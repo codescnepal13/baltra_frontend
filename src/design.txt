@@ -1,0 +1,1625 @@
+import React from "react";
+import BaltraImg from "../../assets/images/BaltraBanner.png";
+import { Link } from "react-router-dom";
+import TopHeader from "../../components/topHeader/TopHeader";
+
+const AboutUS = () => {
+  return (
+    <div className="relative w-full h-auto">
+      {/* TopHeader positioned above the background image */}
+      <div className="absolute top-0 left-0 w-full z-10">
+        <TopHeader />
+      </div>
+
+      <img
+        src={BaltraImg}
+        alt="Baltra Banner"
+        className="w-full h-auto max-w-full"
+        style={{ maxWidth: "100%", height: "auto" }}
+      />
+      <div className="absolute inset-0 flex items-center justify-center md:translate-y-40">
+        {/* Adjust the translate-y value for different screen sizes */}
+        <div className="inline-flex items-center justify-center mt-28 lg:mt-14 px-8 py-2 bg-[#FCFCFC] hover:bg-gray-50 rounded-md">
+          <Link
+            to="/baltra-allProducts"
+            className="font-gothamNarrow text-[#323334] text-sm font-medium tracking-wider"
+          >
+            View Products
+          </Link>
+        </div>
+      </div>
+    </div>
+  );
+};
+
+export default AboutUS;
+
+
+import React from "react";
+import RectangleImg from "../../../assets/images/BaltraRectangleImg.png";
+import KitchenImg from "../../../assets/images/KitchenImg.png";
+import GoldKitchenImg from "../../../assets/images/goldKitchenImg.png";
+import WatchImg from "../../../assets/images/WatchImg.png";
+import WareHouseImg from "../../../assets/images/wareHouseImg.png";
+import GeorangeImg from "../../../assets/images/GeoraneImg.png";
+import BluewareHouseImg from "../../../assets/images/BlueWareHouseImg.png";
+import RadioBaltraImg from "../../../assets/images/radioBaltraImg.png";
+import SpeakerImg from "../../../assets/images/speakerImg.png";
+
+const BackGroundIntegration = () => {
+  return (
+    <div className="w-full h-auto flex flex-col justify-start items-center gap-16 mt-24 mb-24">
+      <div className="flex flex-col justify-start items-center gap-2">
+        <div className="text-center text-neutral-700 text-3xl md:text-4xl lg:text-5xl xl:text-6xl font-gothamNarrow">
+          Backward Integration
+        </div>
+        <div className="text-center text-black text-lg md:text-xl lg:text-2xl font-light font-gothamNarrow">
+          Glimpse of our factory
+        </div>
+      </div>
+      <div className="relative w-full max-w-screen-xl mx-auto px-4 md:px-8 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 md:gap-6 lg:gap-8">
+        <img
+          className="w-full h-full object-cover"
+          src={RectangleImg}
+          alt="RectangleImg 1"
+        />
+        <img
+          className="hidden md:block w-full h-full object-cover"
+          src={KitchenImg}
+          alt="KitchenImg 2"
+        />
+        <img
+          className="w-full h-full object-cover"
+          src={WatchImg}
+          alt="WatchImg 3"
+        />
+        <img
+          className="hidden lg:block w-full h-full object-cover"
+          src={GeorangeImg}
+          alt="GeorangeImg 4"
+        />
+        <img
+          className="hidden xl:block w-full h-full object-cover"
+          src={RadioBaltraImg}
+          alt="RadioBaltraImg 5"
+        />
+        <img
+          className="hidden xl:block w-full h-full object-cover"
+          src={SpeakerImg}
+          alt="SpeakerImg 6"
+        />
+        <img
+          className="hidden md:block w-full h-full object-cover"
+          src={WareHouseImg}
+          alt="WareHouseImg 7"
+        />
+        <img
+          className="hidden lg:block w-full h-full object-cover"
+          src={BluewareHouseImg}
+          alt="BluewareHouseImg 8"
+        />
+        <img
+          className="w-full h-full object-cover"
+          src={GoldKitchenImg}
+          alt="GoldKitchenImg 9"
+        />
+      </div>
+    </div>
+  );
+};
+
+export default BackGroundIntegration;
+
+
+    {/* <div className="flex justify-between items-center w-full mx-auto px-20">
+        {steps.map((step, index) => (
+          <div key={index} className="flex flex-col items-center w-full">
+            <div className="text-sm mb-2 font-gothamNarrow text-[#D0D5DD]">
+              {step.label}
+            </div>
+            <div className="flex items-center w-full">
+              {index > 0 && (
+                <div className="flex-grow h-[2px] bg-[#D0D5DD]"></div>
+              )}
+              <div
+                className={`w-4 h-4 rounded-full ${
+                  step.active ? "bg-[#ED1C24]" : "bg-[#D0D5DD]"
+                }`}
+              ></div>
+              {index < steps.length - 1 && (
+                <div className="flex-grow h-[2px] bg-[#D0D5DD]"></div>
+              )}
+            </div>
+            <div className="text-[#667085] text-xs mt-2 font-gothamNarrow">
+              {step.date}
+            </div>
+          </div>
+        ))}
+      </div> */}
+
+
+      ###### Warranty Add Product(Customer)
+        <div className="fixed inset-0 z-50 flex justify-center items-start bg-black bg-opacity-50">
+      <div
+        className="relative w-full max-w-4xl mx-4 mt-16 bg-white shadow-lg p-6 rounded-lg overflow-y-auto"
+        style={{ maxHeight: "90vh" }}
+      >
+        <button
+          className="absolute top-4 right-4 text-gray-500 cursor-pointer"
+          onClick={handleClose}
+        >
+          <FaTimes size={24} />
+        </button>
+
+        <div className="w-full flex justify-center items-center gap-2.5 mb-4">
+          <div className="w-6.5 h-6.5 relative">
+            <div className="w-[24.17px] h-[17.98px]">
+              <MdOutlineAddHomeWork size={20} />
+            </div>
+          </div>
+          <div className="text-[#1A1A1A] text-2xl font-medium leading-6 font-gothamNarrow">
+            Add Product
+          </div>
+        </div>
+        <form onSubmit={handleFormSubmit}>
+          <div className="w-full flex flex-col md:flex-row justify-center items-start gap-x-4 mb-4 mt-8">
+            <div className="flex-1 flex flex-col justify-start items-start">
+              <div className="text-black text-sm font-gothamNarrow mb-2">
+                Store Name
+              </div>
+              <input
+                type="text"
+                name="store_name"
+                className="w-full text-black p-2 bg-white border border-[#4B4646] focus:outline-none focus:border-red-600 flex justify-start items-center gap-2"
+                placeholder="Store Name"
+                value={store_name}
+                onChange={handleChange}
+              />
+              {customerErr && (
+                <span className="text-sm text-red-600 font-gothamNarrow">
+                  {customerErr.store_name}
+                </span>
+              )}
+            </div>
+            <div className="flex-1 flex flex-col justify-start items-start">
+              <div className="text-black text-sm font-gothamNarrow mb-2">
+                Store Location
+              </div>
+              <input
+                type="text"
+                name="store_location"
+                className="w-full text-black p-2 bg-white border border-[#4B4646] focus:outline-none focus:border-red-600 flex justify-start items-center gap-2"
+                placeholder="Store Location"
+                value={store_location}
+                onChange={handleChange}
+              />
+              {customerErr && (
+                <span className="text-sm text-red-600 font-gothamNarrow">
+                  {customerErr.store_location}
+                </span>
+              )}
+            </div>
+          </div>
+          <div className="w-full flex flex-col md:flex-row justify-center items-start gap-4">
+            <div className="flex-1 flex flex-col justify-start items-start">
+              <div className="text-black text-sm font-gothamNarrow mb-2">
+                Product Serial Number
+              </div>
+              <input
+                type="text"
+                name="serial_number"
+                className="w-full text-black p-2 bg-white border border-[#4B4646] focus:outline-none focus:border-red-600 flex justify-start items-center gap-2"
+                placeholder="Enter Product Serial Number"
+                value={serial_number}
+                onChange={handleChange}
+              />
+              {customerErr && (
+                <span className="text-sm text-red-600 font-gothamNarrow">
+                  {customerErr.serial_number}
+                </span>
+              )}
+            </div>
+            <div className="flex-1 flex flex-col justify-start items-start">
+              <div className="text-black text-sm font-gothamNarrow mb-2">
+                Model Number
+              </div>
+              <input
+                type="text"
+                name="model_num"
+                className="w-full text-black p-2 bg-white border border-[#4B4646] focus:outline-none focus:border-red-600 flex justify-start items-center gap-2"
+                placeholder="Model Number"
+                value={model_num}
+                onChange={handleChange}
+              />
+              {customerErr && (
+                <span className="text-sm text-red-600 font-gothamNarrow">
+                  {customerErr.model_num}
+                </span>
+              )}
+            </div>
+          </div>
+          <div className="w-full flex flex-col md:flex-row justify-center items-start gap-4 mt-4">
+            <div className="flex-1 flex flex-col justify-start items-start">
+              <div className="text-black text-sm font-gothamNarrow mb-2">
+                Model Name
+              </div>
+              <input
+                type="text"
+                name="model_name"
+                className="w-full text-black p-2 bg-white border border-[#4B4646] focus:outline-none focus:border-red-600 flex justify-start items-center gap-2"
+                placeholder="Enter Model Name"
+                value={model_name}
+                onChange={handleChange}
+              />
+              {customerErr && (
+                <span className="text-sm text-red-600 font-gothamNarrow">
+                  {customerErr.model_name}
+                </span>
+              )}
+            </div>
+            <div className="flex-1 flex flex-col justify-start items-start">
+              <div className="text-black text-sm font-gothamNarrow mb-2">
+                Store Number
+              </div>
+              <input
+                type="text"
+                name="store_number"
+                className="w-full text-black p-2 bg-white border border-[#4B4646] focus:outline-none focus:border-red-600 flex justify-start items-center gap-2"
+                placeholder="Store Number"
+                value={store_number}
+                onChange={handleChange}
+              />
+              {customerErr && (
+                <span className="text-sm text-red-600 font-gothamNarrow">
+                  {customerErr.store_number}
+                </span>
+              )}
+            </div>
+          </div>
+          <div className="w-full flex flex-col md:flex-row justify-center items-start gap-4 mt-4">
+            <div className="flex-1 flex flex-col justify-start items-start">
+              <div className="w-full">
+                <label
+                  className="block font-gothamNarrow text-sm text-black mb-2"
+                  htmlFor="purchase_date"
+                >
+                  Purchase Date
+                </label>
+                <input
+                  className="appearance-none w-full font-gothamNarrow text-black p-2 bg-white border border-[#4B4646] rounded-sm py-3 px-4 leading-tight focus:outline-none focus:border-red-600 tracking-normal"
+                  id="purchase_date"
+                  name="purchase_date"
+                  type="date"
+                  value={purchase_date}
+                  onChange={handleChange}
+                />
+                {customerErr && (
+                  <p className="text-red-600 text-xs font-gothamNarrow">
+                    {customerErr.purchase_date}
+                  </p>
+                )}
+              </div>
+            </div>
+            <div className="flex-1 flex flex-col justify-start items-start">
+              <div className="w-full">
+                <label
+                  className="block font-gothamNarrow text-sm text-black mb-2"
+                  htmlFor="warranty_issue"
+                >
+                  Warranty Issues
+                </label>
+                <input
+                  className="appearance-none w-full font-gothamNarrow text-black p-2 bg-white border border-[#4B4646] rounded-sm py-3 px-4 leading-tight focus:outline-none focus:border-red-600 tracking-normal"
+                  id="warranty_issue"
+                  name="warranty_issue"
+                  type="date"
+                  value={warranty_issue}
+                  onChange={handleChange}
+                />
+                {customerErr && (
+                  <p className="text-red-600 text-xs font-gothamNarrow">
+                    {customerErr.warranty_issue}
+                  </p>
+                )}
+              </div>
+            </div>
+          </div>
+
+          <div className="w-full md:w-1/2 mt-3">
+            <label
+              className="block font-gothamNarrow text-sm text-black mb-2"
+              htmlFor="warranty_expiry"
+            >
+              Warranty Expiry
+            </label>
+            <input
+              className="appearance-none w-full font-gothamNarrow text-black p-2 bg-white border border-[#4B4646] rounded-sm py-3 px-4 leading-tight focus:outline-none focus:border-red-600 tracking-normal"
+              id="warranty_expiry"
+              name="warranty_expiry"
+              type="date"
+              value={warranty_expiry}
+              onChange={handleChange}
+            />
+            {customerErr && (
+              <p className="text-red-600 text-xs font-gothamNarrow">
+                {customerErr.warranty_expiry}
+              </p>
+            )}
+          </div>
+
+          <div className="w-full flex flex-col md:flex-row justify-start items-start gap-5">
+            <div className="lg:w-1/2 my-5">
+              <span className="text-sm font-gothamNarrow">
+                {" "}
+                Upload Product Image
+              </span>
+              <div className="w-full font-outfit h-56 border border-gray-400 relative mx-auto my-1">
+                <label
+                  htmlFor="product_image"
+                  className="w-full font-outfit h-full flex items-center justify-center cursor-pointer"
+                >
+                  {productImagePreview ? (
+                    <img
+                      src={productImagePreview}
+                      alt="profile"
+                      className="object-contain w-full font-outfit h-full cursor-pointer"
+                    />
+                  ) : (
+                    <span className="text-sm font-gothamNarrow">
+                      Choose Product Image
+                    </span>
+                  )}
+                </label>
+                <input
+                  id="product_image"
+                  type="file"
+                  name="product_image"
+                  accept="image/*"
+                  className="hidden"
+                  onChange={handleFileInputChange}
+                />
+                {customerErr && (
+                  <span className="text-sm text-red-600 font-gothamNarrow">
+                    {customerErr.product_image}
+                  </span>
+                )}
+              </div>
+            </div>
+
+            <div className="lg:w-1/2 my-5">
+              <span className="text-sm font-gothamNarrow">
+                Upload Bill Image
+              </span>
+              <div className="w-full font-outfit h-56 border border-gray-400 relative mx-auto my-1">
+                <label
+                  htmlFor="bill_image_one"
+                  className="w-full font-outfit h-full flex items-center justify-center cursor-pointer"
+                >
+                  {productBillImagePreview ? (
+                    <img
+                      src={productBillImagePreview}
+                      alt="profile"
+                      className="object-contain w-full font-outfit h-full cursor-pointer"
+                    />
+                  ) : (
+                    <span className="text-sm font-gothamNarrow">
+                      Choose Bill Image
+                    </span>
+                  )}
+                </label>
+                <input
+                  id="bill_image_one"
+                  type="file"
+                  name="bill_image_one"
+                  accept="image/*"
+                  className="hidden"
+                  onChange={handleBillFileInputChange}
+                />
+                {customerErr && (
+                  <span className="text-sm text-red-600 font-gothamNarrow">
+                    {customerErr.bill_image_one}
+                  </span>
+                )}
+              </div>
+            </div>
+          </div>
+          <div className="w-full flex justify-start items-start">
+            <div className="lg:w-3/5">
+              <span className="text-sm font-gothamNarrow">
+                Upload Warranty Card Image
+              </span>
+              <div className="w-full font-outfit h-56 border border-gray-400 relative mx-auto my-1">
+                <label
+                  htmlFor="warranty_image"
+                  className="w-full font-outfit h-full flex items-center justify-center cursor-pointer"
+                >
+                  {warrantyCardImagePreview ? (
+                    <img
+                      src={warrantyCardImagePreview}
+                      alt="profile"
+                      className="object-contain w-full font-outfit h-full cursor-pointer"
+                    />
+                  ) : (
+                    <span className="text-sm font-gothamNarrow">
+                      Choose Warranty Image
+                    </span>
+                  )}
+                </label>
+                <input
+                  id="warranty_image"
+                  type="file"
+                  name="warranty_image"
+                  accept="image/*"
+                  className="hidden"
+                  onChange={handleWarrantyCardImage}
+                />
+                {customerErr && (
+                  <span className="text-sm text-red-600 font-gothamNarrow">
+                    {customerErr.warranty_image}
+                  </span>
+                )}
+              </div>
+            </div>
+          </div>
+          <button
+            className="w-[468px] px-20 py-4 bg-red-600 hover:bg-[#E91C1C] flex justify-center items-center gap-2 my-5"
+            type="submit"
+            disabled={loading}
+          >
+            <div className="text-white font-medium leading-6 font-gothamNarrow relative">
+              {loading && (
+                <span className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2">
+                  <div className="animate-spin rounded-full h-4 w-4 border-t-2 border-b-2 border-white"></div>
+                </span>
+              )}
+              Submit
+            </div>
+          </button>
+        </form>
+      </div>
+    </div>
+
+
+    //Warranty
+    import React from "react";
+import { FaArrowRight } from "react-icons/fa6";
+import moment from "moment";
+
+const packages = [
+  {
+    duration: "3 Months",
+    name: "Basic",
+    price: "Rs. 500",
+    features: [
+      "Loyalty Rewards Program",
+      "Free Servicing",
+      "Extended Warranty Offers",
+      "Priority Customer Support",
+    ],
+  },
+  {
+    duration: "1 Year",
+    name: "Most Popular",
+    price: "Rs. 4200",
+    features: [
+      "Loyalty Rewards Program",
+      "Free Servicing",
+      "Extended Warranty Offers",
+      "Priority Customer Support",
+    ],
+    popular: true,
+  },
+  {
+    duration: "6 Months",
+    name: "Advanced",
+    price: "Rs. 2400",
+    features: [
+      "Loyalty Rewards Program",
+      "Free Servicing",
+      "Extended Warranty Offers",
+      "Priority Customer Support",
+    ],
+  },
+];
+
+const BaltraExtendPackage = ({ loyaltyProduct, loading }) => {
+  const { stock_details, warranty_details } = loyaltyProduct || {};
+  const formattedDate = stock_details?.purchase_date
+    ? moment(stock_details.purchase_date).format("Do MMMM, YYYY")
+    : "N/A";
+
+  const formattedExpiry = stock_details?.warranty_expiry
+    ? moment(stock_details.warranty_expiry).format("Do MMMM, YYYY")
+    : "N/A";
+
+  return (
+    <>
+      <div className="min-h-screen py-10 px-4 lg:px-52">
+        <div>
+          <span className="text-black text-sm font-gothamNarrow">
+            My Products
+          </span>
+          <span className="text-black text-base font-semibold font-gothamNarrow">
+            {" "}
+            {">"}{" "}
+          </span>
+          <span className="text-black text-base font-semibold font-gothamNarrow">
+            {stock_details?.model_name}
+          </span>
+        </div>
+        <div className="flex flex-col md:flex-row justify-start items-start gap-x-14">
+          <div className="flex flex-col justify-start items-start my-8">
+            <div className="text-[#ED1C24] text-3xl font-bold font-gothamNarrow">
+              Warranty Offers
+            </div>
+            <div className="text-center text-[#1A1A1A] text-lg font-light font-gothamNarrow">
+              Select the one that suits you best
+            </div>
+          </div>
+          <div className="flex flex-col md:flex-row items-center md:items-start p-2 border border-[#C2C2C2] gap-4">
+            <div className="flex-shrink-0">
+              <img
+                className="w-36 h-36 md:w-[147px] md:h-[144px]"
+                src={stock_details?.product_image}
+                alt="warrantyPackageImg"
+              />
+            </div>
+            <div className="flex flex-col md:ml-2 my-5">
+              <div className="text-[#1A1A1A] text-base font-semibold font-gothamNarrow">
+                {stock_details?.model_name}
+              </div>
+              <div className="text-black text-sm font-gothamNarrow tracking-[0.14px]">
+                Serial Number:{stock_details?.serial_number}
+              </div>
+              <div className="text-[#1A1A1A] text-sm font-gothamNarrow">
+                Model: {stock_details?.model_num}
+              </div>
+            </div>
+            <div className="flex flex-col justify-start items-start gap-3 ml-4 mt-4">
+              <div className="text-black text-sm font-gothamNarrow">
+                Store Name: {stock_details?.store_name}
+              </div>
+              <div className="text-black text-sm font-gothamNarrow">
+                Purchase Date: {formattedDate}
+              </div>
+              <div className="text-black text-sm font-gothamNarrow">
+                Warranty Expiry: {formattedExpiry}
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div className="flex flex-wrap justify-center items-center gap-x-8 mt-10">
+          <div
+            className={`border-2 rounded-sm p-8 w-full sm:w-80 my-5
+              "border-purple-500"
+            `}
+          >
+            <div className="text-gray-500 font-gothamNarrow text-sm my-2">
+              {warranty_details.duration} Months
+            </div>
+            <div className="text-2xl font-semibold mt-2 font-gothamNarrow">
+              {warranty_details.tier_type}
+            </div>
+            <div className="text-4xl font-bold mt-2 font-gothamNarrow">
+              Rs.{warranty_details.price}
+            </div>
+            <div className="mt-10">
+              <div className="font-semibold font-gothamNarrow">Includes</div>
+              <ul className="list-none mt-2 space-y-2">
+                <li className="flex text-sm font-gothamNarrow items-center">
+                  <svg
+                    className="w-4 h-4 text-teal-500 mr-2"
+                    fill="none"
+                    stroke="currentColor"
+                    strokeWidth="2"
+                    viewBox="0 0 24 24"
+                    xmlns="http://www.w3.org/2000/svg"
+                  >
+                    <path d="M5 13l4 4L19 7"></path>
+                  </svg>
+                  Loyalty Rewards Program
+                </li>
+                <li className="flex text-sm font-gothamNarrow items-center">
+                  <svg
+                    className="w-4 h-4 text-teal-500 mr-2"
+                    fill="none"
+                    stroke="currentColor"
+                    strokeWidth="2"
+                    viewBox="0 0 24 24"
+                    xmlns="http://www.w3.org/2000/svg"
+                  >
+                    <path d="M5 13l4 4L19 7"></path>
+                  </svg>
+                  Free Servicing
+                </li>
+                <li className="flex text-sm font-gothamNarrow items-center">
+                  <svg
+                    className="w-4 h-4 text-teal-500 mr-2"
+                    fill="none"
+                    stroke="currentColor"
+                    strokeWidth="2"
+                    viewBox="0 0 24 24"
+                    xmlns="http://www.w3.org/2000/svg"
+                  >
+                    <path d="M5 13l4 4L19 7"></path>
+                  </svg>
+                  Extended Warranty Offers
+                </li>
+                <li className="flex text-sm font-gothamNarrow items-center">
+                  <svg
+                    className="w-4 h-4 text-teal-500 mr-2"
+                    fill="none"
+                    stroke="currentColor"
+                    strokeWidth="2"
+                    viewBox="0 0 24 24"
+                    xmlns="http://www.w3.org/2000/svg"
+                  >
+                    <path d="M5 13l4 4L19 7"></path>
+                  </svg>
+                  Priority Customer Support
+                </li>
+              </ul>
+            </div>
+            <div className="mt-16">
+              <button className="w-full text-sm border-2 border-purple-500 text-purple-500 py-3 hover:bg-purple-500 hover:text-white transition-colors duration-300 font-gothamNarrow">
+                EXTEND WARRANTY
+              </button>
+              <button
+                className={`font-gothamNarrow text-sm w-full mt-4 py-3 text-white transition-colors duration-300 
+                     bg-purple-500
+                 hover:bg-gradient-to-r from-purple-600 to-blue-600`}
+              >
+                USE LOYALTY POINTS{" "}
+                <FaArrowRight className="inline-block ml-2" />
+              </button>
+            </div>
+          </div>
+        </div>
+
+        {/* <div className="flex flex-wrap justify-center items-center gap-x-8 mt-10">
+          {packages.map((pkg, index) => (
+            <div
+              key={index}
+              className={`border-2 rounded-sm p-8 w-full sm:w-80 my-5 ${
+                pkg.popular ? "border-purple-500" : "border-gray-200"
+              }`}
+            >
+              <div className="text-gray-500 font-gothamNarrow text-sm my-2">
+                {pkg.duration}
+              </div>
+              <div className="text-2xl font-semibold mt-2 font-gothamNarrow">
+                {pkg.name}
+              </div>
+              <div className="text-4xl font-bold mt-2 font-gothamNarrow">
+                {pkg.price}
+              </div>
+              <div className="mt-10">
+                <div className="font-semibold font-gothamNarrow">Includes</div>
+                <ul className="list-none mt-2 space-y-2">
+                  {pkg.features.map((feature, idx) => (
+                    <li
+                      key={idx}
+                      className="flex text-sm font-gothamNarrow items-center"
+                    >
+                      <svg
+                        className="w-4 h-4 text-teal-500 mr-2"
+                        fill="none"
+                        stroke="currentColor"
+                        strokeWidth="2"
+                        viewBox="0 0 24 24"
+                        xmlns="http://www.w3.org/2000/svg"
+                      >
+                        <path d="M5 13l4 4L19 7"></path>
+                      </svg>
+                      {feature}
+                    </li>
+                  ))}
+                </ul>
+              </div>
+              <div className="mt-16">
+                <button className="w-full text-sm border-2 border-purple-500 text-purple-500 py-3 hover:bg-purple-500 hover:text-white transition-colors duration-300 font-gothamNarrow">
+                  EXTEND WARRANTY
+                </button>
+                <button
+                  className={`font-gothamNarrow text-sm w-full mt-4 py-3 text-white transition-colors duration-300 ${
+                    pkg.popular
+                      ? "bg-gradient-to-r from-purple-500 to-blue-500"
+                      : "bg-purple-500"
+                  } hover:bg-gradient-to-r from-purple-600 to-blue-600`}
+                >
+                  USE LOYALTY POINTS{" "}
+                  <FaArrowRight className="inline-block ml-2" />
+                </button>
+              </div>
+            </div>
+          ))}
+        </div> */}
+      </div>
+    </>
+  );
+};
+
+export default BaltraExtendPackage;
+
+
+{/* <div className="flex flex-wrap justify-center items-center gap-x-8 mt-10">
+          {packages.map((pkg, index) => (
+            <div
+              key={index}
+              className={`border-2 rounded-sm p-8 w-full sm:w-80 my-5 ${
+                pkg.popular ? "border-purple-500" : "border-gray-200"
+              }`}
+            >
+              <div className="text-gray-500 font-gothamNarrow text-sm my-2">
+                {pkg.duration}
+              </div>
+              <div className="text-2xl font-semibold mt-2 font-gothamNarrow">
+                {pkg.name}
+              </div>
+              <div className="text-4xl font-bold mt-2 font-gothamNarrow">
+                {pkg.price}
+              </div>
+              <div className="mt-10">
+                <div className="font-semibold font-gothamNarrow">Includes</div>
+                <ul className="list-none mt-2 space-y-2">
+                  {pkg.features.map((feature, idx) => (
+                    <li
+                      key={idx}
+                      className="flex text-sm font-gothamNarrow items-center"
+                    >
+                      <svg
+                        className="w-4 h-4 text-teal-500 mr-2"
+                        fill="none"
+                        stroke="currentColor"
+                        strokeWidth="2"
+                        viewBox="0 0 24 24"
+                        xmlns="http://www.w3.org/2000/svg"
+                      >
+                        <path d="M5 13l4 4L19 7"></path>
+                      </svg>
+                      {feature}
+                    </li>
+                  ))}
+                </ul>
+              </div>
+              <div className="mt-16">
+                <button className="w-full text-sm border-2 border-purple-500 text-purple-500 py-3 hover:bg-purple-500 hover:text-white transition-colors duration-300 font-gothamNarrow">
+                  EXTEND WARRANTY
+                </button>
+                <button
+                  className={`font-gothamNarrow text-sm w-full mt-4 py-3 text-white transition-colors duration-300 ${
+                    pkg.popular
+                      ? "bg-gradient-to-r from-purple-500 to-blue-500"
+                      : "bg-purple-500"
+                  } hover:bg-gradient-to-r from-purple-600 to-blue-600`}
+                >
+                  USE LOYALTY POINTS{" "}
+                  <FaArrowRight className="inline-block ml-2" />
+                </button>
+              </div>
+            </div>
+          ))}
+        </div> */}
+
+
+
+
+        ######################BaltraCatalog
+        import React from "react";
+import baltraCatalogImg1 from "../../assets/images/baltraCatalogImg1.png";
+import ProductHeader from "../../components/topHeader/productHeader/ProductHeader";
+import MetaData from "../../components/layout/metaData/MetaData";
+import { useSelector } from "react-redux";
+
+const BaltraCatalog = () => {
+  const { isAuthenticated, customer } = useSelector((state) => state.auth);
+
+  return (
+    <>
+      <MetaData title="baltra-products-catalog" />
+      <div className="px-4 sm:px-8 md:px-16 lg:px-24  my-24 md:my-28 lg:my-32 h-full">
+        <div className="absolute top-0 left-0 w-full z-10">
+          <ProductHeader
+            isAuthenticated={isAuthenticated}
+            customer={customer}
+          />
+        </div>
+
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-8">
+          {[...Array(4)].map((_, index) => (
+            <div
+              key={index}
+              className="flex flex-col justify-start items-center gap-4"
+            >
+              <img
+                className="w-[200px] sm:w-[250px] md:w-[300px] h-auto transform -rotate-6 cursor-pointer"
+                src={baltraCatalogImg1}
+                alt="Red Book"
+              />
+              <div className="text-center text-[#101214] text-base sm:text-lg md:text-xl font-gothamNarrow">
+                NEW 2080 SHACATALOGUE
+              </div>
+              <div className="flex flex-col justify-start items-center gap-3 w-full">
+                <button className="w-full py-3 sm:py-3 border border-[#202D31] flex justify-center items-center">
+                  <span className="text-center text-black text-sm sm:text-base lg:text-lg font-semibold font-gothamNarrow">
+                    EXPLORE
+                  </span>
+                </button>
+                <button className="w-full py-3 sm:py-3 border border-[#202D31] flex justify-center items-center">
+                  <span className="text-center text-black text-sm sm:text-base lg:text-lg font-semibold font-gothamNarrow">
+                    DOWNLOAD
+                  </span>
+                </button>
+              </div>
+            </div>
+          ))}
+        </div>
+      </div>
+    </>
+  );
+};
+
+export default BaltraCatalog;
+
+
+##########(Art OF Comfort)
+import React from "react";
+import { Link } from "react-router-dom";
+
+const ArtOfComfort = () => {
+  return (
+    <div className="w-full h-auto min-h-[50vh] md:h-screen flex justify-center items-center my-5 sm:my-0 px-4">
+      <div className="w-full max-w-[717px] flex flex-col justify-center items-center gap-8">
+        <div className="flex flex-col justify-start items-center gap-6 sm:gap-12">
+          <div className="w-full max-w-[505px] text-center text-[#202D31] text-3xl sm:text-4xl lg:text-5xl font-bold font-gothamNarrow">
+            Live Your Home: The Art of Comfort
+          </div>
+          <div className="w-full text-center text-[#323334] text-sm sm:text-base font-light leading-[25.33px]">
+            Welcome to Baltra, where innovation meets elegance in home
+            appliances. We pride ourselves on crafting exclusive, modern
+            appliances with sleek designs and cutting-edge technology. Our
+            products boast minimalist aesthetics, energy efficiency, and smart
+            technology, effortlessly blending into any home décor.
+            <br />
+            <br />
+            At Baltra, we believe in creating appliances built to last,
+            providing a timeless and elegant addition to homes for years to
+            come. From the kitchen to the living room, our appliances enhance
+            everyday life with unparalleled convenience and style. Designed for
+            modern living, each product reflects our commitment to quality and
+            customer satisfaction.
+            <br />
+            <br />
+            Read more about Baltra and elevate your living space with our
+            meticulously crafted appliances.
+          </div>
+        </div>
+        <Link
+          to="/baltra-readAboutUS"
+          className="px-8 sm:px-12 py-2.5 bg-white border border-[#DFDEDB] flex justify-center items-center hover:border-red-600 transition-all duration-300"
+        >
+          <button className="text-[#323334] text-sm sm:text-base font-light leading-[18.67px] tracking-wider">
+            READ ABOUT US
+          </button>
+        </Link>
+      </div>
+    </div>
+  );
+};
+
+export default ArtOfComfort;
+
+
+
+######TRee Serices and Promises
+
+import React from "react";
+import WorldClassService from "../../../assets/images/worldClassImg.png";
+import ServiceCenter from "../../../assets/images/serviceCenterImg.png";
+import RepairServiceImg from "../../../assets/images/RepairServicesImg.png";
+import RobustService from "../../../assets/images/RobustInvestoryImg.png";
+
+const ServicePromises = () => {
+  return (
+    <>
+      <div className="relative w-full px-4 md:px-24 leading-none">
+        {/* Centered Text Block */}
+        <div className="text-center">
+          <h1 className="text-[#202D31] text-3xl sm:text-4xl lg:text-5xl font-bold">
+            Our Service Promises
+          </h1>
+          <p className="text-[#000000] text-lg sm:text-xl md:text-2xl font-normal font-gothamNarrow tracking-normal pt-2 text-center">
+            Service Promises: Our Commitment to Excellence
+          </p>
+        </div>
+        <div className="relative w-full mx-auto">
+          {/* Background Images */}
+          <div className="hidden md:block">
+            {" "}
+            {/* Hide images on small screens */}
+            <img
+              className="absolute w-[378px] h-[378px] left-[845px] top-[1130px]"
+              src={RepairServiceImg}
+              alt="RepairServiceImg"
+            />
+            <img
+              className="absolute w-80 h-auto left-[989px] top-[300px] sm:left-[750px] sm:top-[250px] md:left-[800px] md:top-[280px]"
+              src={WorldClassService}
+              alt="WorldClassService"
+            />
+            <img
+              className="absolute w-1/3 h-auto left-[72px] top-[793px] sm:left-[50px] sm:top-[700px] md:left-[60px] md:top-[720px]"
+              src={ServiceCenter}
+              alt="ServiceCenter"
+            />
+            <img
+              className="absolute w-[342px] h-[342px] left-[198px] bottom-16"
+              src={RobustService}
+              alt="RobustService"
+            />
+            {/* Vertical Lines */}
+            <div className="absolute w-[211.5px] h-[1937px] left-[725px] top-[313px] sm:left-[550px] sm:top-[200px] md:left-[600px] md:top-[250px]">
+              <div className="absolute w-[114.5px] h-[0] left-[100px] top-[578px] border-2 border-[#E5E3E3]"></div>
+              <div className="absolute w-60 h-[0] right-[108px] top-[1045px] border-2 border-[#E5E3E3]"></div>
+              <div className="absolute w-[114.5px] h-[0] left-[102px] top-[1535px] border-2 border-[#E5E3E3]"></div>
+              <div className="absolute w-60 h-[0] right-[110px] top-[162px] border-2 border-[#FF5252]"></div>
+              <div className="absolute w-[0] h-[1653px] left-[100px] top-[-115px] border-2 border-[#E1D8D8]"></div>
+              <div className="absolute w-[0] h-[280px] left-[100px] top-[-115px] border-2 border-[#FF5252]"></div>
+            </div>
+          </div>
+
+          {/* Service Promises Content */}
+          <div className="font-gothamNarrow relative w-full h-auto pt-8 sm:pt-0 lg:top-[346px]">
+            {/* Service Promise 1 */}
+            <div className="flex flex-col md:flex-row items-center md:items-start mb-8 lg:marker:mb-20 relative">
+              <div className="w-full md:w-1/2 max-w-xl p-8 bg-white shadow-lg rounded border border-[#FF5252] backdrop-blur-xl">
+                <h2 className="text-[#202D31] text-xl font-semibold">
+                  1. World-Class Services
+                </h2>
+                <p className="text-black text-base mt-4">
+                  At BALTRA, we are dedicated to delivering world-class service
+                  and trusted advice for all your home and kitchen appliance
+                  needs. From your first interaction with us, expect exceptional
+                  support and expertise that goes above and beyond.
+                </p>
+              </div>
+            </div>
+
+            {/* Service Promise 2 */}
+            <div className="flex flex-col items-center md:items-start mb-8 lg:pt-[145px] lg:min-h-screen md:flex-row-reverse relative">
+              <div className="w-full md:w-1/2 max-w-lg p-8 bg-[#F2EFEF] shadow-sm backdrop-blur-xl">
+                <h2 className="text-[#202D31] text-xl font-bold">
+                  2. Service Centers and Technicians
+                </h2>
+                <p className="text-[#434141] text-base mt-4">
+                  At BALTRA, we ensure quick support through our central service
+                  center in Teku, Kathmandu, and 55 distributor points across
+                  the valley. With 44 expert technicians, we provide fast and
+                  reliable repairs, typically within 2-3 days. Trust BALTRA for
+                  prompt, efficient service!
+                </p>
+              </div>
+            </div>
+
+            {/* Service Promise 3 */}
+            <div className="flex flex-col md:flex-row items-center md:items-start mb-8 lg:top-[-150px] relative ">
+              <div className="w-full md:w-1/2 max-w-lg p-8 bg-[#F2EFEF] shadow-sm backdrop-blur-xl">
+                <h2 className="text-[#202D31] text-xl font-bold">
+                  3. Repair Services
+                </h2>
+                <p className="text-[#434141] text-base mt-4">
+                  We prioritize the quality of our products and offer quick
+                  repair services for any warranty-covered issues. Our skilled
+                  technicians aim to complete repairs within 2-3 days, ensuring
+                  fast turnaround and restoring your appliance to peak condition
+                </p>
+              </div>
+            </div>
+
+            {/* Service Promise 4 */}
+            <div className="flex flex-col md:flex-row-reverse items-center md:items-start lg:min-h-screen relative">
+              <div className="w-full md:w-1/2 max-w-lg p-8 bg-[#F2EFEF] shadow-sm backdrop-blur-xl lg:mt-10">
+                <h2 className="text-[#202D31] text-xl font-bold">
+                  4. Robust Inventory
+                </h2>
+                <p className="text-[#434141] text-base mt-4">
+                  At BALTRA, our well-managed, automated inventory ensures quick
+                  access to spare parts and accessories. Visit our Teku service
+                  center in Kathmandu for seamless support and timely repairs.
+                  We prioritize efficiency to get your appliances running
+                  smoothly again.
+                </p>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </>
+  );
+};
+
+export default ServicePromises;
+
+
+//#####(SIZING)Baltra Description
+import React from "react";
+
+const Sizing = ({ addProduct }) => {
+  const parseSizing = (sizing) => {
+    return sizing.split(/(?=[A-Z])/).map((line) => {
+      const [key, value] = line.split(": ");
+      return { key, value };
+    });
+  };
+
+  const sizingData = parseSizing(addProduct?.sizing || "");
+
+  return (
+    <>
+      <div className="w-full bg-white">
+        <div className="max-w-4xl mx-auto px-4 md:px-16">
+          <p className="text-[#282525] text-sm font-light leading-[27px] font-gothamNarrow">
+            {sizingData.map((item, index) => (
+              <div key={index}>
+                <li>
+                  <span className="font-semibold">{item.key}:</span>{" "}
+                  {item.value}
+                </li>
+                <ul className="list-disc list-inside ml-4">
+                  {/* Add the appropriate description for each key here */}
+                  {item.key === "Height" && (
+                    <>
+                      Provides ample space for blending large quantities while
+                      still fitting under most kitchen cabinets.
+                    </>
+                  )}
+                  {item.key === "Width" && (
+                    <>
+                      Compact enough to save counter space, making it ideal for
+                      both small and large kitchens.
+                    </>
+                  )}
+                  {item.key === "Depth" && (
+                    <>
+                      Balanced depth ensures stability during operation and easy
+                      placement alongside other appliances.
+                    </>
+                  )}
+                  {item.key === "Weight" && (
+                    <>
+                      Lightweight enough for easy maneuverability and storage,
+                      yet heavy enough to stay stable during intense blending
+                      tasks.
+                    </>
+                  )}
+                </ul>
+                <br />
+              </div>
+            ))}
+          </p>
+        </div>
+
+        <div className="flex justify-center mt-6">
+          <img
+            className="w-full md:w-80 h-auto"
+            src={addProduct?.sizing_images[0]?.image_url}
+            alt="boxSizeImg"
+          />
+        </div>
+
+        <div className="text-[#282525] text-sm font-semibold leading-[27px] font-gothamNarrow text-center md:px-72 mt-6">
+          Box Dimension:
+        </div>
+
+        <div className="flex justify-center mt-6">
+          <img
+            className="w-full md:w-2/5 h-auto"
+            src={addProduct?.sizing_images[1]?.image_url}
+            alt="boxDimensionImg"
+          />
+        </div>
+      </div>
+    </>
+  );
+};
+
+export default Sizing;
+
+
+responisve design
+Product View
+import React, { useEffect, useState } from "react";
+import {
+  FaArrowRight,
+  FaFacebook,
+  FaInstagram,
+  FaTwitter,
+  FaYoutube,
+} from "react-icons/fa6";
+import { CiShare2 } from "react-icons/ci";
+import { Link } from "react-router-dom";
+import "./ProductViewDetails.css";
+import ProductDescription from "./productDescription/ProductDescription";
+import ProductVaccum from "./productVaccum/ProductVaccum";
+import ProductDetailsVideo from "./productDetailsVideo/ProductDetailsVideo";
+import RelatedProducts from "../relatedProducts/RelatedProducts";
+import RatingReviewsSection from "./ratingReviewsSection/RatingReviewsSection";
+import ProductViewSkeleton from "../../../components/layout/productViewSkeleton/ProductViewSkeleton";
+import { FaTimes } from "react-icons/fa";
+import { useDispatch, useSelector } from "react-redux";
+import { baltraProductsRelated } from "../../../redux/features/product/productSlice";
+import StarRating from "./ratingReviewsSection/starRating/StarRating";
+import { motion, AnimatePresence } from "framer-motion";
+
+const RippleButton = ({ label, rippleColor, onClick, children }) => {
+  const [ripplePosition, setRipplePosition] = useState({ x: 0, y: 0 });
+  const [isHovered, setIsHovered] = useState(false);
+
+  const handleMouseEnter = (e) => {
+    const rect = e.target.getBoundingClientRect();
+    const x = e.clientX - rect.left;
+    const y = e.clientY - rect.top;
+    setRipplePosition({ x, y });
+    setIsHovered(true);
+  };
+
+  const handleMouseLeave = () => {
+    setIsHovered(false);
+  };
+
+  return (
+    <motion.button
+      whileTap={{ scale: 0.95 }}
+      className="w-full py-3 sm:py-3 border border-[#202D31] flex justify-center items-center relative overflow-hidden"
+      onMouseEnter={handleMouseEnter}
+      onMouseLeave={handleMouseLeave}
+      onClick={onClick}
+    >
+      {/* Ripple Effect */}
+      <AnimatePresence>
+        {isHovered && (
+          <motion.div
+            className="absolute rounded-full"
+            style={{
+              top: ripplePosition.y,
+              left: ripplePosition.x,
+              width: 0,
+              height: 0,
+              transform: "translate(-50%, -50%)",
+              backgroundColor: rippleColor,
+            }}
+            animate={{
+              width: 700,
+              height: 700,
+              opacity: 1,
+            }}
+            exit={{
+              opacity: 0,
+              transition: { duration: 0.5 },
+            }}
+            transition={{
+              duration: 0.5,
+              ease: "easeInOut",
+            }}
+          />
+        )}
+      </AnimatePresence>
+
+      {/* Button Text and Children */}
+      <span
+        className={`relative z-10 text-center text-sm sm:text-base lg:text-lg font-semibold font-gothamNarrow flex items-center ${
+          isHovered ? "text-white" : "text-black"
+        }`}
+      >
+        {label}
+        {children && <span className="ml-2">{children}</span>}
+      </span>
+    </motion.button>
+  );
+};
+
+const ProductViewDetails = ({ singleProduct, loading }) => {
+  const { isFetching, allRelatedProducts, statRatingReview } = useSelector(
+    (state) => state.product
+  );
+
+  const { average_rating = 0, total_reviews = 0 } = statRatingReview || {};
+
+  const { id } = singleProduct || {};
+  const dispatch = useDispatch();
+
+  const [selectedColor, setSelectedColor] = useState("");
+  const [selectedSize, setSelectedSize] = useState("");
+  const [isPopupVisible, setPopupVisible] = useState(false);
+  const [selectedImage, setSelectedImage] = useState(singleProduct?.main_image);
+
+  const handleTogglePopup = () => {
+    setPopupVisible(!isPopupVisible);
+  };
+
+  const handleColorSelection = (color) => {
+    setSelectedColor(color);
+  };
+  const handleSizeSelection = (size) => {
+    setSelectedSize(size);
+  };
+
+  useEffect(() => {
+    if (id) {
+      dispatch(baltraProductsRelated(id));
+    }
+  }, [dispatch, id]);
+
+  return (
+    <>
+      {loading ? (
+        <ProductViewSkeleton />
+      ) : (
+        <div className="px-4 md:px-6 lg:px-8 xl:px-12 2xl:px-16 my-4 md:my-6 lg:my-8">
+          <div className="text-xs md:text-sm text-gray-500 mb-4">
+            <Link
+              to={`/category/${singleProduct?.category?.id}`}
+              className="hover:underline font-gothamNarrow"
+            >
+              {singleProduct?.category?.category_name}
+            </Link>
+            {" / "}
+            <Link
+              to={`/subcategory/${singleProduct?.sub_category?.id}`}
+              className="hover:underline font-gothamNarrow"
+            >
+              {singleProduct?.sub_category?.sub_category_name}
+            </Link>
+            {" / "}
+            <span className="font-gothamNarrow">{singleProduct?.name}</span>
+          </div>
+
+          <div className="bg-white px-6 md:px-8 lg:px-12 py-6 md:py-8 lg:py-10 flex flex-col md:flex-row gap-y-6 md:gap-x-8 lg:gap-x-12 xl:gap-x-16">
+            {/* Left Side - Image Section */}
+            <div className="flex flex-col items-center">
+              <div className="relative mb-6 md:mb-8 flex flex-col items-center">
+                <img
+                  className="w-48 h-48 sm:w-56 sm:h-56 md:w-64 md:h-64 lg:w-72 lg:h-72 object-cover"
+                  src={selectedImage}
+                  alt="singleProductImg"
+                  loading="lazy"
+                  srcSet={`${selectedImage} 1x, ${selectedImage}@2x.jpg 2x, ${selectedImage}@3x.jpg 3x`}
+                />
+                <img
+                  className="absolute top-0 right-[-36px] md:right-[-48px] lg:right-[-64px] w-12 h-12 md:w-16 md:h-16"
+                  src={singleProduct?.warranty_icon}
+                  alt="WarrantyImg"
+                />
+              </div>
+
+              {/* Variant Images */}
+              {singleProduct && (
+                <div className="my-2">
+                  <div className="flex gap-2 md:gap-3 lg:gap-4 overflow-x-auto lg:overflow-x-visible scrollbar-hide">
+                    {singleProduct?.images?.map((image, index) => (
+                      <img
+                        key={index}
+                        className="w-16 h-16 md:w-20 md:h-20 lg:w-24 lg:h-24 object-cover border border-gray-200 flex-shrink-0 cursor-pointer"
+                        src={image.image_url}
+                        alt={`Variant ${index + 1}`}
+                        onClick={() => setSelectedImage(image.image_url)}
+                      />
+                    ))}
+                  </div>
+                </div>
+              )}
+            </div>
+
+            {/* Right Side - Content Section */}
+            <div className="flex flex-col gap-3 ml-0 md:ml-6 md:w-1/2 lg:w-7/12">
+              <div className="text-right">
+                <i className="icon-share"></i>
+              </div>
+              <div>
+                <div className="flex justify-between items-center">
+                  <div className="text-gray-600 text-sm md:text-base font-gothamNarrow">
+                    {singleProduct?.model_name}
+                  </div>
+                  <div className="flex items-center">
+                    <Link to="#" onClick={(e) => e.preventDefault()}>
+                      <CiShare2 size={20} onClick={handleTogglePopup} />
+                    </Link>
+                  </div>
+                </div>
+                <h2 className="text-xl md:text-2xl lg:text-3xl text-[#202D31] font-bold my-1">
+                  {singleProduct?.name}
+                </h2>
+                <p className="text-base md:text-lg lg:text-xl text-black">
+                  {singleProduct?.sub_heading}
+                </p>
+              </div>
+              <div className="text-red-600 text-lg md:text-xl lg:text-2xl font-semibold">
+                MRP. {singleProduct?.price}
+              </div>
+              <div className="flex items-center gap-2">
+                <StarRating rating={average_rating} />
+                <span className="text-gray-500 text-sm font-gothamNarrow">
+                  ({total_reviews.toLocaleString()})
+                </span>
+              </div>
+
+              <hr className="border-t border-gray-300" />
+
+              {/* Color Selection */}
+              {singleProduct?.color_styles?.length > 0 && (
+                <div>
+                  <div className="text-sm text-gray-700">Color</div>
+                  <div className="my-2 flex flex-wrap gap-2">
+                    {singleProduct?.color_styles.map((color, index) => (
+                      <div
+                        key={index}
+                        className={`relative w-6 h-6 cursor-pointer border rounded-full ${
+                          selectedColor === color
+                            ? "border-red-500"
+                            : "border-gray-400"
+                        }`}
+                        style={{ backgroundColor: color }}
+                        onClick={() => handleColorSelection(color)}
+                      />
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              {/* Size Selection */}
+              {singleProduct?.sizes?.length > 0 && (
+                <div>
+                  <div className="text-sm text-gray-700">
+                    Size Selection (Jars)
+                  </div>
+                  <div className="my-2 flex flex-wrap gap-2">
+                    {singleProduct?.sizes.map((size, index) => (
+                      <div
+                        key={index}
+                        className={`w-10 h-10 border cursor-pointer flex items-center justify-center ${
+                          selectedSize === size
+                            ? "border-red-500"
+                            : "border-gray-300"
+                        }`}
+                        onClick={() => handleSizeSelection(size)}
+                      >
+                        {size}
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              <div className="text-sm text-gray-700">Packaging</div>
+              <div className="text-lg text-gray-800 font-medium">
+                {singleProduct?.packaging}
+              </div>
+
+              <div className="text-sm text-gray-700">Power</div>
+              <div className="text-xl text-gray-800 font-medium">
+                {singleProduct?.power}
+              </div>
+
+              <div className="flex flex-col gap-4 mt-4">
+                <RippleButton
+                  label="REQUEST A BULK QUOTE"
+                  rippleColor="#071C2E"
+                  className="py-3 px-4 w-full border border-gray-500 text-black text-center font-semibold"
+                >
+                  <FaArrowRight className="ml-2" />
+                </RippleButton>
+                <RippleButton
+                  label="ADD PERSONALIZATION"
+                  rippleColor="#071C2E"
+                  className="py-3 px-4 w-full border border-gray-500 text-black text-center font-semibold"
+                >
+                  <FaArrowRight className="ml-2" />
+                </RippleButton>
+              </div>
+
+              <hr className="border-t border-gray-300" />
+            </div>
+          </div>
+
+          <ProductDescription singleProduct={singleProduct} />
+          <ProductVaccum singleProduct={singleProduct} />
+          <ProductDetailsVideo singleProduct={singleProduct} />
+          <RatingReviewsSection />
+          <RelatedProducts
+            allRelatedProducts={allRelatedProducts}
+            isFetching={isFetching}
+          />
+        </div>
+      )}
+    </>
+  );
+};
+
+export default ProductViewDetails;
+
+
+#######Add PERSONALIZATION
+import React, { useState } from "react";
+import BaltraPersonalizationImg from "../../assets/images/bottlePersonalization.png";
+import { FaTimes } from "react-icons/fa";
+import { FaArrowRightLong } from "react-icons/fa6";
+import MetaData from "../../components/layout/metaData/MetaData";
+import "./BaltraPersonalization.css";
+
+const BaltraPersonalization = ({ closeModal }) => {
+  const [addText, setAddText] = useState("");
+  const [orientation, setOrientation] = useState("horizontal");
+  const [selectedFont, setSelectedFont] = useState("gothamNarrow");
+
+  const handleClose = () => {
+    closeModal();
+  };
+
+  // Function to get the vertical text
+  const getVerticalText = (text) => {
+    return text.split("").map((char, index) => (
+      <span key={index} className="block font-inter leading-none">
+        {" "}
+        {char}
+      </span>
+    ));
+  };
+
+  // Ensure text is within limits
+  const verticalText = addText.slice(0, 13);
+  const horizontalText = addText.slice(0, 8);
+
+  return (
+    <>
+      <MetaData title="Baltra personalization" />
+      <div className="w-full h-auto flex flex-col items-center">
+        <div className="w-full flex justify-between items-center p-8 bg-gradient-to-r from-[#C871CA] to-[#6F2CFF]">
+          <div className="flex-grow text-white text-lg md:text-2xl font-gothamNarrow uppercase text-center">
+            Give your product your personal touch
+          </div>
+          <button
+            className="flex-shrink-0 cursor-pointer"
+            onClick={handleClose}
+          >
+            <FaTimes className="text-white w-6 h-6" />
+          </button>
+        </div>
+
+        <div className="mt-10 text-black text-xl md:text-2xl font-gothamNarrow font-semibold uppercase">
+          Preview
+        </div>
+        <div className="flex flex-col md:flex-row justify-center items-start gap-6 p-6 w-full md:w-4/5">
+          <div className="flex justify-center items-center w-full md:w-1/2 md:mr-8">
+            <div className="bg-gray-200 w-full h-[500px] flex justify-center items-center relative">
+              <img
+                className="w-48 h-auto"
+                src={BaltraPersonalizationImg}
+                alt="PreviewImg"
+              />
+              <div className="absolute inset-0 flex justify-center items-center">
+                {orientation === "horizontal" ? (
+                  <div
+                    className={absolute text-[#ffffff] text-lg font-semibold font-${selectedFont}}
+                  >
+                    {horizontalText}
+                  </div>
+                ) : (
+                  <div
+                    className={absolute text-[#ffffff] text-lg font-semibold font-${selectedFont} flex flex-col items-center}
+                  >
+                    {getVerticalText(verticalText)}
+                  </div>
+                )}
+              </div>
+            </div>
+          </div>
+          <div className="flex flex-col gap-4 w-full md:w-1/2">
+            <div className="flex flex-col gap-2 w-full">
+              <div className="text-[#4F4F4F] font-gothamNarrow font-semibold">
+                Enter your text
+              </div>
+              <div className="flex justify-start items-center gap-2 w-full p-2 border border-[#C2C2C2] rounded-sm">
+                <input
+                  type="text"
+                  className="w-full outline-none py-1 px-3 text-[#4F4F4F] text-base md:font-normal font-gothamNarrow focus:border-red-600 tracking-normal"
+                  placeholder="eg. Baltra"
+                  value={addText}
+                  onChange={(e) => setAddText(e.target.value)}
+                />
+              </div>
+              <div className="text-[#4F4F4F] text-base md:font-normal font-gothamNarrow">
+                Type the word you want to be shown in your product
+              </div>
+              <div className="text-[#4F4F4F] text-base md:font-normal font-gothamNarrow">
+                (Vertical max 13 characters)
+              </div>
+              <div className="text-[#4F4F4F] text-base md:font-normal font-gothamNarrow">
+                (Horizontal max 8 characters)
+              </div>
+            </div>
+
+            <div className="flex flex-col gap-2 w-full">
+              <div className="text-[#4F4F4F] font-gothamNarrow font-semibold">
+                Placement
+              </div>
+              <div className="flex justify-start items-center gap-3 w-full">
+                <div
+                  className={flex flex-col justify-center items-center gap-1 cursor-pointer ${
+                    orientation === "vertical"
+                      ? "border-orange-500"
+                      : "border-[#808080]"
+                  }}
+                  onClick={() => setOrientation("vertical")}
+                >
+                  <div
+                    className={flex justify-center items-center w-16 h-16 p-4 ${
+                      orientation === "vertical"
+                        ? "border border-orange-500"
+                        : ""
+                    }}
+                  >
+                    <div className="texto text-[#4F4F4F] text-base font-gothamNarrow font-light transform rotate-180 origin-bottom-left">
+                      ABC
+                    </div>
+                  </div>
+                  <div className="text-black text-sm font-gothamNarrow font-light">
+                    Vertical
+                  </div>
+                </div>
+
+                <div
+                  className={flex flex-col justify-center items-center gap-1 cursor-pointer ${
+                    orientation === "horizontal"
+                      ? "border-orange-500"
+                      : "border-[#808080]"
+                  }}
+                  onClick={() => setOrientation("horizontal")}
+                >
+                  <div
+                    className={flex justify-center items-center w-16 h-16 p-4 ${
+                      orientation === "horizontal"
+                        ? "border border-orange-500"
+                        : ""
+                    }}
+                  >
+                    <div className="text-[#4F4F4F] text-base font-gothamNarrow font-light">
+                      ABC
+                    </div>
+                  </div>
+                  <div className="text-black text-sm font-gothamNarrow font-light">
+                    Horizontal
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            {/* Font Selection */}
+            <div className="flex flex-col gap-2 w-full">
+              <div className="text-[#4F4F4F] font-gothamNarrow font-semibold">
+                Select Font Style
+              </div>
+              <div className="flex justify-start items-center gap-2 w-full p-3 bg-[#FAFAFA] border border-[#C2C2C2] rounded-md">
+                <select
+                  className="w-full p-2 border border-[#808080] text-[#4F4F4F] text-base font-bold"
+                  value={selectedFont}
+                  onChange={(e) => setSelectedFont(e.target.value)}
+                >
+                  <option value="gothamNarrow">Gotham Narrow</option>
+                  <option value="arial">Arial</option>
+                </select>
+              </div>
+            </div>
+
+            <button className="flex justify-center items-center gap-2 w-full py-4 bg-gradient-to-r from-[#C871CA] to-[#6F2CFF] text-white text-sm font-inter font-semibold rounded-sm">
+              PERSONALIZE
+              <FaArrowRightLong className="text-white" />
+            </button>
+          </div>
+        </div>
+      </div>
+    </>
+  );
+};
+
+export default BaltraPersonalization;

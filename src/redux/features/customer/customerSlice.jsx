@@ -1,0 +1,428 @@
+import { createSlice, createAsyncThunk } from "@reduxjs/toolkit";
+import API from "../../api/api";
+import { getErrorMessage } from "../../../utils/ErrorHandle";
+
+/**
+ * @typedef {Object} CustomerState
+ * @property {boolean} loading
+ * @property {boolean} isLoading
+ * @property {boolean} isProcessing
+ * @property {string} error
+ * @property {string} isError
+ * @property {string} message
+ * @property {string} msg
+ * @property {Array|null} allCustomerProductsList
+ * @property {Object|null} singleCustomerView
+ * @property {Object|null} customerVerify
+ * @property {Array|null} productComplaints
+ * @property {Object|null} productComplaint
+ * @property {Object|null} addCrm
+ * @property {Array|null} trackingProducts
+ * @property {Object|null} trackingProduct
+ */
+/**
+ * @type {CustomerState}
+ */
+const initialState = {
+  loading: false,
+  isLoading: false,
+  isProcessing: false,
+  verificationSuccess: false,
+  error: "",
+  isError: "",
+  message: "",
+  msg: "",
+  allCustomerProductsList: [],
+  singleCustomerView: null,
+  customerVerify: null,
+  productComplaints: [],
+  productComplaint: null,
+  addCrm: null,
+  trackingProducts: [],
+  trackingProduct: null,
+};
+
+// Async thunk to fetch products
+export const getAllCustomerAddedProductList = createAsyncThunk(
+  "customer/getAllCustomerAddedProductList",
+  async (__, { rejectWithValue }) => {
+    try {
+      const response = await API.get("/stocks/getcustomerproduct");
+      return response.data;
+    } catch (error) {
+      return rejectWithValue({ message: getErrorMessage(error) });
+    }
+  }
+);
+
+//single Customer Product List
+export const getSingleProductView = createAsyncThunk(
+  "customer/getSingleProductView",
+  async ({ stock_id }, { rejectWithValue }) => {
+    try {
+      const response = await API.get(`/stocks/customerproductbyid/${stock_id}`);
+      return response.data;
+    } catch (error) {
+      return rejectWithValue({ message: getErrorMessage(error) });
+    }
+  }
+);
+
+//delete CustomerProduct
+export const deleteCustomerProduct = createAsyncThunk(
+  "customer/deleteCustomerProduct",
+  async ({ stock_id, toast }, { rejectWithValue }) => {
+    try {
+      const response = await API.delete(
+        `/stocks/deleteproductbyadmin/${stock_id}`
+      );
+      toast.success(
+        response.data.message || "customer product remove Success!"
+      );
+      return response.data;
+    } catch (error) {
+      return rejectWithValue({ message: getErrorMessage(error) });
+    }
+  }
+);
+
+//deleteMultipleCustomer
+export const deleteMultipleCustomer = createAsyncThunk(
+  "customer/admin-deleteMultipleCustomer",
+  async ({ stock_ids, toast }, { rejectWithValue }) => {
+    try {
+      const response = await API.delete(
+        `/stocks/deletemultipleproductbyadmin`,
+        {
+          data: { stock_ids },
+        }
+      );
+      toast.success(response.data.message || "Product remove successfully!");
+      return response.data;
+    } catch (error) {
+      return rejectWithValue({ message: getErrorMessage(error) });
+    }
+  }
+);
+
+//VerifyCustomerProductList
+export const verifiedCustomerProduct = createAsyncThunk(
+  "customer/verifyCustomerProduct",
+  async ({ data, toast }, { rejectWithValue, dispatch }) => {
+    try {
+      const response = await API.post(`/stocks/approvemyproduct`, data);
+      toast.success(response.data.message || "Customer verified success!");
+      dispatch(getAllCustomerAddedProductList());
+      return response.data;
+    } catch (error) {
+      return rejectWithValue({ message: getErrorMessage(error) });
+    }
+  }
+);
+
+//getAllProductComplaints
+export const allProductComplaints = createAsyncThunk(
+  "customer/allProductComplaints",
+  async ({ page } = {}, { rejectWithValue }) => {
+    try {
+      let queryParams = new URLSearchParams();
+      if (page) queryParams.append("page", page);
+
+      const response = await API.get(
+        `/stocks/getallcomplaints${
+          queryParams.toString() ? `?${queryParams.toString()}` : ""
+        }`
+      );
+      return response.data;
+    } catch (error) {
+      return rejectWithValue({ message: getErrorMessage(error) });
+    }
+  }
+);
+
+//getSingleProductComplaint
+export const getSingleProductComplaint = createAsyncThunk(
+  "customer/getSingleProductComplaint",
+  async ({ complaint_id }, { rejectWithValue }) => {
+    try {
+      const response = await API.get(
+        `/stocks/getcomplaintbyid/${complaint_id}`
+      );
+      return response.data;
+    } catch (error) {
+      return rejectWithValue({ message: getErrorMessage(error) });
+    }
+  }
+);
+
+//deleteProductComplaint
+export const deleteProductComplaint = createAsyncThunk(
+  "customer/deleteProductComplaint",
+  async ({ complaint_id, toast }, { rejectWithValue }) => {
+    try {
+      const response = await API.delete(
+        `/stocks/deletecomplaintbyid/${complaint_id}`
+      );
+      toast.success(response.data.message || "product complaint deleted!");
+      return response.data;
+    } catch (error) {
+      return rejectWithValue({ message: getErrorMessage(error) });
+    }
+  }
+);
+
+//deleteMultipleProductComplaints
+export const deleteMultipleProductComplaints = createAsyncThunk(
+  "customer/deleteMultipleProductComplaints",
+  async ({ complaint_ids, toast }, { rejectWithValue }) => {
+    try {
+      const response = await API.delete(`/stocks/deletemultiplecomplaints`, {
+        data: { complaint_ids },
+      });
+      toast.success(response.data.message || "Product delete successfully!");
+      return response.data;
+    } catch (error) {
+      return rejectWithValue({ message: getErrorMessage(error) });
+    }
+  }
+);
+
+//addCrmContent
+export const addCrmContent = createAsyncThunk(
+  "customer/addCrmContent",
+  async ({ CRMConfig, toast }, { rejectWithValue }) => {
+    try {
+      const response = await API.post(
+        `/stocks/customerservicerequesttocrm`,
+        CRMConfig
+      );
+
+      toast.success(
+        response.data.msg || "Complaint Added to the CRM Successfully!"
+      );
+      return response.data;
+    } catch (error) {
+      return rejectWithValue({ msg: getErrorMessage(error) });
+    }
+  }
+);
+
+//getAllTrackingProducts
+export const getAllTrackingProducts = createAsyncThunk(
+  "customer/getAllTrackingProducts",
+  async ({ job_no, status } = {}, { rejectWithValue }) => {
+    try {
+      let queryParams = new URLSearchParams();
+      if (status) queryParams.append("status", status);
+      if (job_no) queryParams.append("job_no", job_no);
+
+      const response = await API.get(
+        `/stocks/getallcomplaintsbycustomer${
+          queryParams.toString() ? `?${queryParams.toString()}` : ""
+        }`
+      );
+
+      return response.data;
+    } catch (error) {
+      return rejectWithValue({ message: getErrorMessage(error) });
+    }
+  }
+);
+
+//singleTrackingProductByID
+export const singleTrackingProductByID = createAsyncThunk(
+  "customer/singleTrackingProductByID",
+  async ({ complaint_id }, { rejectWithValue }) => {
+    try {
+      const response = await API.get(
+        `/stocks/getcomplaintbyidcustomer/${complaint_id}`
+      );
+      return response.data;
+    } catch (error) {
+      return rejectWithValue({ message: getErrorMessage(error) });
+    }
+  }
+);
+
+const customerSlice = createSlice({
+  name: "customer",
+  initialState,
+  reducers: {
+    clearCustomerError: (state) => {
+      state.error = "";
+      state.isError = "";
+    },
+  },
+  extraReducers: (builder) => {
+    builder
+      .addCase(getAllCustomerAddedProductList.pending, (state) => {
+        state.loading = true;
+      })
+      .addCase(getAllCustomerAddedProductList.fulfilled, (state, action) => {
+        state.loading = false;
+        state.allCustomerProductsList = action.payload.data;
+      })
+      .addCase(getAllCustomerAddedProductList.rejected, (state, action) => {
+        state.loading = false;
+        state.error = action.payload.message;
+      })
+      .addCase(getSingleProductView.pending, (state) => {
+        state.loading = true;
+      })
+      .addCase(getSingleProductView.fulfilled, (state, action) => {
+        state.loading = false;
+        state.singleCustomerView = action.payload.data;
+      })
+      .addCase(getSingleProductView.rejected, (state, action) => {
+        state.loading = false;
+        state.error = action.payload.message;
+      })
+
+      .addCase(deleteCustomerProduct.pending, (state) => {
+        state.isLoading = true;
+      })
+      .addCase(deleteCustomerProduct.fulfilled, (state, action) => {
+        state.isLoading = false;
+        const {
+          arg: { stock_id },
+        } = action.meta;
+        if (stock_id) {
+          state.allCustomerProductsList = state.allCustomerProductsList.filter(
+            (item) => item.id !== stock_id
+          );
+        }
+      })
+      .addCase(deleteCustomerProduct.rejected, (state, action) => {
+        state.isLoading = false;
+        state.isError = action.payload.message;
+      })
+      .addCase(deleteMultipleCustomer.pending, (state) => {
+        state.isProcessing = true;
+      })
+      .addCase(deleteMultipleCustomer.fulfilled, (state, action) => {
+        state.isProcessing = false;
+        const {
+          arg: { stock_ids },
+        } = action.meta;
+        if (Array.isArray(stock_ids) && stock_ids.length > 0) {
+          state.allCustomerProductsList = state.allCustomerProductsList.filter(
+            (item) => !stock_ids.includes(item.product_id)
+          );
+        }
+      })
+      .addCase(deleteMultipleCustomer.rejected, (state, action) => {
+        state.isProcessing = false;
+        state.isError = action.payload.message;
+      })
+
+      .addCase(verifiedCustomerProduct.pending, (state) => {
+        state.isLoading = true;
+      })
+      .addCase(verifiedCustomerProduct.fulfilled, (state, action) => {
+        state.isLoading = false;
+        state.verificationSuccess = true;
+        state.verifiedCustomerProduct = action.payload.data;
+      })
+      .addCase(verifiedCustomerProduct.rejected, (state, action) => {
+        state.isLoading = false;
+        state.verificationSuccess = false;
+        state.error = action.payload.message;
+      })
+      .addCase(allProductComplaints.pending, (state) => {
+        state.loading = true;
+      })
+      .addCase(allProductComplaints.fulfilled, (state, action) => {
+        state.loading = false;
+        state.productComplaints = action.payload.data;
+      })
+      .addCase(allProductComplaints.rejected, (state, action) => {
+        state.loading = false;
+        state.error = action.payload.message;
+      })
+
+      .addCase(getSingleProductComplaint.pending, (state) => {
+        state.loading = true;
+      })
+      .addCase(getSingleProductComplaint.fulfilled, (state, action) => {
+        state.loading = false;
+        state.productComplaint = action.payload.data;
+      })
+      .addCase(getSingleProductComplaint.rejected, (state, action) => {
+        state.loading = false;
+        state.error = action.payload.message;
+      })
+      .addCase(deleteProductComplaint.pending, (state) => {
+        state.isLoading = true;
+      })
+      .addCase(deleteProductComplaint.fulfilled, (state, action) => {
+        state.isLoading = false;
+        const {
+          arg: { complaint_id },
+        } = action.meta;
+        if (complaint_id) {
+          state.productComplaints = state.productComplaints.filter(
+            (item) => item.id !== complaint_id
+          );
+        }
+      })
+      .addCase(deleteProductComplaint.rejected, (state, action) => {
+        state.isLoading = false;
+        state.error = action.payload.message;
+      })
+      .addCase(deleteMultipleProductComplaints.pending, (state) => {
+        state.isProcessing = true;
+      })
+      .addCase(deleteMultipleProductComplaints.fulfilled, (state, action) => {
+        state.isProcessing = false;
+        const {
+          arg: { complaint_ids },
+        } = action.meta;
+        if (Array.isArray(complaint_ids) && complaint_ids.length > 0) {
+          state.productComplaints = state.productComplaints.filter(
+            (item) => !complaint_ids.includes(item.product_id)
+          );
+        }
+      })
+      .addCase(deleteMultipleProductComplaints.rejected, (state, action) => {
+        state.isProcessing = false;
+        state.error = action.payload.message;
+      })
+      .addCase(addCrmContent.pending, (state) => {
+        state.isLoading = true;
+      })
+      .addCase(addCrmContent.fulfilled, (state, action) => {
+        state.isLoading = false;
+        state.addCrm = action.payload.serviceData;
+      })
+      .addCase(addCrmContent.rejected, (state, action) => {
+        state.isLoading = false;
+        state.isError = action.payload.msg;
+      })
+      .addCase(getAllTrackingProducts.pending, (state) => {
+        state.loading = true;
+      })
+      .addCase(getAllTrackingProducts.fulfilled, (state, action) => {
+        state.loading = false;
+        state.trackingProducts = action.payload.data;
+      })
+      .addCase(getAllTrackingProducts.rejected, (state, action) => {
+        state.loading = false;
+        state.error = action.payload.message;
+      })
+      .addCase(singleTrackingProductByID.pending, (state) => {
+        state.loading = true;
+      })
+      .addCase(singleTrackingProductByID.fulfilled, (state, action) => {
+        state.loading = false;
+        state.trackingProduct = action.payload.data;
+      })
+      .addCase(singleTrackingProductByID.rejected, (state, action) => {
+        state.loading = false;
+        state.error = action.payload.message;
+      });
+  },
+});
+
+export const { clearCustomerError } = customerSlice.actions;
+
+export default customerSlice.reducer;

@@ -1,0 +1,105 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+.floating {
+  animation: floating 5s ease-in-out infinite;
+}
+
+.ql-editor {
+  @apply text-sm font-gothamNarrow;
+}
+
+@keyframes floating {
+  0% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(-15px);
+  }
+  100% {
+    transform: translateY(0);
+  }
+}
+.vertical-timeline-element-title {
+  color: #ff5252;
+}
+
+.vertical-timeline-element-content {
+  background: #f0f0f0;
+}
+.vertical-timeline::before {
+  background: #ff5252;
+  width: 2px;
+}
+
+/* CSS Reset */
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+html,
+body {
+  font-family: "Gotham Narrow", sans-serif;
+
+  height: 100%;
+  width: 100%;
+  margin: 0;
+  padding: 0;
+}
+
+body {
+  overflow-x: hidden;
+}
+
+html {
+  scroll-behavior: smooth;
+}
+
+/* Hide default eye icon for password input fields */
+input[type="password"]::-ms-reveal,
+input[type="password"]::-webkit-contacts-auto-fill-button,
+input[type="password"]::-webkit-inner-spin-button {
+  display: none;
+}
+
+/* Hide media controls for video player */
+.video-player::-webkit-media-controls {
+  display: none !important;
+}
+
+.video-player::-webkit-media-controls-start-playback-button {
+  display: none !important;
+}
+
+.video-player::-webkit-media-controls-overlay-enclosure {
+  display: none !important;
+}
+
+/* Updated to use :state(webkit-media-controls-panel) */
+.video-player:state(webkit-media-controls-panel) {
+  display: none !important;
+}
+/* CustomToastContainer.css */
+.custom-toast-container .Toastify__toast {
+  width: 450px;
+}
+
+@layer utilities {
+  .animate-moveUpDown {
+    animation: moveUpDown 2s ease-in-out infinite alternate-reverse both;
+  }
+}
+
+@keyframes moveUpDown {
+  0% {
+    transform: translateY(10px);
+  }
+  100% {
+    transform: translateY(-10px);
+  }
+}

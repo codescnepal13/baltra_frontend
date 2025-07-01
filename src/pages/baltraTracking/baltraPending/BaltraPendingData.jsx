@@ -1,0 +1,48 @@
+import TrackingBaltraImage from "../../../assets/images/trackingCardImage.png";
+
+export const items = [
+  {
+    id: 1,
+    ModelName: "Blender: Crush 3",
+    ModelNumber: 1397438432,
+    JobID: "BMG 174",
+    SentFor: "Repair",
+    Complaint: "Blender is broken",
+    ComplaintStage: "Pending",
+    ComplaintDate: "24th March, 2024",
+    trackingImage: TrackingBaltraImage,
+  },
+  {
+    id: 2,
+    ModelName: "Blender: Crush 3",
+    ModelNumber: 1397438432,
+    JobID: "BMG 174",
+    SentFor: "Repair",
+    Complaint: "Blender is broken",
+    ComplaintStage: "Pending",
+    ComplaintDate: "24th March, 2024",
+    trackingImage: TrackingBaltraImage,
+  },
+  {
+    id: 3,
+    ModelName: "Blender: Crush 3",
+    ModelNumber: 1397438432,
+    JobID: "BMG 174",
+    SentFor: "Repair",
+    Complaint: "Blender is broken",
+    ComplaintStage: "Pending",
+    ComplaintDate: "24th March, 2024",
+    trackingImage: TrackingBaltraImage,
+  },
+  {
+    id: 4,
+    ModelName: "Blender: Crush 3",
+    ModelNumber: 1397438432,
+    JobID: "BMG 174",
+    SentFor: "Repair",
+    Complaint: "Blender is broken",
+    ComplaintStage: "Pending",
+    ComplaintDate: "24th March, 2024",
+    trackingImage: TrackingBaltraImage,
+  },
+];

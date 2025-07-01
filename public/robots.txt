@@ -1,0 +1,11 @@
+User-agent: *
+Disallow: /baltra-admin-dashboard/
+Disallow: /cart/
+Disallow: /checkout/
+Disallow: /baltra-profileInformation/
+
+# Allow everything else
+Allow: /
+
+# Sitemap location
+Sitemap: https://www.baltra.com/sitemap.xml
