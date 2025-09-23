@@ -1,7 +1,7 @@
-import React, { memo, useEffect, useState } from "react";
+import { enqueueSnackbar } from "notistack";
+import React, { useEffect, useState } from "react";
 import { FaTimes } from "react-icons/fa";
 import { useDispatch, useSelector } from "react-redux";
-import { toast } from "react-toastify";
 import {
   addBulkQuote,
   clearProductError,
@@ -44,19 +44,23 @@ const BaltraQuoteModal = ({
         description,
         quantity,
       };
-      dispatch(addBulkQuote({ data, toast })).then((error) => {
+      dispatch(addBulkQuote({ data, enqueueSnackbar })).then((error) => {
         if (!result.error) {
           QuoteCloseModal();
         }
       });
     } else {
-      toast.info("Please correct the errors before submitting!");
+      enqueueSnackbar("Please correct the errors before submitting", {
+        variant: "error",
+      });
     }
   };
 
   useEffect(() => {
     if (error) {
-      toast.error(error);
+      enqueueSnackbar(error, {
+        variant: "error",
+      });
       dispatch(clearProductError());
     }
   }, [error, dispatch]);
@@ -199,4 +203,4 @@ const BaltraQuoteModal = ({
   );
 };
 
-export default memo(BaltraQuoteModal);
+export default React.memo(BaltraQuoteModal);

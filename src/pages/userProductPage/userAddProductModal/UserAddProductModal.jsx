@@ -1,15 +1,16 @@
+import { enqueueSnackbar } from "notistack";
 import React, { useEffect, useState } from "react";
 import { FaTimes } from "react-icons/fa";
 import { MdOutlineAddHomeWork } from "react-icons/md";
 import { useDispatch, useSelector } from "react-redux";
+import { toast } from "react-toastify";
 import {
   baltraCustomerAdd,
   clearProductError,
 } from "../../../redux/features/product/productSlice";
-import { toast } from "react-toastify";
 
 const UserAddProductModal = ({ handleClose }) => {
-  const { loading, error, success } = useSelector((state) => state.product);
+  const { loading, error } = useSelector((state) => state.product);
   const dispatch = useDispatch();
   const [customerAddValue, setCustomerAddValue] = useState({
     store_name: "",
@@ -69,12 +70,7 @@ const UserAddProductModal = ({ handleClose }) => {
     if (!model_num) {
       newErrors.model_num = "ModelNumber is required!";
     }
-    // if (!warranty_issue) {
-    //   newErrors.warranty_issue = "please select warrantyIssue Date!";
-    // }
-    // if (!warranty_expiry) {
-    //   newErrors.warranty_expiry = "please select warrantyExpire Date!";
-    // }
+
     if (!purchase_date) {
       newErrors.purchase_date = "PurchaseDate is required!";
     }
@@ -152,13 +148,17 @@ const UserAddProductModal = ({ handleClose }) => {
     formData.append("warranty_image", warranty_image);
 
     if (validatedForm()) {
-      dispatch(baltraCustomerAdd({ formData, toast })).then((result) => {
-        if (!result.error) {
-          handleClose();
+      dispatch(baltraCustomerAdd({ formData, enqueueSnackbar })).then(
+        (result) => {
+          if (!result.error) {
+            handleClose();
+          }
         }
-      });
+      );
     } else {
-      return toast.warn("Invalid Input");
+      return enqueueSnackbar("Invalid Input", {
+        variant: "error",
+      });
     }
   };
 
@@ -448,53 +448,7 @@ const UserAddProductModal = ({ handleClose }) => {
                 )}
               </div>
             </div>
-
-            {/* <div className="flex-1 w-full flex flex-col justify-start items-start mt-4 md:mt-0">
-              <div className="w-full">
-                <label
-                  className="block font-gothamNarrow text-sm text-black mb-2"
-                  htmlFor="warranty_issue"
-                >
-                  Warranty Issues
-                </label>
-                <input
-                  className="appearance-none w-full font-gothamNarrow text-black p-2 bg-white border border-[#4B4646] rounded-sm py-3 px-4 leading-tight focus:outline-none focus:border-red-600 tracking-normal"
-                  id="warranty_issue"
-                  name="warranty_issue"
-                  type="date"
-                  value={warranty_issue}
-                  onChange={handleChange}
-                />
-                {customerErr && (
-                  <p className="text-red-600 text-xs font-gothamNarrow">
-                    {customerErr.warranty_issue}
-                  </p>
-                )}
-              </div>
-            </div> */}
           </div>
-
-          {/* <div className="w-full mt-3">
-            <label
-              className="block font-gothamNarrow text-sm text-black mb-2"
-              htmlFor="warranty_expiry"
-            >
-              Warranty Expiry
-            </label>
-            <input
-              className="appearance-none w-full font-gothamNarrow text-black p-2 bg-white border border-[#4B4646] rounded-sm py-3 px-4 leading-tight focus:outline-none focus:border-red-600 tracking-normal"
-              id="warranty_expiry"
-              name="warranty_expiry"
-              type="date"
-              value={warranty_expiry}
-              onChange={handleChange}
-            />
-            {customerErr && (
-              <p className="text-red-600 text-xs font-gothamNarrow">
-                {customerErr.warranty_expiry}
-              </p>
-            )}
-          </div> */}
 
           <div className="w-full flex items-center mt-6">
             <button
@@ -516,4 +470,4 @@ const UserAddProductModal = ({ handleClose }) => {
   );
 };
 
-export default UserAddProductModal;
+export default React.memo(UserAddProductModal);

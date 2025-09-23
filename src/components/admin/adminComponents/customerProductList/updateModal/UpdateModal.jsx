@@ -1,3 +1,4 @@
+import { enqueueSnackbar } from "notistack";
 import React, { useEffect, useState } from "react";
 import { FaTimes } from "react-icons/fa";
 import { useDispatch, useSelector } from "react-redux";
@@ -5,7 +6,6 @@ import {
   clearCustomerError,
   verifiedCustomerProduct,
 } from "../../../../../redux/features/customer/customerSlice";
-import { toast } from "react-toastify";
 
 const UpdateModal = ({ item, onClose, verificationSuccess }) => {
   const { isLoading, error } = useSelector((state) => state.customer);
@@ -27,7 +27,7 @@ const UpdateModal = ({ item, onClose, verificationSuccess }) => {
       };
     }
 
-    await dispatch(verifiedCustomerProduct({ data, toast }));
+    await dispatch(verifiedCustomerProduct({ data, enqueueSnackbar }));
     if (verificationSuccess) {
       onClose();
     }
@@ -35,7 +35,9 @@ const UpdateModal = ({ item, onClose, verificationSuccess }) => {
 
   useEffect(() => {
     if (error) {
-      toast.error(error);
+      enqueueSnackbar(error, {
+        variant: "error",
+      });
       dispatch(clearCustomerError());
     }
   }, [error, dispatch]);
@@ -101,4 +103,4 @@ const UpdateModal = ({ item, onClose, verificationSuccess }) => {
   );
 };
 
-export default UpdateModal;
+export default React.memo(UpdateModal);

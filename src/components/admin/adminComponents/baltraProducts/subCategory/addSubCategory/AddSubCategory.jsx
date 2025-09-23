@@ -1,16 +1,16 @@
-import React, { useEffect, useState } from "react";
+import { enqueueSnackbar } from "notistack";
+import { useEffect, useState } from "react";
+import { useForm } from "react-hook-form";
+import { FaInfoCircle } from "react-icons/fa";
 import { HiOutlineArrowLeftCircle } from "react-icons/hi2";
+import { IoCloudUploadOutline } from "react-icons/io5";
+import { useDispatch, useSelector } from "react-redux";
 import { Link, useNavigate } from "react-router-dom";
 import {
   addSubCategory,
   clearAdminError,
   dropdownCategory,
 } from "../../../../../../redux/features/admin/adminSlice";
-import { useForm } from "react-hook-form";
-import { useDispatch, useSelector } from "react-redux";
-import { IoCloudUploadOutline } from "react-icons/io5";
-import { toast } from "react-toastify";
-import { FaInfoCircle } from "react-icons/fa";
 
 const AddSubCategory = () => {
   const { loading, error, dropdownCategories } = useSelector(
@@ -51,16 +51,21 @@ const AddSubCategory = () => {
     formData.append("category_id", data.category_id);
     if (image) formData.append("image", image);
 
-    dispatch(addSubCategory({ formData, toast, navigate }));
+    dispatch(addSubCategory({ formData, enqueueSnackbar, navigate }));
   };
 
   useEffect(() => {
     if (error) {
-      toast.error(error);
+      enqueueSnackbar(error, {
+        variant: "error",
+      });
       dispatch(clearAdminError());
     }
-    dispatch(dropdownCategory());
   }, [dispatch, error]);
+
+  useEffect(() => {
+    dispatch(dropdownCategory());
+  }, [dispatch]);
 
   return (
     <>

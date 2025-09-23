@@ -1,13 +1,14 @@
+import { enqueueSnackbar } from "notistack";
 import React, { useEffect, useState } from "react";
-import StarRating from "./starRating/StarRating";
-import ProductReviewSection from "./productReviewSection/ProductReviewSection";
-import { useSelector, useDispatch } from "react-redux";
+import { useDispatch, useSelector } from "react-redux";
+import { toast } from "react-toastify";
 import {
   addRatingReview,
   allRatingsReviewsById,
   clearProductError,
 } from "../../../../redux/features/product/productSlice";
-import { toast } from "react-toastify";
+import ProductReviewSection from "./productReviewSection/ProductReviewSection";
+import StarRating from "./starRating/StarRating";
 
 const RatingReviewsSection = () => {
   const dispatch = useDispatch();
@@ -68,12 +69,14 @@ const RatingReviewsSection = () => {
         review,
       };
 
-      dispatch(addRatingReview({ data, product_id: id, toast }));
+      dispatch(addRatingReview({ data, product_id: id, enqueueSnackbar }));
 
       setRating(0);
       setReview("");
     } else {
-      toast.warn("Invalid Input");
+      enqueueSnackbar("Invalid Input", {
+        variant: "error",
+      });
     }
   };
 
@@ -85,7 +88,9 @@ const RatingReviewsSection = () => {
 
   useEffect(() => {
     if (error) {
-      toast.error();
+      enqueueSnackbar(error, {
+        variant: "error",
+      });
       dispatch(clearProductError());
     }
   }, [dispatch, error]);
@@ -221,4 +226,4 @@ const RatingReviewsSection = () => {
   );
 };
 
-export default RatingReviewsSection;
+export default React.memo(RatingReviewsSection);

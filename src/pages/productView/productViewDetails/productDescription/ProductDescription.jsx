@@ -1,6 +1,6 @@
 import React, { useState } from "react";
-import ProductSpecification from "./specification/ProductSpecification";
 import Sizing from "./sizing/Sizing";
+import ProductSpecification from "./specification/ProductSpecification";
 import Usage from "./usage/Usage";
 
 const ProductDescription = ({ singleProduct }) => {
@@ -71,4 +71,4 @@ const ProductDescription = ({ singleProduct }) => {
   );
 };
 
-export default ProductDescription;
+export default React.memo(ProductDescription);

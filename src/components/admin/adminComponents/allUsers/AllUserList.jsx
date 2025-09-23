@@ -1,17 +1,17 @@
-import React, { useCallback, useEffect, useState } from "react";
-import UserPagination from "../adminPagination/userPagination/UserPagination";
+import moment from "moment";
+import { enqueueSnackbar } from "notistack";
+import { useCallback, useEffect, useState } from "react";
+import { FaPencilAlt, FaSearch, FaTrashAlt } from "react-icons/fa";
+import { FaTrash } from "react-icons/fa6";
+import { useDispatch, useSelector } from "react-redux";
+import { Link } from "react-router-dom";
 import {
   clearAdminError,
   deleteMultipleUsersRole,
   deleteUserRole,
   getAllUserList,
 } from "../../../../redux/features/admin/adminSlice";
-import { useDispatch, useSelector } from "react-redux";
-import { Link } from "react-router-dom";
-import { FaPencilAlt, FaSearch, FaTrashAlt } from "react-icons/fa";
-import { toast } from "react-toastify";
-import moment from "moment";
-import { FaTrash } from "react-icons/fa6";
+import UserPagination from "../adminPagination/userPagination/UserPagination";
 import DeleteUserPopUp from "./deleteUserPopUp/DeleteUserPopUp";
 
 const AllUserList = () => {
@@ -48,7 +48,7 @@ const AllUserList = () => {
       dispatch(
         deleteMultipleUsersRole({
           user_ids: selectedUsersId,
-          toast,
+          enqueueSnackbar,
         })
       ).then(() => {
         dispatch(getAllUserList(page));
@@ -67,7 +67,7 @@ const AllUserList = () => {
   };
   const handleDeleteConfirm = () => {
     if (selectedUserId !== null) {
-      dispatch(deleteUserRole({ user_id: selectedUserId, toast }));
+      dispatch(deleteUserRole({ user_id: selectedUserId, enqueueSnackbar }));
       setSelectedUserId(null);
     }
   };

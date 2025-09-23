@@ -25,10 +25,12 @@ import API from "../../api/api";
 //MobileVerify
 export const mobileVerify = createAsyncThunk(
   "/auth/mobileVerify",
-  async ({ mobileData, toast, navigate }, { rejectWithValue }) => {
+  async ({ mobileData, enqueueSnackbar, navigate }, { rejectWithValue }) => {
     try {
       const response = await API.post(`/customer/requestotp`, mobileData);
-      toast.success(response.data.message || "verify Your OTP!");
+      enqueueSnackbar(response.data.message || "Please verify Your OTP!", {
+        variant: "success",
+      });
       if (response.data.data && response.data.data.is_verified) {
         navigate("/baltra-account-signUp");
       } else {
@@ -44,10 +46,12 @@ export const mobileVerify = createAsyncThunk(
 //OTPVerify
 export const verifyOTP = createAsyncThunk(
   "/auth/verifyOTP",
-  async ({ OTPData, toast, navigate }, { rejectWithValue }) => {
+  async ({ OTPData, enqueueSnackbar, navigate }, { rejectWithValue }) => {
     try {
       const response = await API.post(`/customer/verifyotp`, OTPData);
-      toast.success(response.data.message || "OTP has been verified!");
+      enqueueSnackbar(response.data.message || "OTP Has been verified!", {
+        variant: "success",
+      });
       navigate("/baltra-account-signUp");
       return response.data;
     } catch (error) {
@@ -59,10 +63,12 @@ export const verifyOTP = createAsyncThunk(
 //register
 export const baltraRegister = createAsyncThunk(
   "/baltra-register",
-  async ({ registerData, toast, navigate }, { rejectWithValue }) => {
+  async ({ registerData, enqueueSnackbar, navigate }, { rejectWithValue }) => {
     try {
       const response = await API.post(`/customer/register`, registerData);
-      toast.success(response.data.message || "auth register success!");
+      enqueueSnackbar(response.data.message || "Register successful!", {
+        variant: "success",
+      });
       navigate("/baltra-aboutUs-Page");
       return response.data;
     } catch (error) {
@@ -74,10 +80,12 @@ export const baltraRegister = createAsyncThunk(
 //login
 export const baltraLogin = createAsyncThunk(
   "/baltra-login",
-  async ({ loginData, toast, navigate }, { rejectWithValue }) => {
+  async ({ loginData, enqueueSnackbar, navigate }, { rejectWithValue }) => {
     try {
       const response = await API.post(`/customer/login`, loginData);
-      toast.success(response.data.message || "auth login success!");
+      enqueueSnackbar(response.data.message || "Auth Login success!", {
+        variant: "success",
+      });
       if (response.data.data && response.data.data.role === "admin") {
         navigate("/baltra-admin-dashboard");
       } else {
@@ -93,13 +101,15 @@ export const baltraLogin = createAsyncThunk(
 //forgotPassword
 export const forgotPassword = createAsyncThunk(
   "/auth/baltra-forgotPassword",
-  async ({ forgotData, toast, navigate }, { rejectWithValue }) => {
+  async ({ forgotData, enqueueSnackbar, navigate }, { rejectWithValue }) => {
     try {
       const response = await API.post(
         `/customer/requestpasswordreset`,
         forgotData
       );
-      toast.success(response.data.message || "please verify your OTP!");
+      enqueueSnackbar(response.data.message || "Please verify Your OTP!", {
+        variant: "success",
+      });
       navigate("/baltra-resetOtpVerify");
       return response.data;
     } catch (error) {
@@ -111,10 +121,12 @@ export const forgotPassword = createAsyncThunk(
 //verifyResetOTP
 export const verifyResetOTP = createAsyncThunk(
   "/auth/baltra-verifyResetOTP",
-  async ({ OTPData, toast, navigate }, { rejectWithValue }) => {
+  async ({ OTPData, enqueueSnackbar, navigate }, { rejectWithValue }) => {
     try {
       const response = await API.post(`/customer/resetverifyotp`, OTPData);
-      toast.success(response.data.message || "OTP has been verified!");
+      enqueueSnackbar(response.data.message || "OTP has been verified!", {
+        variant: "success",
+      });
       navigate("/baltra-resetPassword");
       return response.data;
     } catch (error) {
@@ -126,10 +138,12 @@ export const verifyResetOTP = createAsyncThunk(
 //resetPassword
 export const resetPassword = createAsyncThunk(
   "/auth/baltra-resetPassword",
-  async ({ resetData, toast, navigate }, { rejectWithValue }) => {
+  async ({ resetData, enqueueSnackbar, navigate }, { rejectWithValue }) => {
     try {
       const response = await API.put(`/customer/resetpassword`, resetData);
-      toast.success(response.data.message || "password reset successFully!");
+      enqueueSnackbar(response.data.message || "Password reset successFully!", {
+        variant: "success",
+      });
       navigate("/baltra-account-signin");
       return response.data;
     } catch (error) {
@@ -154,10 +168,12 @@ export const getProfileMe = createAsyncThunk(
 // updateProfile
 export const updateProfile = createAsyncThunk(
   "/auth/updateProfile",
-  async ({ formData, toast }, { rejectWithValue, dispatch }) => {
+  async ({ formData, enqueueSnackbar }, { rejectWithValue, dispatch }) => {
     try {
       const response = await API.put(`/customer/updateprofile`, formData);
-      toast.success(response.data.message || "profile update success!");
+      enqueueSnackbar(response.data.message || "Profile update successFully!", {
+        variant: "success",
+      });
       dispatch(getProfileMe());
       return response.data;
     } catch (error) {
@@ -170,7 +186,7 @@ export const updateProfile = createAsyncThunk(
 export const changePassword = createAsyncThunk(
   "/auth/changePassword",
   async (
-    { editPasswordData, toast, navigate },
+    { editPasswordData, enqueueSnackbar, navigate },
     { rejectWithValue, dispatch }
   ) => {
     try {
@@ -178,7 +194,12 @@ export const changePassword = createAsyncThunk(
         `/customer/changepassword`,
         editPasswordData
       );
-      toast.success(response.data.message || "password changed successFully!");
+      enqueueSnackbar(
+        response.data.message || "password changed successFully!",
+        {
+          variant: "success",
+        }
+      );
       dispatch(setLogout());
       navigate("/baltra-account-signin");
       return response.data;
@@ -191,10 +212,15 @@ export const changePassword = createAsyncThunk(
 //updateMemberShipStatus
 export const updateMemberShipStatus = createAsyncThunk(
   "/auth/updateMemberShipStatus",
-  async ({ data, toast }, { rejectWithValue, dispatch }) => {
+  async ({ data, enqueueSnackbar }, { rejectWithValue, dispatch }) => {
     try {
       const response = await API.post(`/customer/enablemembership`, data);
-      toast.success(response.data.message || "membership update success!");
+      enqueueSnackbar(
+        response.data.message || "membership updated successFully!",
+        {
+          variant: "success",
+        }
+      );
       dispatch(getProfileMe());
       return response.data;
     } catch (error) {

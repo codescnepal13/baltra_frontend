@@ -1,14 +1,16 @@
+import { enqueueSnackbar } from "notistack";
 import React, { useEffect, useState } from "react";
 import { FaTimes } from "react-icons/fa";
 import { MdOutlineAddHomeWork } from "react-icons/md";
 import ReactQuill from "react-quill";
+import "react-quill/dist/quill.snow.css";
 import { useDispatch, useSelector } from "react-redux";
+import { useNavigate } from "react-router-dom";
 import {
   addRegisteredComplaint,
   clearProductError,
 } from "../../../redux/features/product/productSlice";
-import { useNavigate } from "react-router-dom";
-import { toast } from "react-toastify";
+
 import { DistrictsData } from "./districtCityJson/Data";
 const AddRegisteredComplaintModal = ({ handleClose, complaintDetails }) => {
   const { isProcessing, error } = useSelector((state) => state.product);
@@ -135,44 +137,6 @@ const AddRegisteredComplaintModal = ({ handleClose, complaintDetails }) => {
   const removeDescriptionParagraphTags = (product_description) => {
     return product_description.replace(/<p[^>]*>|<\/p>/g, "");
   };
-
-  // const handleSubmit = (e) => {
-  //   e.preventDefault();
-  //   if (validatedForm()) {
-  //     const formData = new FormData();
-  //     formData.append("model_name", model_name);
-  //     formData.append("modelCode", modelCode);
-  //     formData.append("serial_number", serial_number);
-  //     formData.append("problem_type", problem_type);
-  //     formData.append("problem_description", problem_description);
-  //     formData.append("damaged_image", damaged_image);
-  //     formData.append("damaged_Video", damaged_Video);
-  //     formData.append("warranty_image", warranty_image);
-  //     formData.append("customerAddress", customer?.customerAddress);
-  //     formData.append("district", customer?.district);
-  //     formData.append("city", customer?.city);
-  //     formData.append("customerContact", customer?.contact);
-  //     formData.append("email", customer?.email);
-  //     formData.append(
-  //       "customerName",
-  //       `${customer?.firstname} ${customer?.lastname}`
-  //     );
-
-  //     dispatch(
-  //       addRegisteredComplaint({
-  //         stock_id: customerId,
-  //         formData,
-  //         toast,
-  //         navigate,
-  //       })
-  //     ).then((result) => {
-  //       if (!result.error) {
-  //         handleClose();
-  //       }
-  //     });
-  //   }
-  // };
-
   const handleSubmit = (e) => {
     e.preventDefault();
     if (validatedForm()) {
@@ -201,7 +165,7 @@ const AddRegisteredComplaintModal = ({ handleClose, complaintDetails }) => {
         addRegisteredComplaint({
           stock_id: complaintDetails?.customerId,
           formData,
-          toast,
+          enqueueSnackbar,
           navigate,
         })
       ).then((result) => {
@@ -213,7 +177,9 @@ const AddRegisteredComplaintModal = ({ handleClose, complaintDetails }) => {
   };
   useEffect(() => {
     if (error) {
-      toast.error(error);
+      enqueueSnackbar(error, {
+        variant: "error",
+      });
       dispatch(clearProductError());
     }
   }, [dispatch, error]);
@@ -505,4 +471,4 @@ const AddRegisteredComplaintModal = ({ handleClose, complaintDetails }) => {
   );
 };
 
-export default AddRegisteredComplaintModal;
+export default React.memo(AddRegisteredComplaintModal);

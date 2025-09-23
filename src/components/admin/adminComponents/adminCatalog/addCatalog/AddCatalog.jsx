@@ -1,4 +1,5 @@
-import React, { useEffect, useState } from "react";
+import { enqueueSnackbar } from "notistack";
+import { useEffect, useState } from "react";
 import { FaInfoCircle } from "react-icons/fa";
 import { HiOutlineArrowLeftCircle } from "react-icons/hi2";
 import { IoCloudUploadOutline } from "react-icons/io5";
@@ -8,7 +9,6 @@ import {
   addProductCatalog,
   clearAdminError,
 } from "../../../../../redux/features/admin/adminSlice";
-import { toast } from "react-toastify";
 
 const AddCatalog = () => {
   const { loading, error } = useSelector((state) => state.admin);
@@ -92,12 +92,14 @@ const AddCatalog = () => {
     formData.append("catalogue_type", catalogue_type);
     formData.append("catalogue_image", catalogue_image);
 
-    dispatch(addProductCatalog({ formData, toast, navigate }));
+    dispatch(addProductCatalog({ formData, enqueueSnackbar, navigate }));
   };
 
   useEffect(() => {
     if (error) {
-      toast.error(error);
+      enqueueSnackbar(error, {
+        variant: "error",
+      });
       dispatch(clearAdminError());
     }
   }, [dispatch, error]);

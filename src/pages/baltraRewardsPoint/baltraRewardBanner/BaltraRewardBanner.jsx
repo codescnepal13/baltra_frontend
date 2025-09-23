@@ -1,15 +1,15 @@
-import React, { useEffect } from "react";
+import { enqueueSnackbar } from "notistack";
+import { useEffect } from "react";
 import { FaArrowRight } from "react-icons/fa";
-import UserProductHeader from "../../userProductPage/userProductHeader/UserProductHeader";
-import UserProductBannerImg from "../../../assets/images/userProductBannerImg.png";
-import rewardMedalImg from "../../../assets/images/rewardMedalImg.png";
-import baltraBoyImg from "../../../assets/images/baltraBoyImg.png";
 import { useDispatch, useSelector } from "react-redux";
+import baltraBoyImg from "../../../assets/images/baltraBoyImg.png";
+import rewardMedalImg from "../../../assets/images/rewardMedalImg.png";
+import UserProductBannerImg from "../../../assets/images/userProductBannerImg.png";
 import {
   addRedeemPoint,
   clearProductError,
 } from "../../../redux/features/product/productSlice";
-import { toast } from "react-toastify";
+import UserProductHeader from "../../userProductPage/userProductHeader/UserProductHeader";
 
 const BaltraRewardBanner = ({
   rewardPointValue,
@@ -18,7 +18,7 @@ const BaltraRewardBanner = ({
 }) => {
   const { isLoading, error } = useSelector((state) => state.product);
   const dispatch = useDispatch();
-  const { reward_points, tier_status } = rewardPointValue || {};
+  const { reward_points } = rewardPointValue || {};
 
   const handleRedeemPoint = (e) => {
     e.preventDefault();
@@ -27,12 +27,14 @@ const BaltraRewardBanner = ({
       price: warranty_details.price,
       duration: warranty_details.duration,
     };
-    dispatch(addRedeemPoint({ data, toast }));
+    dispatch(addRedeemPoint({ data, enqueueSnackbar }));
   };
 
   useEffect(() => {
     if (error) {
-      toast.error(error);
+      enqueueSnackbar(error, {
+        variant: "error",
+      });
       dispatch(clearProductError());
     }
   }, [dispatch, error]);

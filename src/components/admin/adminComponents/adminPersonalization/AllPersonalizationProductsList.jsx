@@ -1,16 +1,16 @@
-import React, { useEffect, useState } from "react";
-import { FaInfoCircle } from "react-icons/fa";
-import { Link } from "react-router-dom";
-import MetaData from "../../../layout/metaData/MetaData";
+import moment from "moment";
+import { enqueueSnackbar } from "notistack";
+import { useEffect, useState } from "react";
+import { FaInfoCircle, FaSyncAlt } from "react-icons/fa";
+import { FaEye, FaTrash } from "react-icons/fa6";
 import { useDispatch, useSelector } from "react-redux";
+import { Link } from "react-router-dom";
 import {
   allCustomizedPersonalization,
   clearAdminError,
   deleteCustomizedProduct,
 } from "../../../../redux/features/admin/adminSlice";
-import moment from "moment";
-import { FaEye, FaTrash } from "react-icons/fa6";
-import { toast } from "react-toastify";
+import MetaData from "../../../layout/metaData/MetaData";
 import DeletePersonalizationModal from "./DeletePersonalizationModal";
 import UpdateCustomizedModal from "./UpdateCustomizedModal";
 
@@ -48,12 +48,25 @@ const AllPersonalizationProductsList = () => {
       dispatch(
         deleteCustomizedProduct({
           personalization_id: selectedCustomizeId,
-          toast,
+          enqueueSnackbar,
         })
       );
       setSelectedCustomizedId(null);
     }
   };
+
+  const handleReset = () => {
+    setSelectPlacement("All");
+    setSelectedCustomizedId(null);
+    setSelectedItem(null);
+
+    dispatch(
+      allCustomizedPersonalization({
+        placement: "",
+      })
+    );
+  };
+
   useEffect(() => {
     if (error) {
       dispatch(clearAdminError());
@@ -61,7 +74,9 @@ const AllPersonalizationProductsList = () => {
   }, [dispatch, error]);
   useEffect(() => {
     if (isError) {
-      toast.error(isError);
+      enqueueSnackbar(isError, {
+        variant: "error",
+      });
       dispatch(clearAdminError());
     }
   }, [dispatch, isError]);
@@ -104,15 +119,18 @@ const AllPersonalizationProductsList = () => {
                 <option value="vertical">Vertical</option>
               </select>
             </div>
+            <button
+              className="flex cursor-pointer items-center gap-1 px-4 py-2 text-sm border border-gray-300 rounded-md hover:bg-gray-50 transition-colors"
+              onClick={handleReset}
+            >
+              <FaSyncAlt className="text-gray-500" /> Reset
+            </button>
           </div>
 
           <div className="bg-white font-sans table-container hide-scrollbar overflow-x-auto">
             <table className="min-w-full divide-y divide-gray-200 border border-gray-300">
               <thead className="font-gothamNarrow">
                 <tr>
-                  <th className="px-4 py-3 text-left text-sm font-semibold text-black border-l border-r whitespace-nowrap accent-red-500">
-                    <input type="checkbox" />
-                  </th>
                   <th className="px-4 py-1 text-left text-sm font-semibold text-black font-gothamNarrow">
                     S.N.
                   </th>
@@ -167,9 +185,6 @@ const AllPersonalizationProductsList = () => {
                       key={customizeProduct.id}
                       className="hover:bg-[#FFF0E5] hover:shadow-sm whitespace-nowrap border-t border-b border-r border-l border-gray-300 cursor-pointer"
                     >
-                      <td className="px-4 py-2 font-gothamNarrow text-sm font-semibold text-black whitespace-nowrap border-gray-300 border-l border-r accent-red-500">
-                        <input type="checkbox" />
-                      </td>
                       <td className="px-4 py-1 text-left text-sm text-black font-gothamNarrow border-l whitespace-nowrap">
                         {index + 1}
                       </td>

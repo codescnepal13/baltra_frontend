@@ -1,6 +1,6 @@
 import React from "react";
-import RiceCookerImg from "../../../../assets/images/RiceCookerImg.png";
 import FanImg from "../../../../assets/images/FanImg.png";
+import RiceCookerImg from "../../../../assets/images/RiceCookerImg.png";
 import UserProductHeader from "../../../userProductPage/userProductHeader/UserProductHeader";
 
 const ProfileBanner = () => {
@@ -17,10 +17,10 @@ const ProfileBanner = () => {
         />
         <div className="text-white text-center mb-4 md:mb-0">
           <div className="text-lg sm:text-2xl lg:text-4xl 2xl:text-5xl font-normal font-gothamNarrow">
-            My Profile
+            Account Dashboard
           </div>
           <div className="text-sm sm:text-lg lg:text-xl 2xl:text-2xl font-gothamNarrow">
-            Your personal profile
+            Manage your profile and account settings
           </div>
         </div>
         <img src={FanImg} alt="Fan" className="w-20 sm:w-28 lg:w-32 h-auto" />
@@ -29,4 +29,4 @@ const ProfileBanner = () => {
   );
 };
 
-export default ProfileBanner;
+export default React.memo(ProfileBanner);

@@ -1,16 +1,16 @@
-import React, { useEffect, useRef, useState } from "react";
+import { enqueueSnackbar } from "notistack";
+import { useEffect, useRef, useState } from "react";
+import { Controller, useForm } from "react-hook-form";
+import { FaArrowRight } from "react-icons/fa";
 import { useDispatch, useSelector } from "react-redux";
 import { useNavigate } from "react-router-dom";
-import { useForm, Controller } from "react-hook-form";
-import { toast } from "react-toastify";
 import userAuthImg from "../../../assets/images/userAuthImg.png";
+import MetaData from "../../../components/layout/metaData/MetaData";
 import {
   clearAuthError,
   verifyOTP,
 } from "../../../redux/features/auth/authSlice";
 import BaltraSubCategoryHeader from "../../baltraSubCategoryProducts/baltraSubCategoryHeader/BaltraSubCategoryHeader";
-import { FaArrowRight } from "react-icons/fa";
-import MetaData from "../../../components/layout/metaData/MetaData";
 
 const VerifyOTP = () => {
   const { loading, error, customer } = useSelector((state) => state.auth);
@@ -82,7 +82,7 @@ const VerifyOTP = () => {
       otp: parseInt(otp),
     };
 
-    dispatch(verifyOTP({ OTPData, toast, navigate }));
+    dispatch(verifyOTP({ OTPData, enqueueSnackbar, navigate }));
   };
 
   const handleResendCode = () => {
@@ -91,7 +91,9 @@ const VerifyOTP = () => {
 
   useEffect(() => {
     if (error) {
-      toast.error(error);
+      enqueueSnackbar(error, {
+        variant: "error",
+      });
       dispatch(clearAuthError());
     }
   }, [dispatch, error]);

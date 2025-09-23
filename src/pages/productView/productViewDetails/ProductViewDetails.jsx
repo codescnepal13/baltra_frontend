@@ -1,7 +1,8 @@
 import { AnimatePresence, motion } from "framer-motion";
-import React, { useEffect, useState } from "react";
+import { enqueueSnackbar } from "notistack";
+import { useEffect, useState } from "react";
 import { CiShare2 } from "react-icons/ci";
-import { FaTimes } from "react-icons/fa";
+import { FaEye, FaHeart, FaTimes } from "react-icons/fa";
 import {
   FaArrowRight,
   FaFacebook,
@@ -10,8 +11,7 @@ import {
   FaYoutube,
 } from "react-icons/fa6";
 import { useDispatch, useSelector } from "react-redux";
-import { Link, useNavigate } from "react-router-dom";
-import { toast } from "react-toastify";
+import { Link } from "react-router-dom";
 import ProductViewSkeleton from "../../../components/layout/productViewSkeleton/ProductViewSkeleton";
 import { baltraProductsRelated } from "../../../redux/features/product/productSlice";
 import BaltraPersonalization from "../../baltraPersonalization/BaltraPersonalization";
@@ -24,7 +24,13 @@ import ProductVaccum from "./productVaccum/ProductVaccum";
 import RatingReviewsSection from "./ratingReviewsSection/RatingReviewsSection";
 import StarRating from "./ratingReviewsSection/starRating/StarRating";
 
-const RippleButton = ({ label, rippleColor, onClick, children }) => {
+const RippleButton = ({
+  label,
+  rippleColor,
+  onClick,
+  children,
+  variant = "primary",
+}) => {
   const [ripplePosition, setRipplePosition] = useState({ x: 0, y: 0 });
   const [isHovered, setIsHovered] = useState(false);
 
@@ -40,15 +46,21 @@ const RippleButton = ({ label, rippleColor, onClick, children }) => {
     setIsHovered(false);
   };
 
+  const baseClasses =
+    "w-full py-4 px-6 font-semibold font-gothamNarrow relative overflow-hidden transition-all duration-300 transform hover:scale-[1.02] shadow-lg hover:shadow-xl";
+  const variantClasses =
+    variant === "primary"
+      ? "bg-gradient-to-r from-red-600 to-red-700 text-white border border-red-600"
+      : "bg-white text-gray-800 border-2 border-gray-300 hover:border-gray-400";
+
   return (
     <motion.button
-      whileTap={{ scale: 0.95 }}
-      className="w-full py-3 sm:py-3 border border-[#202D31] flex justify-center items-center relative overflow-hidden"
+      whileTap={{ scale: 0.98 }}
+      className={`${baseClasses} ${variantClasses} rounded-xl`}
       onMouseEnter={handleMouseEnter}
       onMouseLeave={handleMouseLeave}
       onClick={onClick}
     >
-      {/* Ripple Effect */}
       <AnimatePresence>
         {isHovered && (
           <motion.div
@@ -64,7 +76,7 @@ const RippleButton = ({ label, rippleColor, onClick, children }) => {
             animate={{
               width: 1500,
               height: 700,
-              opacity: 1,
+              opacity: 0.3,
             }}
             exit={{
               opacity: 0,
@@ -78,14 +90,13 @@ const RippleButton = ({ label, rippleColor, onClick, children }) => {
         )}
       </AnimatePresence>
 
-      {/* Button Text and Children */}
       <span
-        className={`relative z-10 text-center text-sm sm:text-base lg:text-lg font-semibold font-gothamNarrow flex items-center ${
-          isHovered ? "text-white" : "text-black"
+        className={`relative z-10 flex items-center justify-center gap-2 text-lg ${
+          isHovered && variant === "secondary" ? "text-white" : ""
         }`}
       >
         {label}
-        {children && <span className="ml-2">{children}</span>}
+        {children}
       </span>
     </motion.button>
   );
@@ -98,10 +109,8 @@ const ProductViewDetails = ({ singleProduct, loading }) => {
   const { isAuthenticated, customer } = useSelector((state) => state.auth);
 
   const { average_rating = 0, total_reviews = 0 } = statRatingReview || {};
-
   const { id } = singleProduct || {};
   const dispatch = useDispatch();
-  const navigate = useNavigate();
 
   const [selectedColor, setSelectedColor] = useState("");
   const [selectedSize, setSelectedSize] = useState("");
@@ -109,9 +118,9 @@ const ProductViewDetails = ({ singleProduct, loading }) => {
   const [selectedImage, setSelectedImage] = useState("");
   const [selectedModalName, setSelectedModalName] = useState("");
   const [selectedModalNumber, setSelectedModalNumber] = useState("");
-
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [quoteModalOpen, setQuoteModalOpen] = useState(false);
+  const [imageViews, setImageViews] = useState(0);
 
   const [zoomPosition, setZoomPosition] = useState({
     backgroundPositionX: "0%",
@@ -137,17 +146,29 @@ const ProductViewDetails = ({ singleProduct, loading }) => {
     setIsZoomVisible(false);
   };
 
+  const isBottleOrFlaskCategory = () => {
+    const name = singleProduct?.category?.category_name?.toLowerCase() || "";
+    return (
+      name.includes("bottle") ||
+      (name.includes("bottles") &&
+        (name.includes("flask") || name.includes("flasks")))
+    );
+  };
+
   const handlePersonalizationClick = () => {
-    if (singleProduct?.category?.category_name === "Bottles & Flasks") {
+    if (isBottleOrFlaskCategory()) {
       if (singleProduct?.sizes?.length > 0 && !selectedSize) {
-        toast.warn("Please select a size.");
+        enqueueSnackbar("Please Select a size.", { variant: "error" });
       } else if (singleProduct?.color_styles?.length > 0 && !selectedColor) {
-        toast.warn("Please select a color.");
+        enqueueSnackbar("Please Select a color.", { variant: "error" });
       } else {
         setIsModalOpen(true);
       }
     } else {
-      toast.info("Personalization is only available for Bottles and Flasks.");
+      enqueueSnackbar(
+        "Personalization is only available for Bottles and Flasks.",
+        { variant: "error" }
+      );
     }
   };
 
@@ -155,8 +176,13 @@ const ProductViewDetails = ({ singleProduct, loading }) => {
     if (isAuthenticated) {
       setQuoteModalOpen(true);
     } else {
-      toast.info("please login first!");
+      enqueueSnackbar("Please Login first", { variant: "error" });
     }
+  };
+
+  const handleImageSelect = (imageUrl) => {
+    setSelectedImage(imageUrl);
+    setImageViews((prev) => prev + 1);
   };
 
   useEffect(() => {
@@ -165,28 +191,12 @@ const ProductViewDetails = ({ singleProduct, loading }) => {
     setSelectedModalNumber(singleProduct?.model_num);
   }, [singleProduct]);
 
-  const closeModal = () => {
-    setIsModalOpen(false);
-  };
-
-  const QuoteCloseModal = () => {
-    setQuoteModalOpen(false);
-  };
-
-  const handleMouseLeave = () => {
-    setSelectedImage(singleProduct?.main_image);
-  };
-
-  const handleTogglePopup = () => {
-    setPopupVisible(!isPopupVisible);
-  };
-
-  const handleColorSelection = (color) => {
-    setSelectedColor(color);
-  };
-  const handleSizeSelection = (size) => {
-    setSelectedSize(size);
-  };
+  const closeModal = () => setIsModalOpen(false);
+  const QuoteCloseModal = () => setQuoteModalOpen(false);
+  const handleMouseLeave = () => setSelectedImage(singleProduct?.main_image);
+  const handleTogglePopup = () => setPopupVisible(!isPopupVisible);
+  const handleColorSelection = (color) => setSelectedColor(color);
+  const handleSizeSelection = (size) => setSelectedSize(size);
 
   useEffect(() => {
     if (id) {
@@ -194,319 +204,451 @@ const ProductViewDetails = ({ singleProduct, loading }) => {
     }
   }, [dispatch, id]);
 
+  if (loading) {
+    return <ProductViewSkeleton />;
+  }
+
   return (
-    <>
-      {loading ? (
-        <ProductViewSkeleton />
-      ) : (
-        <div className="px-4 md:px-12 lg:px-24 my-8">
-          <div className="text-sm text-gray-500 mb-4">
+    <div className="min-h-screen bg-gradient-to-br from-gray-50 via-white to-gray-100">
+      {/* Breadcrumb Navigation */}
+      <div className="bg-white shadow-sm border-b sticky top-0 z-40">
+        <div className="max-w-7xl mx-auto px-4 md:px-8 py-3">
+          <nav className="text-sm text-gray-600">
             <Link
               to={`/category/${singleProduct?.category?.id}`}
-              className="hover:underline font-gothamNarrow"
+              className="hover:text-red-600 transition-colors font-medium"
             >
               {singleProduct?.category?.category_name}
             </Link>
-            {" / "}
+            <span className="mx-2">/</span>
             <Link
               to={`/subcategory/${singleProduct?.sub_category?.id}`}
-              className="hover:underline font-gothamNarrow"
+              className="hover:text-red-600 transition-colors font-medium"
             >
               {singleProduct?.sub_category?.sub_category_name}
             </Link>
-            {" / "}
-            <span className=" font-gothamNarrow">{singleProduct?.name}</span>
-          </div>
-          <div className="bg-[#ffffff] px-8 py-8 flex flex-col md:flex-row gap-y-8 md:gap-x-12 lg:gap-x-32 overflow-hidden">
-            <div className="flex flex-col items-center">
-              {/* Main Image */}
-              <div className="relative mb-8 flex flex-col items-center">
-                <img
-                  className="w-64 h-64 sm:w-72 sm:h-72 md:w-80 md:h-80 object-contain"
-                  src={selectedImage}
-                  alt="singleProductImg"
-                  loading="lazy"
-                  onMouseMove={handleMouseMove}
-                  onMouseOut={handleMouseOut}
-                />
+            <span className="mx-2">/</span>
+            <span className="text-gray-900 font-semibold">
+              {singleProduct?.name}
+            </span>
+          </nav>
+        </div>
+      </div>
 
-                {isZoomVisible && (
-                  <div
-                    className="absolute inset-0 w-full h-full bg-contain bg-no-repeat pointer-events-none cursor-pointer"
-                    style={{
-                      backgroundImage: `url(${selectedImage})`,
-                      backgroundPositionX: zoomPosition.backgroundPositionX,
-                      backgroundPositionY: zoomPosition.backgroundPositionY,
-                      backgroundSize: "200%",
-                    }}
-                  ></div>
+      <div className="max-w-7xl mx-auto px-4 md:px-8 py-8">
+        {/* Main Product Section */}
+        <div className="bg-white rounded-3xl shadow-2xl overflow-hidden mb-12">
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 p-8 lg:p-12">
+            {/* Image Section */}
+            <div className="relative">
+              <div className="sticky top-8">
+                {/* Main Image Container */}
+                <div className="relative bg-gradient-to-br from-gray-50 to-white rounded-2xl p-8 mb-6 group overflow-hidden">
+                  <div className="absolute inset-0 bg-gradient-to-tr from-red-50/30 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500"></div>
+
+                  <motion.img
+                    initial={{ scale: 0.8, opacity: 0 }}
+                    animate={{ scale: 1, opacity: 1 }}
+                    transition={{ duration: 0.5 }}
+                    className="w-full h-96 object-contain relative z-10"
+                    src={selectedImage}
+                    alt="Product"
+                    loading="lazy"
+                    onMouseMove={handleMouseMove}
+                    onMouseOut={handleMouseOut}
+                  />
+
+                  {/* Zoom Effect */}
+                  {isZoomVisible && (
+                    <div
+                      className="absolute inset-0 bg-contain bg-no-repeat pointer-events-none z-20 rounded-2xl"
+                      style={{
+                        backgroundImage: `url(${selectedImage})`,
+                        backgroundPositionX: zoomPosition.backgroundPositionX,
+                        backgroundPositionY: zoomPosition.backgroundPositionY,
+                        backgroundSize: "200%",
+                      }}
+                    />
+                  )}
+
+                  {/* Warranty Badge */}
+                  {singleProduct?.warranty_icon && (
+                    <motion.img
+                      initial={{ scale: 0, rotate: -180 }}
+                      animate={{ scale: 1, rotate: 0 }}
+                      transition={{
+                        delay: 0.3,
+                        type: "spring",
+                        stiffness: 200,
+                      }}
+                      className="absolute -top-2 -right-2 w-16 h-16 md:w-20 md:h-20 z-30"
+                      src={singleProduct?.warranty_icon}
+                      alt="Warranty"
+                    />
+                  )}
+
+                  {/* View Counter */}
+                  <div className="absolute bottom-4 right-4 bg-black/70 text-white px-3 py-1 rounded-full text-sm flex items-center gap-1">
+                    <FaEye size={12} />
+                    <span>{imageViews}</span>
+                  </div>
+                </div>
+
+                {/* Thumbnail Images */}
+                {singleProduct?.images?.length > 0 && (
+                  <div className="flex gap-3 overflow-x-auto scrollbar-hide pb-2">
+                    <motion.div
+                      whileHover={{ scale: 1.05 }}
+                      className={`flex-shrink-0 w-20 h-20 rounded-xl overflow-hidden cursor-pointer border-3 transition-all ${
+                        selectedImage === singleProduct?.main_image
+                          ? "border-red-500 shadow-lg"
+                          : "border-gray-200 hover:border-gray-300"
+                      }`}
+                      onClick={() =>
+                        handleImageSelect(singleProduct?.main_image)
+                      }
+                    >
+                      <img
+                        src={singleProduct?.main_image}
+                        alt="Main"
+                        className="w-full h-full object-contain bg-gray-50"
+                      />
+                    </motion.div>
+                    {singleProduct.images.map((image, index) => (
+                      <motion.div
+                        key={index}
+                        whileHover={{ scale: 1.05 }}
+                        className={`flex-shrink-0 w-20 h-20 rounded-xl overflow-hidden cursor-pointer border-3 transition-all ${
+                          selectedImage === image.image_url
+                            ? "border-red-500 shadow-lg"
+                            : "border-gray-200 hover:border-gray-300"
+                        }`}
+                        onClick={() => handleImageSelect(image.image_url)}
+                      >
+                        <img
+                          src={image.image_url}
+                          alt={`Variant ${index + 1}`}
+                          className="w-full h-full object-contain bg-gray-50"
+                        />
+                      </motion.div>
+                    ))}
+                  </div>
                 )}
+              </div>
+            </div>
 
-                {/* Warranty Icon */}
-                <img
-                  className="absolute top-0 right-[-24px] sm:right-[-40px] md:right-[-74px] lg:right-[-150px] w-12 h-12 sm:w-16 sm:h-16 md:w-24 md:h-24"
-                  src={singleProduct?.warranty_icon}
-                  alt="WarrantyImg"
-                />
+            {/* Product Details Section */}
+            <div className="space-y-6">
+              {/* Header Section */}
+              <div className="flex justify-between items-start">
+                <div className="flex-1">
+                  <p className="text-gray-600 text-lg font-medium mb-2">
+                    {singleProduct?.model_name}
+                  </p>
+                  <h1 className="text-4xl lg:text-5xl font-bold text-gray-900 leading-tight mb-3">
+                    {singleProduct?.name}
+                  </h1>
+                  <p className="text-gray-700 text-lg mb-2 font-medium">
+                    {singleProduct?.model_num}
+                  </p>
+                  <p className="text-gray-600 text-lg leading-relaxed">
+                    {singleProduct?.sub_heading}
+                  </p>
+                </div>
+
+                <div className="flex items-center gap-3">
+                  <motion.button
+                    whileHover={{ scale: 1.1 }}
+                    whileTap={{ scale: 0.95 }}
+                    className="p-3 rounded-full bg-gray-100 hover:bg-red-100 text-gray-600 hover:text-red-600 transition-colors"
+                  >
+                    <FaHeart size={20} />
+                  </motion.button>
+                  <motion.button
+                    whileHover={{ scale: 1.1 }}
+                    whileTap={{ scale: 0.95 }}
+                    className="p-3 rounded-full bg-gray-100 hover:bg-blue-100 text-gray-600 hover:text-blue-600 transition-colors"
+                    onClick={handleTogglePopup}
+                  >
+                    <CiShare2 size={22} />
+                  </motion.button>
+                </div>
               </div>
 
-              {/* Variant Images */}
-              {singleProduct?.images?.length > 0 && (
-                <div className="my-2">
-                  <div className="flex gap-2 md:gap-3 lg:gap-4 overflow-x-auto lg:overflow-x-visible scrollbar-hide">
-                    {singleProduct.images.map((image, index) => (
-                      <img
+              {/* Price and Rating */}
+              <div className="bg-gradient-to-r from-red-50 to-orange-50 p-6 rounded-2xl border border-red-100">
+                <div className="flex items-center justify-between mb-4">
+                  <div className="text-4xl font-bold text-red-600">
+                    ₹{singleProduct?.price?.toLocaleString()}
+                    <span className="text-lg text-gray-600 font-normal ml-2">
+                      MRP
+                    </span>
+                  </div>
+                </div>
+                <div className="flex items-center gap-3">
+                  <StarRating rating={average_rating} />
+                  <span className="text-gray-600 font-medium">
+                    ({total_reviews.toLocaleString()} reviews)
+                  </span>
+                </div>
+              </div>
+
+              {/* Color Selection */}
+              {singleProduct?.color_styles?.length > 0 && (
+                <div className="space-y-4">
+                  <h3 className="text-xl font-semibold text-gray-900">
+                    Select Color
+                  </h3>
+                  <div className="flex flex-wrap gap-3">
+                    {singleProduct.color_styles.map((color, index) => (
+                      <motion.div
                         key={index}
-                        className="w-16 h-16 md:w-20 md:h-20 lg:w-24 lg:h-24 object-contain border border-gray-200 flex-shrink-0 cursor-pointer"
-                        src={image.image_url}
-                        alt={`Variant ${index + 1}`}
-                        onMouseEnter={() => setSelectedImage(image.image_url)}
-                        onMouseLeave={handleMouseLeave}
-                      />
+                        whileHover={{ scale: 1.1 }}
+                        whileTap={{ scale: 0.95 }}
+                        className={`relative w-12 h-12 rounded-full cursor-pointer border-4 transition-all ${
+                          selectedColor === color
+                            ? "border-gray-800 shadow-lg scale-110"
+                            : "border-gray-300 hover:border-gray-400"
+                        }`}
+                        style={{ backgroundColor: color }}
+                        onClick={() => handleColorSelection(color)}
+                      >
+                        {selectedColor === color && (
+                          <motion.div
+                            initial={{ scale: 0 }}
+                            animate={{ scale: 1 }}
+                            className="absolute inset-0 flex items-center justify-center"
+                          >
+                            <svg
+                              className="w-6 h-6 text-white drop-shadow-lg"
+                              fill="none"
+                              stroke="currentColor"
+                              viewBox="0 0 24 24"
+                            >
+                              <path
+                                strokeLinecap="round"
+                                strokeLinejoin="round"
+                                strokeWidth="3"
+                                d="M5 13l4 4L19 7"
+                              />
+                            </svg>
+                          </motion.div>
+                        )}
+                      </motion.div>
                     ))}
                   </div>
                 </div>
               )}
-            </div>
-            {/* Right side - Content Section */}
-            <div className="flex flex-col gap-2 ml-0 md:ml-8 md:w-1/2 lg:w-7/12">
-              <div className="text-right">
-                <i className="icon-share"></i>
-              </div>
-              <div>
-                <div className="flex justify-between items-center">
-                  <div className="text-[#77777E] text-base font-gothamNarrow">
-                    {singleProduct?.model_name}
-                  </div>
-                  <div className="flex items-center">
-                    <Link to="#" onClick={(e) => e.preventDefault()}>
-                      <CiShare2 size={22} onClick={handleTogglePopup} />
-                    </Link>
-                  </div>
-                  {isPopupVisible && (
-                    <div className="font-gothamNarrow fixed inset-0 flex items-center px-8 sm:px-0 lg:justify-center z-50">
-                      <div className="absolute inset-0 bg-black opacity-50"></div>
-                      <div className="relative bg-white p-6 sm:p-8 rounded-lg shadow-lg z-10 max-w-xs sm:max-w-md w-full overflow-hidden">
-                        <button
-                          className="absolute top-2 right-2 text-gray-500 hover:text-gray-800"
-                          onClick={handleTogglePopup}
-                        >
-                          <FaTimes size={24} />
-                        </button>
-                        <div className="flex flex-col items-center">
-                          <h2 className="text-xl font-normal mb-4 font-gothamNarrow">
-                            Share via:
-                          </h2>
-                          <div className="flex flex-wrap justify-center space-x-4">
-                            <a
-                              href="https://www.facebook.com"
-                              target="_blank"
-                              rel="noopener noreferrer"
-                            >
-                              <FaFacebook size={32} className="text-blue-600" />
-                            </a>
-                            <a
-                              href="https://www.instagram.com"
-                              target="_blank"
-                              rel="noopener noreferrer"
-                            >
-                              <FaInstagram
-                                size={32}
-                                className="text-pink-500"
-                              />
-                            </a>
-                            <a
-                              href="https://www.twitter.com"
-                              target="_blank"
-                              rel="noopener noreferrer"
-                            >
-                              <FaTwitter size={32} className="text-blue-400" />
-                            </a>
-                            <a
-                              href="https://www.youtube.com"
-                              target="_blank"
-                              rel="noopener noreferrer"
-                            >
-                              <FaYoutube size={32} className="text-red-600" />
-                            </a>
-                          </div>
-                        </div>
-                      </div>
-                    </div>
-                  )}
-                </div>
-                <h2 className="text-2xl md:text-3xl text-[#202D31] font-bold font-gothamNarrow my-1">
-                  {singleProduct?.name}
-                </h2>
 
-                <h2 className="text-sm md:text-base font-semibold text-[#202D31] font-gothamNarrow my-1">
-                  {singleProduct?.model_num}
-                </h2>
-                <p className="text-[#000000] text-base md:text-lg font-gothamNarrow">
-                  {singleProduct?.sub_heading}
-                </p>
-              </div>
-              <div className="text-[#ED1C24] text-xl md:text-2xl font-medium tracking-normal">
-                MRP. {singleProduct?.price}
-              </div>
-              <div className="flex items-center gap-1 font-/* The `gothamNarrow` is a custom font class gothamNarrow">
-                <StarRating rating={average_rating} />
-                <span className="text-gray-500 text-sm font-gothamNarrow">
-                  ({total_reviews.toLocaleString()})
-                </span>
-              </div>
-              <hr className="border-t w-full border-gray-300" />
-              {singleProduct?.color_styles?.length > 0 && (
-                <div>
-                  <div className="text-[#4D5159] text-sm font-gothamNarrow">
-                    Color
-                  </div>
-                  <div className="my-2">
-                    {singleProduct?.color_styles &&
-                      singleProduct?.color_styles?.length > 0 && (
-                        <div className="flex items-center flex-wrap justify-start my-2 gap-4">
-                          {singleProduct?.color_styles?.map((color, index) => (
-                            <div
-                              key={index}
-                              className={`relative w-6 h-6 rounded-full cursor-pointer border ${
-                                selectedColor === color
-                                  ? "border-red"
-                                  : "border-gray-400"
-                              }`}
-                              style={{ backgroundColor: color }}
-                              onClick={() => handleColorSelection(color)}
-                            >
-                              {selectedColor === color && (
-                                <div className="absolute inset-0 flex items-center justify-center">
-                                  <svg
-                                    className="w-4 h-4 text-white"
-                                    fill="none"
-                                    stroke="currentColor"
-                                    viewBox="0 0 24 24"
-                                    xmlns="http://www.w3.org/2000/svg"
-                                  >
-                                    <path
-                                      strokeLinecap="round"
-                                      strokeLinejoin="round"
-                                      strokeWidth="2"
-                                      d="M5 13l4 4L19 7"
-                                    ></path>
-                                  </svg>
-                                </div>
-                              )}
-                            </div>
-                          ))}
-                        </div>
-                      )}
-                  </div>
-                </div>
-              )}
+              {/* Size Selection */}
               {singleProduct?.sizes?.length > 0 && (
-                <div>
-                  <div className="text-[#4D5159] text-sm font-gothamNarrow">
-                    Size Selection
+                <div className="space-y-4">
+                  <h3 className="text-xl font-semibold text-gray-900">
+                    Select Size
+                  </h3>
+                  <div className="flex flex-wrap gap-3">
+                    {singleProduct.sizes.map((size, index) => (
+                      <motion.button
+                        key={index}
+                        whileHover={{ scale: 1.05 }}
+                        whileTap={{ scale: 0.95 }}
+                        className={`px-4 py-3 min-w-[60px] rounded-xl border-2 font-semibold transition-all ${
+                          selectedSize === size
+                            ? "border-red-500 bg-red-50 text-red-700"
+                            : "border-gray-300 hover:border-gray-400 text-gray-700"
+                        }`}
+                        onClick={() => handleSizeSelection(size)}
+                      >
+                        {size}
+                      </motion.button>
+                    ))}
                   </div>
-                  {singleProduct?.sizes && singleProduct?.sizes?.length > 0 && (
-                    <div className="flex items-center flex-wrap justify-start my-2 gap-3">
-                      {singleProduct?.sizes?.map((size, index) => (
-                        <div
-                          key={index}
-                          className={`w-12 h-12 border cursor-pointer font-gothamNarrow flex items-center justify-center ${
-                            selectedSize === size
-                              ? "border-[#f3232B]"
-                              : "border-gray-300"
-                          }`}
-                          onClick={() => handleSizeSelection(size)}
-                        >
-                          <span className="text-black text-sm text-center font-gothamNarrow">
-                            {size}
-                          </span>
-                        </div>
-                      ))}
-                    </div>
-                  )}
                 </div>
               )}
-              <div className="text-[#4D5159] text-sm font-gothamNarrow">
-                Packaging
-              </div>
-              <div className="text-lg text-[#4A4545] font-medium font-gothamNarrow">
-                {singleProduct?.packaging}
-              </div>
-              <div className="text-[#4D5159] text-sm font-gothamNarrow">
-                Power
-              </div>
-              <div className="text-xl text-[#4A4545] font-gothamNarrow">
-                {singleProduct?.power}
-              </div>
-              <div className="flex w-full flex-col gap-4 my-2">
-                {/* Link to request a bulk quote */}
-                <Link to={"#"} className="w-full">
-                  <RippleButton
-                    label="REQUEST A BULK QUOTE"
-                    rippleColor="#071C2E"
-                    className="flex justify-center items-center w-full py-3 px-4 border border-gray-500 text-center text-[#272626] font-semibold font-gothamNarrow"
-                    onClick={handleBulkQuoteClick}
-                  >
-                    <FaArrowRight className="ml-2" />
-                  </RippleButton>
-                </Link>
 
-                {/* Link to add personalization */}
+              {/* Product Specifications */}
+              <div className="grid grid-cols-2 gap-6 p-6 bg-gray-50 rounded-2xl">
+                <div>
+                  <h4 className="text-sm font-semibold text-gray-600 mb-2">
+                    PACKAGING
+                  </h4>
+                  <p className="text-lg font-bold text-gray-900">
+                    {singleProduct?.packaging}
+                  </p>
+                </div>
+                <div>
+                  <h4 className="text-sm font-semibold text-gray-600 mb-2">
+                    POWER
+                  </h4>
+                  <p className="text-lg font-bold text-gray-900">
+                    {singleProduct?.power}
+                  </p>
+                </div>
+              </div>
+
+              {/* Action Buttons */}
+              <div className="space-y-4">
+                <RippleButton
+                  label="REQUEST A BULK QUOTE"
+                  rippleColor="#1f2937"
+                  onClick={handleBulkQuoteClick}
+                  variant="primary"
+                >
+                  <FaArrowRight />
+                </RippleButton>
 
                 <RippleButton
                   label="ADD PERSONALIZATION"
-                  rippleColor="#071C2E"
-                  className="flex justify-center items-center w-full py-3 px-4 border border-gray-500 text-center text-[#000000] font-semibold font-gothamNarrow"
+                  rippleColor="#1f2937"
                   onClick={handlePersonalizationClick}
+                  variant="secondary"
                 >
-                  <FaArrowRight className="ml-2" />
+                  <FaArrowRight />
                 </RippleButton>
-
-                {isModalOpen && (
-                  <div className="fixed inset-0 z-50 flex justify-center items-center bg-black bg-opacity-50">
-                    <div className="bg-white w-full max-w-4xl p-6 relative mx-4 md:mx-6">
-                      <BaltraPersonalization
-                        selectedColor={selectedColor}
-                        selectedSize={selectedSize}
-                        mainImage={selectedImage}
-                        productId={singleProduct.id}
-                        closeModal={closeModal}
-                      />
-                    </div>
-                  </div>
-                )}
-
-                {quoteModalOpen && (
-                  <div className="fixed inset-0 z-50 flex justify-center items-center">
-                    <div className="w-full max-w-4xl p-6 relative mx-4 md:mx-6">
-                      <BaltraQuoteModal
-                        productId={singleProduct.id}
-                        bulkImage={selectedImage}
-                        QuoteCloseModal={QuoteCloseModal}
-                        model_name={selectedModalName}
-                        model_num={selectedModalNumber}
-                        customer={customer}
-                      />
-                    </div>
-                  </div>
-                )}
               </div>
-
-              <hr className="border-t w-full border-gray-300" />
             </div>
           </div>
-          <ProductDescription singleProduct={singleProduct} />
-          <ProductVaccum singleProduct={singleProduct} />
-          <ProductDetailsVideo singleProduct={singleProduct} />
-          <RatingReviewsSection />
-          <RelatedProducts
-            allRelatedProducts={allRelatedProducts}
-            isFetching={isFetching}
-          />
         </div>
-      )}
-    </>
+
+        {/* Share Popup Modal */}
+        <AnimatePresence>
+          {isPopupVisible && (
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              className="fixed inset-0 flex items-center justify-center z-50 px-4"
+            >
+              <div
+                className="absolute inset-0 bg-black/60 backdrop-blur-sm"
+                onClick={handleTogglePopup}
+              />
+              <motion.div
+                initial={{ scale: 0.8, opacity: 0 }}
+                animate={{ scale: 1, opacity: 1 }}
+                exit={{ scale: 0.8, opacity: 0 }}
+                className="relative bg-white p-8 rounded-3xl shadow-2xl max-w-md w-full"
+              >
+                <button
+                  className="absolute top-4 right-4 p-2 rounded-full hover:bg-gray-100 transition-colors"
+                  onClick={handleTogglePopup}
+                >
+                  <FaTimes size={20} className="text-gray-600" />
+                </button>
+
+                <div className="text-center">
+                  <h2 className="text-2xl font-bold mb-6 text-gray-900">
+                    Share Product
+                  </h2>
+                  <div className="flex justify-center gap-6">
+                    <motion.a
+                      whileHover={{ scale: 1.2 }}
+                      href="https://www.facebook.com"
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="p-3 rounded-full bg-blue-50 hover:bg-blue-100 transition-colors"
+                    >
+                      <FaFacebook size={32} className="text-blue-600" />
+                    </motion.a>
+                    <motion.a
+                      whileHover={{ scale: 1.2 }}
+                      href="https://www.instagram.com"
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="p-3 rounded-full bg-pink-50 hover:bg-pink-100 transition-colors"
+                    >
+                      <FaInstagram size={32} className="text-pink-600" />
+                    </motion.a>
+                    <motion.a
+                      whileHover={{ scale: 1.2 }}
+                      href="https://www.twitter.com"
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="p-3 rounded-full bg-blue-50 hover:bg-blue-100 transition-colors"
+                    >
+                      <FaTwitter size={32} className="text-blue-400" />
+                    </motion.a>
+                    <motion.a
+                      whileHover={{ scale: 1.2 }}
+                      href="https://www.youtube.com"
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="p-3 rounded-full bg-red-50 hover:bg-red-100 transition-colors"
+                    >
+                      <FaYoutube size={32} className="text-red-600" />
+                    </motion.a>
+                  </div>
+                </div>
+              </motion.div>
+            </motion.div>
+          )}
+        </AnimatePresence>
+
+        {/* Modals */}
+        <AnimatePresence>
+          {isModalOpen && (
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              className="fixed inset-0 z-50 flex justify-center items-center bg-black/60 backdrop-blur-sm"
+            >
+              <motion.div
+                initial={{ scale: 0.9, opacity: 0 }}
+                animate={{ scale: 1, opacity: 1 }}
+                exit={{ scale: 0.9, opacity: 0 }}
+                className="bg-white w-full max-w-4xl mx-4 rounded-3xl overflow-hidden shadow-2xl"
+              >
+                <BaltraPersonalization
+                  selectedColor={selectedColor}
+                  selectedSize={selectedSize}
+                  mainImage={selectedImage}
+                  productId={singleProduct.id}
+                  closeModal={closeModal}
+                />
+              </motion.div>
+            </motion.div>
+          )}
+        </AnimatePresence>
+
+        <AnimatePresence>
+          {quoteModalOpen && (
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              className="fixed inset-0 z-50 flex justify-center items-center bg-black/60 backdrop-blur-sm"
+            >
+              <motion.div
+                initial={{ scale: 0.9, opacity: 0 }}
+                animate={{ scale: 1, opacity: 1 }}
+                exit={{ scale: 0.9, opacity: 0 }}
+                className="w-full max-w-4xl mx-4 rounded-3xl overflow-hidden shadow-2xl"
+              >
+                <BaltraQuoteModal
+                  productId={singleProduct.id}
+                  bulkImage={selectedImage}
+                  QuoteCloseModal={QuoteCloseModal}
+                  model_name={selectedModalName}
+                  model_num={selectedModalNumber}
+                  customer={customer}
+                />
+              </motion.div>
+            </motion.div>
+          )}
+        </AnimatePresence>
+
+        {/* Additional Sections */}
+        <ProductDescription singleProduct={singleProduct} />
+        <ProductVaccum singleProduct={singleProduct} />
+        <ProductDetailsVideo singleProduct={singleProduct} />
+        <RatingReviewsSection />
+        <RelatedProducts
+          allRelatedProducts={allRelatedProducts}
+          isFetching={isFetching}
+        />
+      </div>
+    </div>
   );
 };
 

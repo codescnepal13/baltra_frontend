@@ -1,14 +1,15 @@
-import React, { useEffect, useState } from "react";
+import { enqueueSnackbar } from "notistack";
+import { useEffect, useState } from "react";
+import { FaInfoCircle } from "react-icons/fa";
 import { HiOutlineArrowLeftCircle } from "react-icons/hi2";
+import { useDispatch, useSelector } from "react-redux";
+import { Link, useNavigate } from "react-router-dom";
+import { toast } from "react-toastify";
 import {
   addBulkImport,
   addQrProduct,
   clearAdminError,
 } from "../../../../redux/features/admin/adminSlice";
-import { toast } from "react-toastify";
-import { Link, useNavigate } from "react-router-dom";
-import { useDispatch, useSelector } from "react-redux";
-import { FaInfoCircle } from "react-icons/fa";
 
 const AddQrProduct = () => {
   const { loading, isProcessing, error } = useSelector((state) => state.admin);
@@ -56,9 +57,11 @@ const AddQrProduct = () => {
   const handleSubmit = (e) => {
     e.preventDefault();
     if (validatedForm()) {
-      dispatch(addQrProduct({ addQrValue, toast, navigate }));
+      dispatch(addQrProduct({ addQrValue, enqueueSnackbar, navigate }));
     } else {
-      return toast.warn("Invalid Input");
+      return enqueueSnackbar("Invalid Input", {
+        variant: "error",
+      });
     }
   };
 
@@ -71,12 +74,14 @@ const AddQrProduct = () => {
     const formData = new FormData();
     formData.append("file", bulkImportFile);
 
-    dispatch(addBulkImport({ formData, toast, navigate }));
+    dispatch(addBulkImport({ formData, enqueueSnackbar, navigate }));
   };
 
   useEffect(() => {
     if (error) {
-      toast.error(error);
+      enqueueSnackbar(error, {
+        variant: "error",
+      });
       dispatch(clearAdminError());
     }
   }, [dispatch, error]);

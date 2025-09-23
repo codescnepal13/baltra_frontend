@@ -1,13 +1,16 @@
-import React, { useCallback, useEffect, useState } from "react";
+import moment from "moment";
+import { enqueueSnackbar } from "notistack";
+import { useCallback, useEffect, useState } from "react";
 import {
   FaDownload,
+  FaInfoCircle,
   FaPlusCircle,
-  FaSearch,
+  FaQrcode,
+  FaSyncAlt,
   FaTrash,
   FaTrashAlt,
-  FaQrcode,
-  FaInfoCircle,
 } from "react-icons/fa";
+import { useDispatch, useSelector } from "react-redux";
 import { Link } from "react-router-dom";
 import {
   clearAdminError,
@@ -17,11 +20,8 @@ import {
   downloadSelectQrInPDF,
   getAllQrList,
 } from "../../../../redux/features/admin/adminSlice";
-import { useDispatch, useSelector } from "react-redux";
-import moment from "moment";
-import BaltraQrModal from "../baltraQrModal/BaltraQrModal";
-import { toast } from "react-toastify";
 import QRPagination from "../adminPagination/qrPagination/QRPagination";
+import BaltraQrModal from "../baltraQrModal/BaltraQrModal";
 import DeleteQrModal from "../deleteQrModal/DeleteQrModal";
 
 const QRProductList = () => {
@@ -40,29 +40,6 @@ const QRProductList = () => {
 
   const [isDownloadFetching, setIsDownloadFetching] = useState(false);
 
-  // const handleDownload = async () => {
-  //   setIsDownloading(true);
-  //   try {
-  //     const actionResult = await dispatch(downloadAllQrInPDF());
-  //     if (downloadAllQrInPDF.fulfilled.match(actionResult)) {
-  //       const url = window.URL.createObjectURL(
-  //         new Blob([actionResult.payload])
-  //       );
-  //       const a = document.createElement("a");
-  //       a.href = url;
-  //       a.download = "qr-products-list.pdf";
-  //       document.body.appendChild(a);
-  //       a.click();
-  //       a.remove();
-  //     } else {
-  //       console.error("Failed to download PDF:", actionResult.payload.message);
-  //     }
-  //   } catch (error) {
-  //     console.error("Error during PDF download:", error);
-  //   } finally {
-  //     setIsDownloading(false);
-  //   }
-  // };
   const handleDownload = async () => {
     setIsDownloading(true);
     try {
@@ -130,9 +107,22 @@ const QRProductList = () => {
     setSelectedQrCode(null);
   };
 
+  const handleReset = () => {
+    setSelectedProductsId([]); // clear selected checkboxes
+    setSelectedProductId(null); // clear single delete selection
+    setSelectedQrCode(null); // clear opened QR code
+    setOpenQrModal(false); // close QR modal if open
+    dispatch(getAllQrList(newPage)); // reload from first page
+  };
+
   const handleDeleteConfirm = () => {
     if (selectedProductId !== null) {
-      dispatch(deleteBaltraQrProduct({ product_id: selectedProductId, toast }));
+      dispatch(
+        deleteBaltraQrProduct({
+          product_id: selectedProductId,
+          enqueueSnackbar,
+        })
+      );
       setSelectedProductId(null);
     }
   };
@@ -172,7 +162,10 @@ const QRProductList = () => {
   const handleMultipleDelete = () => {
     if (selectedProductsId.length > 0) {
       dispatch(
-        deleteMultipleQrProduct({ product_ids: selectedProductsId, toast })
+        deleteMultipleQrProduct({
+          product_ids: selectedProductsId,
+          enqueueSnackbar,
+        })
       ).then(() => {
         dispatch(getAllQrList(page));
       });
@@ -193,7 +186,7 @@ const QRProductList = () => {
 
   return (
     <>
-      <div className="font-gothamNarrow container mx-auto px-8">
+      <div className="font-gothamNarrow container mx-auto px-4">
         <div className="flex items-center w-full my-2">
           <FaInfoCircle className="text-black mr-2" size={20} />
           <p className="text-xs text-black font-outfit flex-grow md:text-sm">
@@ -218,22 +211,12 @@ const QRProductList = () => {
 
         <div className="bg-[#FFFFFF] px-2 py-4">
           <div className="flex mb-2 text-xs items-center">
-            <div className="relative mr-2 flex items-center">
-              <input
-                type="text"
-                placeholder="Search by Model Name"
-                className="w-42 pl-4 pr-10 py-2 border border-gray-300 rounded-sm text-sm focus:outline-none focus:border-red-500 focus:ring-gray-300 font-gothamNarrow"
-              />
-              <button className="bg-red-600 hover:bg-red-700 text-white py-3 px-4 ml-1 inline-flex items-center rounded-sm font-gothamNarrow">
-                <FaSearch />
-              </button>
-            </div>
-            <div className="relative mr-2 flex items-center">
-              <select className="w-42 pl-4 pr-10 py-2 border border-gray-300 rounded-sm text-sm focus:outline-none focus:border-red-500 focus:ring-gray-300 font-gothamNarrow">
-                <option value="">Select serial number</option>
-                <option value="All">All</option>
-              </select>
-            </div>
+            <button
+              className="flex cursor-pointer items-center gap-1 px-4 py-2 text-sm border border-gray-300 rounded-md hover:bg-gray-50 transition-colors"
+              onClick={handleReset}
+            >
+              <FaSyncAlt className="text-gray-500" /> Reset
+            </button>
             <div className="flex items-center">
               {selectedProductsId.length > 0 && (
                 <button
@@ -279,58 +262,73 @@ const QRProductList = () => {
               )}
             </div>
 
-            <div className="ml-auto flex items-center">
-              <button
-                className={`${
-                  isDownloading
-                    ? "bg-gray-500"
-                    : "bg-green-600 hover:bg-green-700"
-                } text-white py-2 px-4 inline-flex items-center rounded-sm font-gothamNarrow`}
-                onClick={handleDownload}
-                disabled={isDownloading}
-              >
-                {isDownloading ? (
-                  <>
-                    <svg
-                      className="animate-spin h-5 w-5 mr-2 text-white"
-                      xmlns="http://www.w3.org/2000/svg"
-                      fill="none"
-                      viewBox="0 0 24 24"
-                    >
-                      <circle
-                        className="opacity-25"
-                        cx="12"
-                        cy="12"
-                        r="10"
-                        stroke="currentColor"
-                        strokeWidth="4"
-                      ></circle>
-                      <path
-                        className="opacity-75"
-                        fill="currentColor"
-                        d="M4 12a8 8 0 018-8v8H4z"
-                      ></path>
-                    </svg>
-                    Processing...
-                  </>
-                ) : (
-                  <>
-                    <FaDownload className="mr-2 font-gothamNarrow" />
-                    Export
-                  </>
-                )}
-              </button>
-            </div>
+            {allQrList.length > 0 && (
+              <div className="ml-auto flex items-center">
+                <button
+                  className={`${
+                    isDownloading
+                      ? "bg-gray-500"
+                      : "bg-green-600 hover:bg-green-700"
+                  } text-white py-2 px-4 inline-flex items-center rounded-sm font-gothamNarrow`}
+                  onClick={handleDownload}
+                  disabled={isDownloading}
+                >
+                  {isDownloading ? (
+                    <>
+                      <svg
+                        className="animate-spin h-5 w-5 mr-2 text-white"
+                        xmlns="http://www.w3.org/2000/svg"
+                        fill="none"
+                        viewBox="0 0 24 24"
+                      >
+                        <circle
+                          className="opacity-25"
+                          cx="12"
+                          cy="12"
+                          r="10"
+                          stroke="currentColor"
+                          strokeWidth="4"
+                        ></circle>
+                        <path
+                          className="opacity-75"
+                          fill="currentColor"
+                          d="M4 12a8 8 0 018-8v8H4z"
+                        ></path>
+                      </svg>
+                      Processing...
+                    </>
+                  ) : (
+                    <>
+                      <FaDownload className="mr-2 font-gothamNarrow" />
+                      Export
+                    </>
+                  )}
+                </button>
+              </div>
+            )}
           </div>
+
+          {selectedProductsId.length > 0 && (
+            <div className="flex flex-wrap gap-2 mb-4 p-3 bg-blue-50 rounded-lg border border-blue-200">
+              <span className="text-sm text-blue-700 font-medium mr-2">
+                {selectedProductsId.length} item(s) selected
+              </span>
+            </div>
+          )}
 
           <div className="bg-white font-sans table-container hide-scrollbar overflow-x-auto">
             {selectedProductsId?.length > 0 && (
-              <button
-                className="h-4 w-4 text-red-600 hover:text-red-700"
-                onClick={handleMultipleDelete}
-              >
-                <FaTrashAlt />
-              </button>
+              <div className="mb-3 flex justify-start">
+                <button
+                  className="flex items-center gap-2 px-3 py-1.5 rounded-lg 
+                   bg-red-500 text-white text-sm font-medium
+                   hover:bg-red-600 transition"
+                  onClick={handleMultipleDelete}
+                >
+                  <FaTrashAlt className="text-white" />
+                  Delete Selected
+                </button>
+              </div>
             )}
             <table className="min-w-full divide-y divide-gray-200 border border-gray-300">
               <thead className="font-gothamNarrow">

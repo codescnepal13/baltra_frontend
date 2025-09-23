@@ -1,6 +1,6 @@
-import { createSlice, createAsyncThunk } from "@reduxjs/toolkit";
-import API from "../../api/api";
+import { createAsyncThunk, createSlice } from "@reduxjs/toolkit";
 import { getErrorMessage } from "../../../utils/ErrorHandle";
+import API from "../../api/api";
 
 /**
  * @typedef {Object} CustomerState
@@ -71,13 +71,16 @@ export const getSingleProductView = createAsyncThunk(
 //delete CustomerProduct
 export const deleteCustomerProduct = createAsyncThunk(
   "customer/deleteCustomerProduct",
-  async ({ stock_id, toast }, { rejectWithValue }) => {
+  async ({ stock_id, enqueueSnackbar }, { rejectWithValue }) => {
     try {
       const response = await API.delete(
         `/stocks/deleteproductbyadmin/${stock_id}`
       );
-      toast.success(
-        response.data.message || "customer product remove Success!"
+      enqueueSnackbar(
+        response.data.message || "customer product deleted successFully!",
+        {
+          variant: "success",
+        }
       );
       return response.data;
     } catch (error) {
@@ -89,7 +92,7 @@ export const deleteCustomerProduct = createAsyncThunk(
 //deleteMultipleCustomer
 export const deleteMultipleCustomer = createAsyncThunk(
   "customer/admin-deleteMultipleCustomer",
-  async ({ stock_ids, toast }, { rejectWithValue }) => {
+  async ({ stock_ids, enqueueSnackbar }, { rejectWithValue }) => {
     try {
       const response = await API.delete(
         `/stocks/deletemultipleproductbyadmin`,
@@ -97,7 +100,12 @@ export const deleteMultipleCustomer = createAsyncThunk(
           data: { stock_ids },
         }
       );
-      toast.success(response.data.message || "Product remove successfully!");
+      enqueueSnackbar(
+        response.data.message || "product deleted successFully!",
+        {
+          variant: "success",
+        }
+      );
       return response.data;
     } catch (error) {
       return rejectWithValue({ message: getErrorMessage(error) });
@@ -108,10 +116,13 @@ export const deleteMultipleCustomer = createAsyncThunk(
 //VerifyCustomerProductList
 export const verifiedCustomerProduct = createAsyncThunk(
   "customer/verifyCustomerProduct",
-  async ({ data, toast }, { rejectWithValue, dispatch }) => {
+  async ({ data, enqueueSnackbar }, { rejectWithValue, dispatch }) => {
     try {
       const response = await API.post(`/stocks/approvemyproduct`, data);
-      toast.success(response.data.message || "Customer verified success!");
+
+      enqueueSnackbar(response.data.message || "Customer verified success!", {
+        variant: "success",
+      });
       dispatch(getAllCustomerAddedProductList());
       return response.data;
     } catch (error) {
@@ -158,12 +169,14 @@ export const getSingleProductComplaint = createAsyncThunk(
 //deleteProductComplaint
 export const deleteProductComplaint = createAsyncThunk(
   "customer/deleteProductComplaint",
-  async ({ complaint_id, toast }, { rejectWithValue }) => {
+  async ({ complaint_id, enqueueSnackbar }, { rejectWithValue }) => {
     try {
       const response = await API.delete(
         `/stocks/deletecomplaintbyid/${complaint_id}`
       );
-      toast.success(response.data.message || "product complaint deleted!");
+      enqueueSnackbar(response.data.message || "product complaint deleted!", {
+        variant: "success",
+      });
       return response.data;
     } catch (error) {
       return rejectWithValue({ message: getErrorMessage(error) });
@@ -174,12 +187,17 @@ export const deleteProductComplaint = createAsyncThunk(
 //deleteMultipleProductComplaints
 export const deleteMultipleProductComplaints = createAsyncThunk(
   "customer/deleteMultipleProductComplaints",
-  async ({ complaint_ids, toast }, { rejectWithValue }) => {
+  async ({ complaint_ids, enqueueSnackbar }, { rejectWithValue }) => {
     try {
       const response = await API.delete(`/stocks/deletemultiplecomplaints`, {
         data: { complaint_ids },
       });
-      toast.success(response.data.message || "Product delete successfully!");
+      enqueueSnackbar(
+        response.data.message || "product complaint deleted successFully!",
+        {
+          variant: "success",
+        }
+      );
       return response.data;
     } catch (error) {
       return rejectWithValue({ message: getErrorMessage(error) });
@@ -190,16 +208,16 @@ export const deleteMultipleProductComplaints = createAsyncThunk(
 //addCrmContent
 export const addCrmContent = createAsyncThunk(
   "customer/addCrmContent",
-  async ({ CRMConfig, toast }, { rejectWithValue }) => {
+  async ({ CRMConfig, enqueueSnackbar }, { rejectWithValue }) => {
     try {
       const response = await API.post(
         `/stocks/customerservicerequesttocrm`,
         CRMConfig
       );
 
-      toast.success(
-        response.data.msg || "Complaint Added to the CRM Successfully!"
-      );
+      enqueueSnackbar(response.data.message || "CRM added successFully!", {
+        variant: "success",
+      });
       return response.data;
     } catch (error) {
       return rejectWithValue({ msg: getErrorMessage(error) });

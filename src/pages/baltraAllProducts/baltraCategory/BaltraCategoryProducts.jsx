@@ -1,10 +1,10 @@
-import React, { useEffect, useCallback, useMemo } from "react";
-import BaltraCard from "./BaltraCard";
+import React, { useCallback, useEffect, useMemo } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import {
   baltraCategoryProducts,
   clearProductError,
 } from "../../../redux/features/product/productSlice";
+import BaltraCard from "./BaltraCard";
 import CategorySkeleton from "./categorySkeleton/CategorySkeleton";
 
 const BaltraCategoryProducts = () => {
@@ -51,4 +51,4 @@ const BaltraCategoryProducts = () => {
   );
 };
 
-export default BaltraCategoryProducts;
+export default React.memo(BaltraCategoryProducts);

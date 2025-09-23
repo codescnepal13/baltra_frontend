@@ -1,9 +1,9 @@
-import React, { useEffect, useState } from "react";
+import { enqueueSnackbar } from "notistack";
+import { useEffect, useState } from "react";
 import { useForm } from "react-hook-form";
 import { FaArrowRight, FaEye, FaEyeSlash } from "react-icons/fa";
 import { useDispatch, useSelector } from "react-redux";
 import { Link, useNavigate } from "react-router-dom";
-import { toast } from "react-toastify";
 import userAuthImg from "../../../assets/images/userAuthImg.png";
 import MetaData from "../../../components/layout/metaData/MetaData";
 import {
@@ -38,16 +38,24 @@ const BaltraLogin = () => {
     if (Object.keys(errors).length === 0) {
       const { contact, password } = loginData;
       dispatch(
-        baltraLogin({ loginData: { contact, password }, toast, navigate })
+        baltraLogin({
+          loginData: { contact, password },
+          enqueueSnackbar,
+          navigate,
+        })
       );
     } else {
-      toast.warn("Invalid Input!");
+      enqueueSnackbar("Invalid Input", {
+        variant: "error",
+      });
     }
   };
 
   useEffect(() => {
     if (error) {
-      toast.error(error);
+      enqueueSnackbar(error, {
+        variant: "error",
+      });
       dispatch(clearAuthError());
     }
   }, [dispatch, error]);

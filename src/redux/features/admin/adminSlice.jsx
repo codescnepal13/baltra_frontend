@@ -75,10 +75,13 @@ export const getSingleUser = createAsyncThunk(
 //updateUserRole
 export const updateUserRole = createAsyncThunk(
   "admin/updateUserRole",
-  async ({ id, formData, toast, navigate }, { rejectWithValue }) => {
+  async ({ id, formData, enqueueSnackbar, navigate }, { rejectWithValue }) => {
     try {
       const response = await API.put(`/user/updateuser/${id}`, formData);
-      toast.success(response.data.message || "user data updated");
+
+      enqueueSnackbar(response.data.message || "user data updated", {
+        variant: "success",
+      });
       navigate("/baltra-admin-dashboard/all-user-List");
       return response.data;
     } catch (error) {
@@ -90,10 +93,13 @@ export const updateUserRole = createAsyncThunk(
 //delete UserRole
 export const deleteUserRole = createAsyncThunk(
   "/admin/deleteUserRole",
-  async ({ user_id, toast }, { rejectWithValue }) => {
+  async ({ user_id, enqueueSnackbar }, { rejectWithValue }) => {
     try {
       const response = await API.delete(`/user/deleteusers/${user_id}`);
-      toast.success(response.data.message || "user deleted SuccessFully!");
+
+      enqueueSnackbar(response.data.message || "user deleted SuccessFully!", {
+        variant: "success",
+      });
       return response.data;
     } catch (error) {
       return rejectWithValue({ message: getErrorMessage(error) });
@@ -105,13 +111,15 @@ export const deleteUserRole = createAsyncThunk(
 
 export const deleteMultipleUsersRole = createAsyncThunk(
   "/admin/deleteMultipleUsersRole",
-  async ({ user_ids, toast }, { rejectWithValue }) => {
+  async ({ user_ids, enqueueSnackbar }, { rejectWithValue }) => {
     try {
       const response = await API.delete(`/user/deletemultipleusers`, {
         data: { user_ids },
       });
 
-      toast.success(response.data.message || "user deleted SuccessFully!");
+      enqueueSnackbar(response.data.message || "item deleted SuccessFully!", {
+        variant: "success",
+      });
       return response.data;
     } catch (error) {
       return rejectWithValue({ message: getErrorMessage(error) });
@@ -180,10 +188,12 @@ export const getSingleCustomer = createAsyncThunk(
 //updateCustomerRole
 export const updateCustomerRole = createAsyncThunk(
   "admin/updateCustomerRole",
-  async ({ id, formData, toast, navigate }, { rejectWithValue }) => {
+  async ({ id, formData, enqueueSnackbar, navigate }, { rejectWithValue }) => {
     try {
       const response = await API.put(`/user/updatecustomer/${id}`, formData);
-      toast.success(response.data.message || "customer data updated");
+      enqueueSnackbar(response.data.message || "customer data updated", {
+        variant: "success",
+      });
       navigate("/baltra-admin-dashboard/all-customer-List");
       return response.data;
     } catch (error) {
@@ -195,10 +205,15 @@ export const updateCustomerRole = createAsyncThunk(
 //delete User Role
 export const deleteCustomerRole = createAsyncThunk(
   "/admin/deleteCustomerRole",
-  async ({ customer_id, toast }, { rejectWithValue }) => {
+  async ({ customer_id, enqueueSnackbar }, { rejectWithValue }) => {
     try {
       const response = await API.delete(`/user/deletecustomers/${customer_id}`);
-      toast.success(response.data.message || "customer deleted SuccessFully!");
+      enqueueSnackbar(
+        response.data.message || "customer deleted successFully!",
+        {
+          variant: "success",
+        }
+      );
       return response.data;
     } catch (error) {
       return rejectWithValue({ message: getErrorMessage(error) });
@@ -209,13 +224,18 @@ export const deleteCustomerRole = createAsyncThunk(
 // deleteMultipleCustomersRole;
 export const deleteMultipleCustomersRole = createAsyncThunk(
   "/admin/deleteMultipleCustomersRole",
-  async ({ customer_ids, toast }, { rejectWithValue }) => {
+  async ({ customer_ids, enqueueSnackbar }, { rejectWithValue }) => {
     try {
       const response = await API.delete(`/user/deletemultiplecustomers`, {
         data: { customer_ids },
       });
 
-      toast.success(response.data.message || "customer deleted SuccessFully!");
+      enqueueSnackbar(
+        response.data.message || "customer deleted successFully!",
+        {
+          variant: "success",
+        }
+      );
       return response.data;
     } catch (error) {
       return rejectWithValue({ message: getErrorMessage(error) });
@@ -227,10 +247,12 @@ export const deleteMultipleCustomersRole = createAsyncThunk(
 
 export const addCategory = createAsyncThunk(
   "/admin/add-Category",
-  async ({ formData, toast, navigate }, { rejectWithValue }) => {
+  async ({ formData, enqueueSnackbar, navigate }, { rejectWithValue }) => {
     try {
       const response = await API.post(`/products/addcategory`, formData);
-      toast.success(response.data.message || "category added success!");
+      enqueueSnackbar(response.data.message || "category added successFully!", {
+        variant: "success",
+      });
       navigate("/baltra-admin-dashboard/all-category-List");
       return response.data;
     } catch (error) {
@@ -278,12 +300,15 @@ export const categoryProductById = createAsyncThunk(
 //deleteCategory
 export const deleteCategory = createAsyncThunk(
   "/admin/deleteCategory",
-  async ({ category_id, toast }, { rejectWithValue }) => {
+  async ({ category_id, enqueueSnackbar }, { rejectWithValue }) => {
     try {
       const response = await API.delete(
         `/products/deletecategory/${category_id}`
       );
-      toast.success(response.data.message || "category delete success!");
+
+      enqueueSnackbar(response.data.message || "category delete success!", {
+        variant: "success",
+      });
       return response.data;
     } catch (error) {
       return rejectWithValue({ message: getErrorMessage(error) });
@@ -294,13 +319,15 @@ export const deleteCategory = createAsyncThunk(
 //editCategory
 export const editCategory = createAsyncThunk(
   "/admin-editCategory",
-  async ({ category_id, formData, toast }, { rejectWithValue }) => {
+  async ({ category_id, formData, enqueueSnackbar }, { rejectWithValue }) => {
     try {
       const response = await API.put(
         `/products/updatecategory/${category_id}`,
         formData
       );
-      toast.success(response.data.message || "category update success1");
+      enqueueSnackbar(response.data.message || "category update success!", {
+        variant: "success",
+      });
 
       return response.data;
     } catch (error) {
@@ -312,10 +339,15 @@ export const editCategory = createAsyncThunk(
 //Add Sub Category
 export const addSubCategory = createAsyncThunk(
   "/admin-subCategoryProduct",
-  async ({ formData, toast, navigate }, { rejectWithValue }) => {
+  async ({ formData, enqueueSnackbar, navigate }, { rejectWithValue }) => {
     try {
       const response = await API.post(`/products/addsubcategory`, formData);
-      toast.success(response.data.message || "subCategory added SuccessFully!");
+      enqueueSnackbar(
+        response.data.message || "subcategory added successFully!",
+        {
+          variant: "success",
+        }
+      );
       navigate("/baltra-admin-dashboard/all-sub-category-List");
       return response.data;
     } catch (error) {
@@ -389,12 +421,15 @@ export const dropdownSubCategoryList = createAsyncThunk(
 //deleteSubCategory
 export const deleteSubCategory = createAsyncThunk(
   "/admin-deletesubCategory",
-  async ({ subcategory_id, toast }, { rejectWithValue }) => {
+  async ({ subcategory_id, enqueueSnackbar }, { rejectWithValue }) => {
     try {
       const response = await API.delete(
         `/products/deletesubcategory/${subcategory_id}`
       );
-      toast.success(response.data.message || "subCategory deleted success!");
+
+      enqueueSnackbar(response.data.message || "subCategory deleted success!", {
+        variant: "success",
+      });
       return response.data;
     } catch (error) {
       return rejectWithValue({ message: getErrorMessage(error) });
@@ -405,13 +440,18 @@ export const deleteSubCategory = createAsyncThunk(
 //SubCategoryEdit
 export const editSubCategory = createAsyncThunk(
   "/admin-editSubCategory",
-  async ({ id, formData, toast }, { rejectWithValue }) => {
+  async ({ id, formData, enqueueSnackbar }, { rejectWithValue }) => {
     try {
       const response = await API.put(
         `/products/updatesubcategory/${id}`,
         formData
       );
-      toast.success(response.data.message || "subCategory update Success!");
+      enqueueSnackbar(
+        response.data.message || "subcategory updated successFully!",
+        {
+          variant: "success",
+        }
+      );
       return response.data;
     } catch (error) {
       return rejectWithValue({ message: getErrorMessage(error) });
@@ -435,10 +475,12 @@ export const subCategoryById = createAsyncThunk(
 //addProductByAmin
 export const addBaltraProduct = createAsyncThunk(
   "/admin-addProduct",
-  async ({ formData, toast, navigate }, { rejectWithValue }) => {
+  async ({ formData, enqueueSnackbar, navigate }, { rejectWithValue }) => {
     try {
       const response = await API.post(`/products/postproducts`, formData);
-      toast.success(response.data.message || "product added SuccessFully!");
+      enqueueSnackbar(response.data.message || "product added successFully!", {
+        variant: "error",
+      });
       navigate("/baltra-admin-dashboard/all-products-list");
       return response.data;
     } catch (error) {
@@ -484,12 +526,15 @@ export const singleProductView = createAsyncThunk(
 //deleteBaltraProductsByAdmin
 export const deleteBaltraProduct = createAsyncThunk(
   "/admin-deleteBaltraProduct",
-  async ({ product_id, toast }, { rejectWithValue }) => {
+  async ({ product_id, enqueueSnackbar }, { rejectWithValue }) => {
     try {
       const response = await API.delete(
         `/products/deleteproducts/${product_id}`
       );
-      toast.success(response.data.message || "product delete SuccessFully!");
+
+      enqueueSnackbar(response.data.message || "product delete SuccessFully!", {
+        variant: "success",
+      });
       return response.data;
     } catch (error) {
       return rejectWithValue({ message: getErrorMessage(error) });
@@ -513,13 +558,15 @@ export const singleProductById = createAsyncThunk(
 //edit Product
 export const editProduct = createAsyncThunk(
   "/admin/edit-Product",
-  async ({ product_id, formData, toast }, { rejectWithValue }) => {
+  async ({ product_id, formData, enqueueSnackbar }, { rejectWithValue }) => {
     try {
       const response = await API.put(
         `/products/updateproduct/${product_id}`,
         formData
       );
-      toast.success(response.data.message || "product Update SuccessFully!");
+      enqueueSnackbar(response.data.message || "product edited successFully", {
+        variant: "success",
+      });
 
       return response.data;
     } catch (error) {
@@ -531,10 +578,12 @@ export const editProduct = createAsyncThunk(
 //addBulkImport
 export const addBulkImport = createAsyncThunk(
   "/admin-addBulkImport",
-  async ({ formData, toast, navigate }, { rejectWithValue }) => {
+  async ({ formData, enqueueSnackbar, navigate }, { rejectWithValue }) => {
     try {
       const response = await API.post(`/products/bulkproductqr`, formData);
-      toast.success(response.data.message || "bulk added successFully!");
+      enqueueSnackbar(response.data.message || "Bulk added SuccessFully!", {
+        variant: "success",
+      });
       navigate("/baltra-admin-dashboard/all-QrProducts-list");
       return response.data;
     } catch (error) {
@@ -546,12 +595,15 @@ export const addBulkImport = createAsyncThunk(
 //deleteQrProduct
 export const deleteBaltraQrProduct = createAsyncThunk(
   "/admin-deleteBaltraQrProduct",
-  async ({ product_id, toast }, { rejectWithValue }) => {
+  async ({ product_id, enqueueSnackbar }, { rejectWithValue }) => {
     try {
       const response = await API.delete(
         `/products/deleteqrproduct/${product_id}`
       );
-      toast.success(response.data.message || "qr deleted SuccessFully!");
+
+      enqueueSnackbar(response.data.message || "qr deleted SuccessFully!", {
+        variant: "success",
+      });
 
       return response.data;
     } catch (error) {
@@ -563,12 +615,15 @@ export const deleteBaltraQrProduct = createAsyncThunk(
 //deleteMultipleQrProduct
 export const deleteMultipleQrProduct = createAsyncThunk(
   "/admin-deleteQrMultipleProduct",
-  async ({ product_ids, toast }, { rejectWithValue }) => {
+  async ({ product_ids, enqueueSnackbar }, { rejectWithValue }) => {
     try {
       const response = await API.delete(`/products/deleteqrproduct-multiple`, {
         data: { product_ids },
       });
-      toast.success(response.data.message || "Bulk remove successfully!");
+
+      enqueueSnackbar(response.data.message || "Bulk remove successfully!", {
+        variant: "success",
+      });
       return response.data;
     } catch (error) {
       return rejectWithValue({ message: getErrorMessage(error) });
@@ -579,12 +634,18 @@ export const deleteMultipleQrProduct = createAsyncThunk(
 //deleteMultipleCategoryOnce(deleteMultipleCategoryProduct)
 export const deleteMultipleCategoryProduct = createAsyncThunk(
   "/admin-deleteMultipleCategoryProduct",
-  async ({ category_ids, toast }, { rejectWithValue }) => {
+  async ({ category_ids, enqueueSnackbar }, { rejectWithValue }) => {
     try {
       const response = await API.delete(`/products/deleteselectedcategory`, {
         data: { category_ids },
       });
-      toast.success(response.data.message || "category remove successfully!");
+
+      enqueueSnackbar(
+        response.data.message || "category remove successfully!",
+        {
+          variant: "success",
+        }
+      );
       return response.data;
     } catch (error) {
       return rejectWithValue({ message: getErrorMessage(error) });
@@ -595,13 +656,16 @@ export const deleteMultipleCategoryProduct = createAsyncThunk(
 //deleteMultipleSubCategoryProduct
 export const deleteMultipleSubCategoryProduct = createAsyncThunk(
   "/admin-deleteMultipleSubCategoryProduct",
-  async ({ subcategory_ids, toast }, { rejectWithValue }) => {
+  async ({ subcategory_ids, enqueueSnackbar }, { rejectWithValue }) => {
     try {
       const response = await API.delete(`/products/deleteselectedsubcategory`, {
         data: { subcategory_ids },
       });
-      toast.success(
-        response.data.message || "SubCategory remove successfully!"
+      enqueueSnackbar(
+        response.data.message || "SubCategory remove successfully!",
+        {
+          variant: "success",
+        }
       );
       return response.data;
     } catch (error) {
@@ -613,12 +677,15 @@ export const deleteMultipleSubCategoryProduct = createAsyncThunk(
 //deleteMultipleProduct
 export const deleteMultipleProduct = createAsyncThunk(
   "/admin-deleteMultipleProduct",
-  async ({ product_ids, toast }, { rejectWithValue }) => {
+  async ({ product_ids, enqueueSnackbar }, { rejectWithValue }) => {
     try {
       const response = await API.delete(`/products/deletemultipleproducts`, {
         data: { product_ids },
       });
-      toast.success(response.data.message || "Product remove successfully!");
+
+      enqueueSnackbar(response.data.message || "Product remove successfully!", {
+        variant: "success",
+      });
       return response.data;
     } catch (error) {
       return rejectWithValue({ message: getErrorMessage(error) });
@@ -629,10 +696,12 @@ export const deleteMultipleProduct = createAsyncThunk(
 //AddQRProduct
 export const addQrProduct = createAsyncThunk(
   "/admin-addQrProduct",
-  async ({ addQrValue, toast, navigate }, { rejectWithValue }) => {
+  async ({ addQrValue, enqueueSnackbar, navigate }, { rejectWithValue }) => {
     try {
       const response = await API.post(`/products/postqr`, addQrValue);
-      toast.success(response.data.message || "product added SuccessFully!");
+      enqueueSnackbar(response.data.message || "QR added successFuloly!", {
+        variant: "success",
+      });
       navigate("/baltra-admin-dashboard/all-QrProducts-list");
       return response.data;
     } catch (error) {
@@ -734,15 +803,15 @@ export const downloadSelectQrInPDF = createAsyncThunk(
 //addWarrantyPackage
 export const addWarrantyPackage = createAsyncThunk(
   "/admin/add-WarrantyPackage",
-  async ({ warrantyValue, toast, navigate }, { rejectWithValue }) => {
+  async ({ warrantyValue, enqueueSnackbar, navigate }, { rejectWithValue }) => {
     try {
       const response = await API.post(
         `/products/extendwarrantyform`,
         warrantyValue
       );
-      toast.success(
-        response.data.message || "Warranty Package added successFully!"
-      );
+      enqueueSnackbar(response.data.message || "warranty added successFully!", {
+        variant: "success",
+      });
       navigate(`/baltra-admin-dashboard/all/warranty-package-list`);
       return response.data;
     } catch (error) {
@@ -770,13 +839,18 @@ export const singleWarrantyProduct = createAsyncThunk(
 
 export const editWarrantyForm = createAsyncThunk(
   "admin/editWarrantyForm",
-  async ({ form_id, warrantyValue, toast, navigate }, { rejectWithValue }) => {
+  async (
+    { form_id, warrantyValue, enqueueSnackbar, navigate },
+    { rejectWithValue }
+  ) => {
     try {
       const response = await API.put(
         `/products/updatewarrantyform/${form_id}`,
         warrantyValue
       );
-      toast.success(response.data.message || "Warranty update Success!");
+      enqueueSnackbar(response.data.message || "warranty package updated", {
+        variant: "success",
+      });
       navigate("/baltra-admin-dashboard/all/warranty-package-list");
       return response.data;
     } catch (error) {
@@ -811,12 +885,17 @@ export const getAllWarrantyPackages = createAsyncThunk(
 
 export const deleteWarrantyCard = createAsyncThunk(
   "admin/deleteWarrantyCard",
-  async ({ form_id, toast }, { rejectWithValue }) => {
+  async ({ form_id, enqueueSnackbar }, { rejectWithValue }) => {
     try {
       const response = await API.delete(
         `/products/deleteextendwarrantyform/${form_id}`
       );
-      toast.success(response.data.message || "warranty deleted success!");
+      enqueueSnackbar(
+        response.data.message || "warranty deleted successFully!",
+        {
+          variant: "success",
+        }
+      );
       return response.data;
     } catch (error) {
       return rejectWithValue({ message: error.message });
@@ -828,7 +907,7 @@ export const deleteWarrantyCard = createAsyncThunk(
 
 export const deleteMultipleWarrantyPackage = createAsyncThunk(
   "/admin/deleteMultipleWarrantyPackage",
-  async ({ form_ids, toast }, { rejectWithValue }) => {
+  async ({ form_ids, enqueueSnackbar }, { rejectWithValue }) => {
     try {
       const response = await API.delete(
         `/products/multipledeleteextendwarrantyform`,
@@ -837,7 +916,9 @@ export const deleteMultipleWarrantyPackage = createAsyncThunk(
         }
       );
 
-      toast.success(response.data.message || "Warranty deleted SuccessFully!");
+      enqueueSnackbar(response.data.message || "item deleted successFully!", {
+        variant: "success",
+      });
       return response.data;
     } catch (error) {
       return rejectWithValue({ message: getErrorMessage(error) });
@@ -848,11 +929,13 @@ export const deleteMultipleWarrantyPackage = createAsyncThunk(
 //Add Product Catalog
 export const addProductCatalog = createAsyncThunk(
   "/admin/addProductCatalog",
-  async ({ formData, toast, navigate }, { rejectWithValue }) => {
+  async ({ formData, enqueueSnackbar, navigate }, { rejectWithValue }) => {
     try {
       const response = await API.post(`/products/uploadcatalogue`, formData);
 
-      toast.success(response.data.message || "Catalog added SuccessFully!");
+      enqueueSnackbar(response.data.message || "Catalog added successFully!", {
+        variant: "success",
+      });
       navigate("/baltra-admin-dashboard/all/e-catalog-list");
       return response.data;
     } catch (error) {
@@ -877,11 +960,14 @@ export const allProductCatalog = createAsyncThunk(
 //delete Product Catalog
 export const deleteProductCatalog = createAsyncThunk(
   "/admin/deleteProductCatalog",
-  async ({ id, toast }, { rejectWithValue }) => {
+  async ({ id, enqueueSnackbar }, { rejectWithValue }) => {
     try {
       const response = await API.delete(`/products/deletecatalogue/${id}`);
-      toast.success(
-        response.data.message || "product catalog deleted SuccessFully!"
+      enqueueSnackbar(
+        response.data.message || "product catalog deleted successFully",
+        {
+          variant: "success",
+        }
       );
       return response.data;
     } catch (error) {
@@ -930,12 +1016,15 @@ export const singlePersonalizationView = createAsyncThunk(
 //deletecustomizedProduct(deleteCustomizedProduct)
 export const deleteCustomizedProduct = createAsyncThunk(
   "/admin/deleteCustomizedProduct",
-  async ({ personalization_id, toast }, { rejectWithValue }) => {
+  async ({ personalization_id, enqueueSnackbar }, { rejectWithValue }) => {
     try {
       const response = await API.delete(
         `/customer/deletepersonalization/${personalization_id}`
       );
-      toast.success(response.data.message || "customize product deleted!");
+
+      enqueueSnackbar(response.data.message || "customize product deleted", {
+        variant: "success",
+      });
       return response.data;
     } catch (error) {
       return rejectWithValue({ message: getErrorMessage(error) });
@@ -946,10 +1035,13 @@ export const deleteCustomizedProduct = createAsyncThunk(
 //verifiedCustomizedProduct
 export const verifiedCustomizedProduct = createAsyncThunk(
   "/admin/verifiedCustomizedProduct",
-  async ({ data, toast }, { rejectWithValue }) => {
+  async ({ data, enqueueSnackbar }, { rejectWithValue }) => {
     try {
       const response = await API.post(`/customer/approvepersonalization`, data);
-      toast.success(response.data.message || "customize product updated!");
+
+      enqueueSnackbar(response.data.message || "customize product updated", {
+        variant: "success",
+      });
       return response.data;
     } catch (error) {
       return rejectWithValue({ message: getErrorMessage(error) });
@@ -994,12 +1086,16 @@ export const singleBulkQuote = createAsyncThunk(
 //deleteBulkQuoteProduct
 export const deleteBulkQuoteProduct = createAsyncThunk(
   "/admin/deleteBulkQuoteProduct",
-  async ({ quote_id, toast }, { rejectWithValue }) => {
+  async ({ quote_id, enqueueSnackbar }, { rejectWithValue }) => {
     try {
       const response = await API.delete(
         `/products/deletequotation/${quote_id}`
       );
-      toast.success(response.data.message || "Bulk Quote Delete SuccessFully!");
+
+      enqueueSnackbar(response.data.message || "item deleted successFully!", {
+        variant: "success",
+      });
+
       return response.data;
     } catch (error) {
       return rejectWithValue({ message: getErrorMessage(error) });
@@ -1010,14 +1106,20 @@ export const deleteBulkQuoteProduct = createAsyncThunk(
 //verifiedBulkQuoteProduct
 export const verifiedBulkQuoteProduct = createAsyncThunk(
   "/admin/verifiedBulkQuoteProduct",
-  async ({ quote_id, data, toast }, { rejectWithValue, dispatch }) => {
+  async (
+    { quote_id, data, enqueueSnackbar },
+    { rejectWithValue, dispatch }
+  ) => {
     try {
       const response = await API.put(
         `/products/approvequotation/${quote_id}`,
         data
       );
-      toast.success(
-        response.data.message || "Bulk Quote verified SuccessFully!"
+      enqueueSnackbar(
+        response.data.message || "Bulk Quote verified successFully!",
+        {
+          variant: "success",
+        }
       );
       dispatch(allBulkQuoteProducts());
       return response.data;

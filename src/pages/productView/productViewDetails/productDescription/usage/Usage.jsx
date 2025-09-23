@@ -3,39 +3,16 @@ import React from "react";
 const Usage = ({ singleProduct }) => {
   const imageToDisplay = singleProduct?.usage_images?.slice(0, 2) || [];
 
-  const extractListFromUsage = (usage) => {
-    const tempDiv = document.createElement("div");
-    tempDiv.innerHTML = usage;
-
-    const ulElement = tempDiv.querySelector("ul");
-    return ulElement ? Array.from(ulElement.querySelectorAll("li")) : [];
-  };
-
-  const usageText = singleProduct?.usage?.replace(/<ul>.*<\/ul>/s, "").trim();
-
-  const listItems = extractListFromUsage(singleProduct?.usage);
-
   return (
     <div className="w-full bg-white py-2">
       <div className="max-w-4xl mx-auto px-4 md:px-16">
         <span className="font-semibold font-gothamNarrow">Usage</span>
         <br />
-        <p className="text-[#282525] text-sm font-light leading-[27px] font-gothamNarrow">
-          {usageText}
-        </p>
 
-        {listItems.length > 0 && (
-          <ul className="mt-4 list-disc pl-6">
-            {listItems.map((item, index) => (
-              <li
-                key={index}
-                className="text-[#282525] text-sm font-light leading-[27px] font-gothamNarrow"
-              >
-                {item.textContent}
-              </li>
-            ))}
-          </ul>
-        )}
+        <div
+          className="text-[#282525] text-sm font-light leading-[27px] break-words font-gothamNarrow ql-editor prose prose-lg max-w-none"
+          dangerouslySetInnerHTML={{ __html: singleProduct?.usage }}
+        />
       </div>
 
       {/* Render images as before */}
@@ -65,4 +42,4 @@ const Usage = ({ singleProduct }) => {
   );
 };
 
-export default Usage;
+export default React.memo(Usage);

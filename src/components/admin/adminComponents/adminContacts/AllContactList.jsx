@@ -1,19 +1,25 @@
+import { debounce } from "lodash";
+import moment from "moment";
+import { enqueueSnackbar } from "notistack";
 import React, { useCallback, useEffect, useState } from "react";
+import {
+  FaEye,
+  FaSearch,
+  FaSyncAlt,
+  FaTrash,
+  FaTrashAlt,
+} from "react-icons/fa";
 import { useDispatch, useSelector } from "react-redux";
+import { Link } from "react-router-dom";
 import {
   clearContactError,
   deleteContactData,
   deleteMultipleContacts,
   getAllContactList,
 } from "../../../../redux/features/contact/contactSlice";
-import { Link } from "react-router-dom";
-import { FaEye, FaSearch, FaTrash, FaTrashAlt } from "react-icons/fa";
-import moment from "moment";
-import { toast } from "react-toastify";
+import MetaData from "../../../layout/metaData/MetaData";
 import ContactPagination from "../adminPagination/contactPagination/ContactPagination";
 import ContactDeletePopUp from "./contactDeletePopUp/ContactDeletePopUp";
-import { debounce } from "lodash";
-import MetaData from "../../../layout/metaData/MetaData";
 
 const AllContactList = () => {
   const { loading, error, allContacts } = useSelector((state) => state.contact);
@@ -48,7 +54,7 @@ const AllContactList = () => {
       dispatch(
         deleteMultipleContacts({
           contact_ids: selectedContactsId,
-          toast,
+          enqueueSnackbar,
         })
       ).then(() => {
         dispatch(
@@ -74,7 +80,9 @@ const AllContactList = () => {
 
   const handleDeleteConfirm = () => {
     if (selectedContactId !== null) {
-      dispatch(deleteContactData({ contact_id: selectedContactId, toast }));
+      dispatch(
+        deleteContactData({ contact_id: selectedContactId, enqueueSnackbar })
+      );
 
       setSelectedContactId(null);
     }
@@ -102,6 +110,21 @@ const AllContactList = () => {
     const value = e.target.value;
     setSearchByCustomerNumber(value);
     debouncedSearch(value, "phone");
+  };
+
+  const handleReset = () => {
+    setSearchByCustomerName("");
+    setSearchByCustomerNumber("");
+    setSelectedContactsId([]);
+    setSelectedContactId(null);
+
+    dispatch(
+      getAllContactList({
+        page: 1,
+        name: "",
+        phone: "",
+      })
+    );
   };
 
   const handlePageChange = useCallback(
@@ -136,7 +159,7 @@ const AllContactList = () => {
   return (
     <>
       <MetaData title="Baltra-admin-dashboard-all-contact-list" />
-      <div className="font-gothamNarrow container mx-auto px-8 py-8">
+      <div className="font-gothamNarrow container mx-auto px-4 py-8">
         <div className="flex justify-between mb-4">
           <h2 className="text-lg font-semibold font-gothamNarrow">
             All Contact List
@@ -169,16 +192,36 @@ const AllContactList = () => {
                 <FaSearch />
               </button>
             </div>
+
+            <button
+              className="flex cursor-pointer items-center gap-1 px-4 py-2 text-sm border border-gray-300 rounded-md hover:bg-gray-50 transition-colors"
+              onClick={handleReset}
+            >
+              <FaSyncAlt className="text-gray-500" /> Reset
+            </button>
           </div>
 
+          {selectedContactsId.length > 0 && (
+            <div className="flex flex-wrap gap-2 mb-4 p-3 bg-blue-50 rounded-lg border border-blue-200">
+              <span className="text-sm text-blue-700 font-medium mr-2">
+                {selectedContactsId.length} item(s) selected
+              </span>
+            </div>
+          )}
+
           <div className="bg-white font-sans table-container hide-scrollbar overflow-x-auto">
-            {selectedContactsId.length > 0 && (
-              <button
-                className="h-4 w-4 text-red-600 hover:text-red-700"
-                onClick={handleMultipleDelete}
-              >
-                <FaTrashAlt />
-              </button>
+            {selectedContactsId?.length > 0 && (
+              <div className="mb-3 flex justify-start">
+                <button
+                  className="flex items-center gap-2 px-3 py-1.5 rounded-lg 
+                   bg-red-500 text-white text-sm font-medium
+                   hover:bg-red-600 transition"
+                  onClick={handleMultipleDelete}
+                >
+                  <FaTrashAlt className="text-white" />
+                  Delete Selected
+                </button>
+              </div>
             )}
             <table className="min-w-full divide-y divide-gray-200 border border-gray-300">
               <thead className="font-gothamNarrow">
@@ -261,12 +304,12 @@ const AllContactList = () => {
                           <Link
                             to={`/baltra-admin-dashboard/single-view-contact/${adminContact.id}`}
                           >
-                            <FaEye className="text-blue-600 hover:text-black mx-2" />
+                            <FaEye className="text-blue-600 hover:text-black mx-1" />
                           </Link>
                           <button
                             onClick={() => handleOpenModal(adminContact.id)}
                           >
-                            <FaTrash className="text-red-600 hover:text-red-700 mx-2" />
+                            <FaTrash className="text-red-600 hover:text-red-700 mx-1" />
                           </button>
                           {selectedContactId === adminContact.id && (
                             <ContactDeletePopUp
@@ -306,4 +349,4 @@ const AllContactList = () => {
   );
 };
 
-export default AllContactList;
+export default React.memo(AllContactList);

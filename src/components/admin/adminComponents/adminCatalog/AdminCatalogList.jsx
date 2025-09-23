@@ -1,5 +1,7 @@
-import React, { useEffect, useState } from "react";
-import { FaPlusCircle, FaSearch, FaTrash } from "react-icons/fa";
+import moment from "moment";
+import { enqueueSnackbar } from "notistack";
+import { useEffect, useState } from "react";
+import { FaPlusCircle, FaSyncAlt, FaTrash } from "react-icons/fa";
 import { useDispatch, useSelector } from "react-redux";
 import { Link } from "react-router-dom";
 import {
@@ -7,14 +9,13 @@ import {
   clearAdminError,
   deleteProductCatalog,
 } from "../../../../redux/features/admin/adminSlice";
-import moment from "moment";
 import ProductCatalogDeleteModal from "./addCatalog/ProductCatalogDeleteModal";
-import { toast } from "react-toastify";
 
 const AdminCatalogList = () => {
   const { loading, error, allProductCatalogList } = useSelector(
     (state) => state.admin
   );
+  const dispatch = useDispatch();
 
   const [selectedCatalogId, setSelectedCatalogId] = useState(null);
 
@@ -28,11 +29,18 @@ const AdminCatalogList = () => {
 
   const handleDeleteConfirm = () => {
     if (selectedCatalogId !== null) {
-      dispatch(deleteProductCatalog({ id: selectedCatalogId, toast }));
+      dispatch(
+        deleteProductCatalog({ id: selectedCatalogId, enqueueSnackbar })
+      );
       setSelectedCatalogId(null);
     }
   };
-  const dispatch = useDispatch();
+
+  const handleReset = () => {
+    setSelectedCatalogId(null);
+    dispatch(allProductCatalog());
+  };
+
   useEffect(() => {
     if (error) {
       dispatch(clearAdminError());
@@ -59,25 +67,18 @@ const AdminCatalogList = () => {
 
         <div className="bg-[#FFFFFF] px-2 py-4">
           <div className="flex mb-2 text-xs items-center">
-            <div className="relative mr-2 flex items-center">
-              <input
-                type="text"
-                placeholder="Search by Catalog"
-                className="w-42 pl-4 pr-10 py-2 border border-gray-300 rounded-sm text-sm focus:outline-none focus:border-red-500 focus:ring-gray-300 font-gothamNarrow"
-              />
-              <button className="bg-red-600 hover:bg-red-700 text-white py-3 px-4 ml-1 inline-flex items-center rounded-sm font-gothamNarrow">
-                <FaSearch />
-              </button>
-            </div>
+            <button
+              className="flex cursor-pointer items-center gap-1 px-4 py-2 text-sm border border-gray-300 rounded-md hover:bg-gray-50 transition-colors"
+              onClick={handleReset}
+            >
+              <FaSyncAlt className="text-gray-500" /> Reset
+            </button>
           </div>
 
           <div className="bg-white font-sans table-container hide-scrollbar overflow-x-auto">
             <table className="min-w-full divide-y divide-gray-200 border border-gray-300">
               <thead className="font-gothamNarrow">
                 <tr>
-                  <th className="px-4 py-3 text-left text-sm font-semibold text-black border-l border-r accent-red-500">
-                    <input type="checkbox" />
-                  </th>
                   <th className="px-4 py-2 font-gothamNarrow text-left text-sm font-semibold text-black whitespace-nowrap">
                     S.N.
                   </th>
@@ -114,9 +115,6 @@ const AdminCatalogList = () => {
                       key={catalog.id}
                       className="hover:bg-[#FFF0E5] hover:shadow-sm border-t border-b border-r border-l border-gray-300 cursor-pointer"
                     >
-                      <td className="px-4 py-2 font-gothamNarrow text-sm font-semibold text-black whitespace-nowrap border-gray-300 border-l border-r accent-red-500">
-                        <input type="checkbox" />
-                      </td>
                       <td className="px-4 py-2 font-gothamNarrow text-sm text-black whitespace-nowrap">
                         {index + 1}
                       </td>

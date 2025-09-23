@@ -1,16 +1,17 @@
 import { debounce } from "lodash";
 import moment from "moment";
+import { enqueueSnackbar } from "notistack";
 import React, { useCallback, useEffect, useState } from "react";
 import {
   FaPencilAlt,
   FaPlusCircle,
   FaSearch,
+  FaSyncAlt,
   FaTrash,
   FaTrashAlt,
 } from "react-icons/fa";
 import { useDispatch, useSelector } from "react-redux";
 import { Link } from "react-router-dom";
-import { toast } from "react-toastify";
 import {
   clearAdminError,
   deleteMultipleWarrantyPackage,
@@ -58,7 +59,7 @@ const AllWarrantyPackageList = () => {
       dispatch(
         deleteMultipleWarrantyPackage({
           form_ids: selectedWarrantysId,
-          toast,
+          enqueueSnackbar,
         })
       ).then(() => {
         dispatch(getAllWarrantyPackages({ page, type: searchByPackageType }));
@@ -78,7 +79,9 @@ const AllWarrantyPackageList = () => {
 
   const handleDeleteConfirm = () => {
     if (selectedWarrantyId !== null) {
-      dispatch(deleteWarrantyCard({ form_id: selectedWarrantyId, toast }));
+      dispatch(
+        deleteWarrantyCard({ form_id: selectedWarrantyId, enqueueSnackbar })
+      );
       setSelectedWarrantyId(null);
     }
   };
@@ -105,6 +108,13 @@ const AllWarrantyPackageList = () => {
     [dispatch, searchByPackageType]
   );
 
+  const handleReset = () => {
+    setSelectedWarrantyId(null);
+    setSelectedWarrantysId([]);
+    setSearchByPackageType("");
+    dispatch(getAllWarrantyPackages({ page: newPage }));
+  };
+
   useEffect(() => {
     if (error) {
       dispatch(clearAdminError());
@@ -117,7 +127,7 @@ const AllWarrantyPackageList = () => {
 
   return (
     <>
-      <div className="font-gothamNarrow container mx-auto px-8 py-8">
+      <div className="font-gothamNarrow container mx-auto px-4 py-8">
         <div className="flex justify-between mb-4">
           <h2 className="text-lg font-semibold font-gothamNarrow">
             All Warranty List
@@ -144,17 +154,37 @@ const AllWarrantyPackageList = () => {
                 <FaSearch />
               </button>
             </div>
+            <button
+              className="flex cursor-pointer items-center gap-1 px-4 py-2 text-sm border border-gray-300 rounded-md hover:bg-gray-50 transition-colors"
+              onClick={handleReset}
+            >
+              <FaSyncAlt className="text-gray-500" /> Reset
+            </button>
           </div>
 
+          {selectedWarrantysId.length > 0 && (
+            <div className="flex flex-wrap gap-2 mb-4 p-3 bg-blue-50 rounded-lg border border-blue-200">
+              <span className="text-sm text-blue-700 font-medium mr-2">
+                {selectedWarrantysId.length} item(s) selected
+              </span>
+            </div>
+          )}
+
           <div className="bg-white font-sans table-container hide-scrollbar overflow-x-auto">
-            {selectedWarrantysId.length > 0 && (
-              <button
-                className="h-4 w-4 text-red-600 hover:text-red-700"
-                onClick={handleMultipleDelete}
-              >
-                <FaTrashAlt />
-              </button>
+            {selectedWarrantysId?.length > 0 && (
+              <div className="mb-3 flex justify-start">
+                <button
+                  className="flex items-center gap-2 px-3 py-1.5 rounded-lg 
+                   bg-red-500 text-white text-sm font-medium
+                   hover:bg-red-600 transition"
+                  onClick={handleMultipleDelete}
+                >
+                  <FaTrashAlt className="text-white" />
+                  Delete Selected
+                </button>
+              </div>
             )}
+
             <table className="min-w-full divide-y divide-gray-200 border border-gray-300">
               <thead className="font-gothamNarrow">
                 <tr>
@@ -163,9 +193,9 @@ const AllWarrantyPackageList = () => {
                       type="checkbox"
                       onChange={handleSelectAll}
                       checked={
-                        allWarrantyPackagesList &&
-                        selectedWarrantysId.length ===
-                          allWarrantyPackagesList.length
+                        allWarrantyPackagesList?.length > 0 &&
+                        selectedWarrantysId?.length ===
+                          allWarrantyPackagesList?.length
                       }
                     />
                   </th>
@@ -300,4 +330,4 @@ const AllWarrantyPackageList = () => {
   );
 };
 
-export default AllWarrantyPackageList;
+export default React.memo(AllWarrantyPackageList);

@@ -1,7 +1,7 @@
+import { enqueueSnackbar } from "notistack";
 import React, { useEffect, useState } from "react";
 import { FaTimes } from "react-icons/fa";
 import { useDispatch, useSelector } from "react-redux";
-import { toast } from "react-toastify";
 import {
   clearAdminError,
   verifiedCustomizedProduct,
@@ -20,13 +20,15 @@ const UpdateCustomizedModal = ({ item, onClose }) => {
       status: "Approved",
     };
 
-    await dispatch(verifiedCustomizedProduct({ data, toast }));
+    await dispatch(verifiedCustomizedProduct({ data, enqueueSnackbar }));
     onClose();
   };
 
   useEffect(() => {
     if (error) {
-      toast.error(error);
+      enqueueSnackbar(error, {
+        variant: "error",
+      });
       dispatch(clearAdminError());
     }
   }, [dispatch, error]);
@@ -91,4 +93,4 @@ const UpdateCustomizedModal = ({ item, onClose }) => {
   );
 };
 
-export default UpdateCustomizedModal;
+export default React.memo(UpdateCustomizedModal);

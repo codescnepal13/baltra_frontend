@@ -38,4 +38,4 @@ const RelatedProducts = ({ allRelatedProducts, isFetching }) => {
   );
 };
 
-export default RelatedProducts;
+export default React.memo(RelatedProducts);

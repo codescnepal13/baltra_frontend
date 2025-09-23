@@ -1,40 +1,16 @@
 import React from "react";
 
 const Sizing = ({ singleProduct }) => {
-  const extractListFromUsage = (sizing) => {
-    const tempDiv = document.createElement("div");
-    tempDiv.innerHTML = sizing;
-
-    const ulElement = tempDiv.querySelector("ul");
-    return ulElement ? Array.from(ulElement.querySelectorAll("li")) : [];
-  };
-
-  const sizingText = singleProduct?.sizing?.replace(/<ul>.*<\/ul>/s, "").trim();
-
-  const listItems = extractListFromUsage(singleProduct?.sizing);
-
   return (
     <div className="w-full bg-white">
       <div className="max-w-4xl mx-auto px-4 md:px-16">
         <div className="text-[#282525] text-sm font-light leading-[27px] font-gothamNarrow">
           <span className="font-semibold">Sizing</span>
           <br />
-          <p className="text-[#282525] text-sm font-light leading-[27px] font-gothamNarrow">
-            {sizingText}
-          </p>
-
-          {listItems.length > 0 && (
-            <ul className="mt-4 list-disc pl-6">
-              {listItems.map((item, index) => (
-                <li
-                  key={index}
-                  className="text-[#282525] text-sm font-light leading-[27px] font-gothamNarrow"
-                >
-                  {item.textContent}
-                </li>
-              ))}
-            </ul>
-          )}
+          <div
+            className="text-[#282525] text-sm font-light leading-[27px] break-words font-gothamNarrow ql-editor prose prose-lg max-w-none"
+            dangerouslySetInnerHTML={{ __html: singleProduct?.sizing }}
+          />
         </div>
       </div>
       {singleProduct?.sizing_images[1]?.image_url && (
@@ -64,4 +40,4 @@ const Sizing = ({ singleProduct }) => {
   );
 };
 
-export default Sizing;
+export default React.memo(Sizing);

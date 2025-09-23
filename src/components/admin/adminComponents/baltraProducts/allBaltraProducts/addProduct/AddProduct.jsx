@@ -1,12 +1,13 @@
-import React, { useEffect, useState } from "react";
+import { enqueueSnackbar } from "notistack";
+import { useEffect, useState } from "react";
 import { BlockPicker } from "react-color";
 import { FaInfoCircle, FaTimes, FaTrash } from "react-icons/fa";
 import { HiOutlineArrowLeftCircle } from "react-icons/hi2";
 import { IoCloudUploadOutline } from "react-icons/io5";
 import ReactQuill from "react-quill";
+import "react-quill/dist/quill.snow.css";
 import { useDispatch, useSelector } from "react-redux";
 import { Link, useNavigate } from "react-router-dom";
-import { toast } from "react-toastify";
 import {
   addBaltraProduct,
   clearAdminError,
@@ -55,71 +56,49 @@ const presetColors = [
   "#9E9E9E",
   "#607D8B",
   "#FFFFFF",
-  "#FFCDD2",
-  "#F8BBD0",
-  "#E1BEE7",
-  "#D1C4E9",
-  "#C5CAE9",
-  "#BBDEFB",
-  "#B3E5FC",
-  "#B2EBF2",
-  "#B2DFDB",
-  "#C8E6C9",
-  "#DCEDC8",
-  "#F0F4C3",
-  "#FFF9C4",
-  "#FFECB3",
-  "#FFE0B2",
-  "#FFCCBC",
-  "#D7CCC8",
-  "#F5F5F5",
-  "#CFD8DC",
-  "#E57373",
-  "#F06292",
-  "#BA68C8",
-  "#9575CD",
-  "#7986CB",
-  "#64B5F6",
-  "#4FC3F7",
-  "#4DD0E1",
-  "#4DB6AC",
-  "#81C784",
-  "#AED581",
-  "#DCE775",
-  "#FFF176",
-  "#FFD54F",
-  "#FFB74D",
-  "#FF8A65",
-  "#A1887F",
-  "#E0E0E0",
-  "#90A4AE",
-  "#F48FB1",
-  "#CE93D8",
-  "#B39DDB",
-  "#9FA8DA",
-  "#90CAF9",
-  "#81D4FA",
-  "#80DEEA",
-  "#80CBC4",
-  "#A5D6A7",
-  "#C5E1A5",
-  "#E6EE9C",
-  "#FFF59D",
-  "#FFE082",
-  "#FFCC80",
-  "#FFAB91",
-  "#BCAAA4",
-  "#EEEEEE",
-  "#B0BEC5",
+];
+
+const quillModules = {
+  toolbar: [
+    [{ header: [1, 2, 3, false] }],
+    [{ font: [] }],
+    [{ size: ["small", false, "large", "huge"] }],
+    ["bold", "italic", "underline", "strike"],
+    [{ color: [] }, { background: [] }],
+    [{ script: "sub" }, { script: "super" }],
+    [{ list: "ordered" }, { list: "bullet" }],
+    [{ indent: "-1" }, { indent: "+1" }],
+    [{ align: [] }],
+    ["link", "image", "video"],
+    ["blockquote", "code-block"],
+    ["clean"],
+  ],
+};
+
+const quillFormats = [
+  "header",
+  "font",
+  "size",
+  "bold",
+  "italic",
+  "underline",
+  "strike",
+  "color",
+  "background",
+  "script",
+  "list",
+  "bullet",
+  "indent",
+  "align",
+  "link",
+  "image",
+  "video",
+  "blockquote",
+  "code-block",
 ];
 const AddProduct = () => {
-  const {
-    dropdownCategories,
-    error,
-    isLoading,
-    isProcessing,
-    dropdownSubCategories,
-  } = useSelector((state) => state.admin);
+  const { dropdownCategories, error, isLoading, dropdownSubCategories } =
+    useSelector((state) => state.admin);
   const dispatch = useDispatch();
   const navigate = useNavigate();
 
@@ -196,36 +175,12 @@ const AddProduct = () => {
     setProductSpecification(value);
   };
 
-  const removeSpecificationParagraphTags = (specification) => {
-    // Remove <p> and </p> tags
-    specification = specification.replace(/<p[^>]*>|<\/p>/g, "");
-
-    // Remove unnecessary <br> tags (e.g., consecutive <br> tags)
-    specification = specification.replace(/(<br\s*\/?>\s*)+/g, " ");
-
-    return specification;
-  };
-
   const handleSizingChange = (value) => {
     setProductSizing(value);
   };
 
-  const removeSizingParagraphTags = (sizing) => {
-    // Remove <p> and </p> tags
-    sizing = sizing.replace(/<p[^>]*>|<\/p>/g, "");
-
-    // Remove unnecessary <br> tags (e.g., consecutive <br> tags)
-    sizing = sizing.replace(/(<br\s*\/?>\s*)+/g, " ");
-
-    return sizing;
-  };
-
   const handleUsageChange = (value) => {
     setProductUsage(value);
-  };
-
-  const removeUsageParagraphTags = (usage) => {
-    return usage.replace(/<p[^>]*>|<\/p>|<br\s*\/?>/g, "");
   };
 
   const handleMainFileChange = (e) => {
@@ -519,10 +474,12 @@ const AddProduct = () => {
   };
 
   const handleColorChange = (color) => {
-    setAddProductValue((prevValue) => ({
-      ...prevValue,
-      color_styles: [...prevValue.color_styles, color.hex],
-    }));
+    if (!color_styles.includes(color.hex)) {
+      setAddProductValue((prevValue) => ({
+        ...prevValue,
+        color_styles: [...prevValue.color_styles, color.hex],
+      }));
+    }
   };
 
   const handleRemoveColor = (colorToRemove) => {
@@ -550,12 +507,6 @@ const AddProduct = () => {
   const handleSubmit = (e) => {
     e.preventDefault();
     if (validatedForm()) {
-      const sanitizedSpecification =
-        removeSpecificationParagraphTags(productSpecification);
-
-      const sanitizedSizing = removeSizingParagraphTags(productSizing);
-
-      const sanitizedUsage = removeUsageParagraphTags(productUsage);
       const formData = new FormData();
       formData.append("name", name);
       formData.append("category_id", category_id);
@@ -570,9 +521,9 @@ const AddProduct = () => {
       formData.append("sub_heading", sub_heading);
       formData.append("model_name", model_name);
       formData.append("reward_points", parseInt(reward_points));
-      formData.append("specification", sanitizedSpecification);
-      formData.append("sizing", sanitizedSizing);
-      formData.append("usage", sanitizedUsage);
+      formData.append("specification", productSpecification);
+      formData.append("sizing", productSizing);
+      formData.append("usage", productUsage);
       formData.append("warranty_icon", warranty_icon);
       formData.append("galleryimageone", galleryimageone);
       formData.append("galleryimagetwo", galleryimagetwo);
@@ -607,15 +558,19 @@ const AddProduct = () => {
           formData.append("specification_images", photo);
         });
       }
-      dispatch(addBaltraProduct({ formData, toast, navigate }));
+      dispatch(addBaltraProduct({ formData, enqueueSnackbar, navigate }));
     } else {
-      toast.warn("Invalid Input");
+      enqueueSnackbar("Invalid Input", {
+        variant: "error",
+      });
     }
   };
 
   useEffect(() => {
     if (error) {
-      toast.error(error);
+      enqueueSnackbar(error, {
+        variant: "error",
+      });
       dispatch(clearAdminError());
     }
   }, [dispatch, error]);
@@ -955,11 +910,13 @@ const AddProduct = () => {
                   </div>
                 ))}
               </div>
-              <BlockPicker
-                colors={presetColors}
-                width="95%"
-                onChangeComplete={handleColorChange}
-              />
+              <div className="border border-gray-200 rounded-lg p-4">
+                <BlockPicker
+                  colors={presetColors}
+                  width="100%"
+                  onChangeComplete={handleColorChange}
+                />
+              </div>
               {productErr.color_styles && (
                 <span className="text-xs text-red-600 font-gothamNarrow">
                   {productErr.color_styles}
@@ -1013,14 +970,23 @@ const AddProduct = () => {
                 htmlFor="specification"
                 className="text-black font-normal mb-2 font-gothamNarrow"
               >
-                Product Specification(Specification must be in List Format)
+                Product Specification
               </label>
               <div className="my-1">
-                <ReactQuill
+                {/* <ReactQuill
                   theme="snow"
                   value={productSpecification}
                   onChange={handleSpecificationChange}
                   className="tex-lg"
+                /> */}
+                <ReactQuill
+                  theme="snow"
+                  value={productSpecification}
+                  onChange={handleSpecificationChange}
+                  modules={quillModules}
+                  formats={quillFormats}
+                  className="bg-white"
+                  placeholder="Enter detailed product description..."
                 />
 
                 {productErr && (
@@ -1036,14 +1002,24 @@ const AddProduct = () => {
                 htmlFor="sizing"
                 className="text-black font-normal mb-2 font-gothamNarrow"
               >
-                Product Sizing(description format)
+                Product Sizing
               </label>
               <div className="my-1">
-                <ReactQuill
+                {/* <ReactQuill
                   theme="snow"
                   value={productSizing}
                   onChange={handleSizingChange}
                   className="tex-lg"
+                /> */}
+
+                <ReactQuill
+                  theme="snow"
+                  value={productSizing}
+                  onChange={handleSizingChange}
+                  modules={quillModules}
+                  formats={quillFormats}
+                  className="bg-white"
+                  placeholder="Enter detailed product sizing..."
                 />
                 {productErr && (
                   <span className="text-xs text-red-600 font-gothamNarrow">
@@ -1060,11 +1036,21 @@ const AddProduct = () => {
                 Product Usage(Both description and List format)
               </label>
               <div className="my-1">
-                <ReactQuill
+                {/* <ReactQuill
                   theme="snow"
                   value={productUsage}
                   onChange={handleUsageChange}
                   className="tex-lg"
+                /> */}
+
+                <ReactQuill
+                  theme="snow"
+                  value={productUsage}
+                  onChange={handleUsageChange}
+                  modules={quillModules}
+                  formats={quillFormats}
+                  className="bg-white"
+                  placeholder="Enter detailed product Usage..."
                 />
                 {productErr && (
                   <span className="text-xs text-red-600 font-gothamNarrow">

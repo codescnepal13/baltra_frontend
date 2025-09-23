@@ -1,16 +1,17 @@
 import { debounce } from "lodash";
 import moment from "moment";
-import React, { useCallback, useEffect, useState } from "react";
+import { enqueueSnackbar } from "notistack";
+import { useCallback, useEffect, useState } from "react";
 import {
   FaPencilAlt,
   FaPlusCircle,
   FaSearch,
+  FaSyncAlt,
   FaTrash,
   FaTrashAlt,
 } from "react-icons/fa";
 import { useDispatch, useSelector } from "react-redux";
 import { Link } from "react-router-dom";
-import { toast } from "react-toastify";
 import {
   categoryProductsList,
   clearAdminError,
@@ -55,7 +56,7 @@ const AllCategoryProductList = () => {
       dispatch(
         deleteMultipleCategoryProduct({
           category_ids: selectedProductsId,
-          toast,
+          enqueueSnackbar,
         })
       ).then(() => {
         dispatch(categoryProductsList(page));
@@ -84,9 +85,9 @@ const AllCategoryProductList = () => {
   const handleDeleteConfirm = useCallback(
     (id) => {
       setOpenModal(false);
-      dispatch(deleteCategory({ category_id: id, toast }));
+      dispatch(deleteCategory({ category_id: id, enqueueSnackbar }));
     },
-    [dispatch, toast]
+    [dispatch, enqueueSnackbar]
   );
 
   const handlePageChange = useCallback(
@@ -100,6 +101,12 @@ const AllCategoryProductList = () => {
     debouncedSearch(searchByCategoryName);
   };
 
+  const handleReset = () => {
+    setSearchByCategoryName("");
+    dispatch(categoryProductsList({ page: 1 }));
+    setSelectedProductsId([]);
+  };
+
   useEffect(() => {
     if (error) {
       dispatch(clearAdminError());
@@ -108,13 +115,13 @@ const AllCategoryProductList = () => {
   }, [dispatch, searchByCategoryName, error, debouncedSearch]);
   useEffect(() => {
     if (isError) {
-      toast.error(isError);
+      enqueueSnackbar(isError, { variant: "error" });
       dispatch(clearAdminError());
     }
   }, [dispatch, isError]);
   return (
     <>
-      <div className="font-gothamNarrow container mx-auto px-8 py-8">
+      <div className="font-gothamNarrow container mx-auto px-4 py-8">
         <div className="flex justify-between mb-4">
           <h2 className="text-lg font-semibold font-gothamNarrow">
             Category Product List
@@ -142,16 +149,34 @@ const AllCategoryProductList = () => {
                 <FaSearch />
               </button>
             </div>
+            <button
+              className="flex cursor-pointer items-center gap-1 px-4 py-2 text-sm border border-gray-300 rounded-md hover:bg-gray-50 transition-colors"
+              onClick={handleReset}
+            >
+              <FaSyncAlt className="text-gray-500" /> Reset
+            </button>
           </div>
+          {selectedProductsId.length > 0 && (
+            <div className="flex flex-wrap gap-2 mb-4 p-3 bg-blue-50 rounded-lg border border-blue-200">
+              <span className="text-sm text-blue-700 font-medium mr-2">
+                {selectedProductsId.length} item(s) selected
+              </span>
+            </div>
+          )}
 
           <div className="bg-white font-sans table-container">
             {selectedProductsId?.length > 0 && (
-              <button
-                className="h-4 w-4 text-red-600 hover:text-red-700"
-                onClick={handleMultipleDelete}
-              >
-                <FaTrashAlt />
-              </button>
+              <div className="mb-3 flex justify-start">
+                <button
+                  className="flex items-center gap-2 px-3 py-1.5 rounded-lg 
+                   bg-red-500 text-white text-sm font-medium
+                   hover:bg-red-600 transition"
+                  onClick={handleMultipleDelete}
+                >
+                  <FaTrashAlt className="text-white" />
+                  Delete Selected
+                </button>
+              </div>
             )}
             <table className="min-w-full divide-y divide-gray-200 border border-gray-300">
               <thead className="font-gothamNarrow">

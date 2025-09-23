@@ -1,6 +1,6 @@
 import { createAsyncThunk, createSlice } from "@reduxjs/toolkit";
-import API from "../../api/api";
 import { getErrorMessage } from "../../../utils/ErrorHandle";
+import API from "../../api/api";
 
 /**
  * @typedef {Object} ContactState
@@ -20,10 +20,12 @@ import { getErrorMessage } from "../../../utils/ErrorHandle";
 //Action Dispatch
 export const addContact = createAsyncThunk(
   "contact/addForm",
-  async ({ contactData, toast }, { rejectWithValue }) => {
+  async ({ contactData, enqueueSnackbar }, { rejectWithValue }) => {
     try {
       const response = await API.post(`/contactus/contactus`, contactData);
-      toast.success(response.data.message || "Thank you for your message");
+      enqueueSnackbar(response.data.message || "Thank you for your message", {
+        variant: "success",
+      });
       return response.data;
     } catch (error) {
       return rejectWithValue({ message: getErrorMessage(error) });
@@ -70,10 +72,16 @@ export const getSingleContact = createAsyncThunk(
 //delete ContactData
 export const deleteContactData = createAsyncThunk(
   "/contact/deleteContact",
-  async ({ contact_id, toast }, { rejectWithValue }) => {
+  async ({ contact_id, enqueueSnackbar }, { rejectWithValue }) => {
     try {
       const response = await API.delete(`/contactus/deleteform/${contact_id}`);
-      toast.success(response.data.message || "contact deleted SuccessFully!");
+
+      enqueueSnackbar(
+        response.data.message || "contact deleted SuccessFully!",
+        {
+          variant: "success",
+        }
+      );
       return response.data;
     } catch (error) {
       return rejectWithValue({ message: getErrorMessage(error) });
@@ -84,13 +92,18 @@ export const deleteContactData = createAsyncThunk(
 //deleteMultipleContacts
 export const deleteMultipleContacts = createAsyncThunk(
   "/contact/deleteMultipleContacts",
-  async ({ contact_ids, toast }, { rejectWithValue }) => {
+  async ({ contact_ids, enqueueSnackbar }, { rejectWithValue }) => {
     try {
       const response = await API.delete(`/contactus/deletemultiplecontactus`, {
         data: { contact_ids },
       });
 
-      toast.success(response.data.message || "contact deleted SuccessFully!");
+      enqueueSnackbar(
+        response.data.message || "contact deleted SuccessFully!",
+        {
+          variant: "success",
+        }
+      );
       return response.data;
     } catch (error) {
       return rejectWithValue({ message: getErrorMessage(error) });

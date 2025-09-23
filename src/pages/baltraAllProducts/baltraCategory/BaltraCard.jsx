@@ -1,5 +1,5 @@
-import React from "react";
 import PropTypes from "prop-types";
+import React from "react";
 import { Link } from "react-router-dom";
 import LazyImage from "../../../components/layout/lazyImage/LazyImage";
 
@@ -37,4 +37,4 @@ BaltraCard.propTypes = {
   index: PropTypes.number.isRequired,
 };
 
-export default BaltraCard;
+export default React.memo(BaltraCard);

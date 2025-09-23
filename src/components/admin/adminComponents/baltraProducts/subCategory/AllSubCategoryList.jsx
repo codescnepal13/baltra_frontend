@@ -1,8 +1,12 @@
-import React, { useCallback, useEffect, useState } from "react";
+import { debounce } from "lodash";
+import moment from "moment";
+import { enqueueSnackbar } from "notistack";
+import { useCallback, useEffect, useState } from "react";
 import {
   FaPencilAlt,
   FaPlusCircle,
   FaSearch,
+  FaSyncAlt,
   FaTrash,
   FaTrashAlt,
 } from "react-icons/fa";
@@ -14,9 +18,6 @@ import {
   deleteSubCategory,
   subCategoryProductsList,
 } from "../../../../../redux/features/admin/adminSlice";
-import { debounce } from "lodash";
-import moment from "moment";
-import { toast } from "react-toastify";
 import SubCategoryPagination from "../../adminPagination/subCategoryPagination/SubCategoryPagination";
 import SubCategoryDeleteModal from "./SubCategoryDeleteModal/SubCategoryDeleteModal";
 const AllSubCategoryList = () => {
@@ -25,7 +26,11 @@ const AllSubCategoryList = () => {
   );
   const subCategoryPagination =
     useSelector((state) => state.admin.subCategoryPagination) || {};
-  const { page, total_pages, results_per_page } = subCategoryPagination;
+  const {
+    page = 1,
+    total_pages = 1,
+    results_per_page = 8,
+  } = subCategoryPagination;
 
   const dispatch = useDispatch();
 
@@ -55,7 +60,7 @@ const AllSubCategoryList = () => {
       dispatch(
         deleteMultipleSubCategoryProduct({
           subcategory_ids: selectedProductsId,
-          toast,
+          enqueueSnackbar,
         })
       ).then(() => {
         dispatch(subCategoryProductsList(page));
@@ -77,6 +82,12 @@ const AllSubCategoryList = () => {
     [dispatch]
   );
 
+  const handleReset = () => {
+    setSearchByCategoryName("");
+    dispatch(subCategoryProductsList({ page: 1 }));
+    setSelectedProductsId([]);
+  };
+
   const handleOpenModal = (productId) => {
     setSelectedProductId(productId);
   };
@@ -87,7 +98,12 @@ const AllSubCategoryList = () => {
 
   const handleDeleteConfirm = () => {
     if (selectedProductId !== null) {
-      dispatch(deleteSubCategory({ subcategory_id: selectedProductId, toast }));
+      dispatch(
+        deleteSubCategory({
+          subcategory_id: selectedProductId,
+          enqueueSnackbar,
+        })
+      );
       setSelectedProductId(null);
     }
   };
@@ -105,7 +121,7 @@ const AllSubCategoryList = () => {
 
   useEffect(() => {
     if (error) {
-      toast.error(error);
+      enqueueSnackbar(error, { variant: "error" });
       dispatch(clearAdminError());
     }
   }, [dispatch, error]);
@@ -115,7 +131,7 @@ const AllSubCategoryList = () => {
   }, [dispatch, searchByCategoryName, debouncedSearch]);
   return (
     <>
-      <div className="font-gothamNarrow container mx-auto px-8 py-8">
+      <div className="font-gothamNarrow container mx-auto px-4 py-8">
         <div className="flex justify-between mb-4">
           <h2 className="text-lg font-semibold font-gothamNarrow">
             Sub Category List
@@ -143,16 +159,35 @@ const AllSubCategoryList = () => {
                 <FaSearch />
               </button>
             </div>
+            <button
+              className="flex cursor-pointer items-center gap-1 px-4 py-2 text-sm border border-gray-300 rounded-md hover:bg-gray-50 transition-colors"
+              onClick={handleReset}
+            >
+              <FaSyncAlt className="text-gray-500" /> Reset
+            </button>
           </div>
+
+          {selectedProductsId.length > 0 && (
+            <div className="flex flex-wrap gap-2 mb-4 p-3 bg-blue-50 rounded-lg border border-blue-200">
+              <span className="text-sm text-blue-700 font-medium mr-2">
+                {selectedProductsId.length} item(s) selected
+              </span>
+            </div>
+          )}
 
           <div className="bg-white font-sans table-container">
             {selectedProductsId?.length > 0 && (
-              <button
-                className="h-4 w-4 text-red-600 hover:text-red-700"
-                onClick={handleMultipleDelete}
-              >
-                <FaTrashAlt />
-              </button>
+              <div className="mb-3 flex justify-start">
+                <button
+                  className="flex items-center gap-2 px-3 py-1.5 rounded-lg 
+                   bg-red-500 text-white text-sm font-medium
+                   hover:bg-red-600 transition"
+                  onClick={handleMultipleDelete}
+                >
+                  <FaTrashAlt className="text-white" />
+                  Delete Selected
+                </button>
+              </div>
             )}
             <table className="min-w-full divide-y divide-gray-200 border border-gray-300">
               <thead className="font-gothamNarrow">
@@ -213,9 +248,9 @@ const AllSubCategoryList = () => {
                         />
                       </td>
                       <td className="px-4 font-gothamNarrow py-1 whitespace-nowrap text-xs text-gray-500">
-                        {page != null && results_per_page != null
-                          ? (page - 1) * results_per_page + index + 1
-                          : ""}
+                        <td className="px-4 py-1 text-xs">
+                          {(page - 1) * results_per_page + index + 1}
+                        </td>
                       </td>
                       <td className="px-4 py-1 whitespace-nowrap text-sm font-gothamNarrow text-[#000000]">
                         {subCategory.name}

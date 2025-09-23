@@ -1,13 +1,12 @@
-import React from "react";
 import {
   VerticalTimeline,
   VerticalTimelineElement,
 } from "react-vertical-timeline-component";
 import "react-vertical-timeline-component/style.min.css";
-import WorldClassService from "../../../assets/images/worldClassImg.png";
-import ServiceCenter from "../../../assets/images/serviceCenterImg.png";
 import RepairServiceImg from "../../../assets/images/RepairServicesImg.png";
 import RobustService from "../../../assets/images/RobustInvestoryImg.png";
+import ServiceCenter from "../../../assets/images/serviceCenterImg.png";
+import WorldClassService from "../../../assets/images/worldClassImg.png";
 
 const ServicePromises = () => {
   const services = [

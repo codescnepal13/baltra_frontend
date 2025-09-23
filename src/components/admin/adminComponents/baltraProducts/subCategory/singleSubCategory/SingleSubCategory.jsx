@@ -1,16 +1,16 @@
-import React, { useEffect, useState } from "react";
-import { HiOutlineArrowLeftCircle } from "react-icons/hi2";
-import { Link, useNavigate, useParams } from "react-router-dom";
-import FormSkeleton from "../../../adminLayout/formSkeleton/FormSkeleton";
-import { useDispatch, useSelector } from "react-redux";
+import { enqueueSnackbar } from "notistack";
+import { useEffect, useState } from "react";
 import { useForm } from "react-hook-form";
+import { HiOutlineArrowLeftCircle } from "react-icons/hi2";
+import { IoCloudUploadOutline } from "react-icons/io5";
+import { useDispatch, useSelector } from "react-redux";
+import { Link, useParams } from "react-router-dom";
 import {
   clearAdminError,
   editSubCategory,
   subCategoryById,
 } from "../../../../../../redux/features/admin/adminSlice";
-import { IoCloudUploadOutline } from "react-icons/io5";
-import { toast } from "react-toastify";
+import FormSkeleton from "../../../adminLayout/formSkeleton/FormSkeleton";
 
 const SingleSubCategory = () => {
   const { loading, isLoading, error, subCategoryProduct, dropdownCategories } =
@@ -18,7 +18,7 @@ const SingleSubCategory = () => {
 
   const { id } = useParams();
   const dispatch = useDispatch();
-  const navigate = useNavigate();
+
   const {
     register,
     handleSubmit,
@@ -62,13 +62,16 @@ const SingleSubCategory = () => {
     formData.append("name", data.name);
     if (image) formData.append("image", image);
 
-    dispatch(editSubCategory({ id, formData, toast }));
+    dispatch(editSubCategory({ id, formData, enqueueSnackbar }));
   };
 
   useEffect(() => {
     if (error) {
       dispatch(clearAdminError());
     }
+  }, [dispatch]);
+
+  useEffect(() => {
     if (id) {
       dispatch(subCategoryById(id));
     }

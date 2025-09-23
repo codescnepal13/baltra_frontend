@@ -1,14 +1,15 @@
+import { enqueueSnackbar } from "notistack";
 import React, { useEffect, useState } from "react";
 import { HiOutlineArrowLeftCircle } from "react-icons/hi2";
 import { useDispatch, useSelector } from "react-redux";
 import { Link, useNavigate } from "react-router-dom";
+
+import ReactQuill from "react-quill";
 import {
   addWarrantyPackage,
   clearAdminError,
   dropdownSubCategoryList,
 } from "../../../../../redux/features/admin/adminSlice";
-import { toast } from "react-toastify";
-import ReactQuill from "react-quill";
 
 const AddWarrantyPackage = () => {
   const { loading, error, subCategoryList } = useSelector(
@@ -36,7 +37,6 @@ const AddWarrantyPackage = () => {
   };
 
   const removeOfferParagraphTags = (offers) => {
-
     return offers.replace(/<p[^>]*>|<\/p>/g, "");
   };
 
@@ -68,12 +68,14 @@ const AddWarrantyPackage = () => {
         addWarrantyPackage({
           warrantyValue,
           sanitizedOfferDescription,
-          toast,
+          enqueueSnackbar,
           navigate,
         })
       );
     } else {
-      toast.warn("Invalid Input!");
+      enqueueSnackbar("Invalid Input", {
+        variant: "error",
+      });
     }
   };
 
@@ -83,7 +85,9 @@ const AddWarrantyPackage = () => {
 
   useEffect(() => {
     if (error) {
-      toast.error(error);
+      enqueueSnackbar(error, {
+        variant: "error",
+      });
       dispatch(clearAdminError());
     }
   }, [dispatch, error]);
@@ -250,4 +254,4 @@ const AddWarrantyPackage = () => {
   );
 };
 
-export default AddWarrantyPackage;
+export default React.memo(AddWarrantyPackage);

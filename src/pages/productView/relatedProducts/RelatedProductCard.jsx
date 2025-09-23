@@ -1,6 +1,6 @@
+import { AnimatePresence, motion } from "framer-motion";
 import React, { useState } from "react";
 import { Link } from "react-router-dom";
-import { AnimatePresence, motion } from "framer-motion";
 import LazyRelatedImage from "../../../components/layout/lazyRelatedImage/LazyRelatedImage";
 
 const RelatedProductCard = ({ item }) => {
@@ -35,19 +35,24 @@ const RelatedProductCard = ({ item }) => {
             </div>
 
             <div className="border-t border-[#E4E4E4] mt-2 pt-2">
-            
               <div className="text-[#4A4A4A] text-xs mt-4 font-gothamNarrow mb-2 space-y-2">
                 <div>
                   <span className="text-sm">Model Name: </span>
-                  <span className="font-semibold text-sm">{item.model_name}</span>
+                  <span className="font-semibold text-sm">
+                    {item.model_name}
+                  </span>
                 </div>
                 <div>
                   <span className="text-sm">Model Number: </span>
-                  <span className="font-semibold text-sm">{item.model_num}</span>
+                  <span className="font-semibold text-sm">
+                    {item.model_num}
+                  </span>
                 </div>
                 <div>
                   <span className="text-sm">Sub Category: </span>
-                  <span className="font-semibold text-sm">{item.sub_category}</span>
+                  <span className="font-semibold text-sm">
+                    {item.sub_category}
+                  </span>
                 </div>
                 <div>
                   <span className="text-sm">Warranty: </span>
@@ -62,4 +67,4 @@ const RelatedProductCard = ({ item }) => {
   );
 };
 
-export default RelatedProductCard;
+export default React.memo(RelatedProductCard);

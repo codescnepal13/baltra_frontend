@@ -1,7 +1,11 @@
-import React, { useEffect, useState, useCallback } from "react";
-import { GoTrash } from "react-icons/go";
+import { AnimatePresence, motion } from "framer-motion";
+import moment from "moment";
+import { enqueueSnackbar } from "notistack";
+import { useCallback, useEffect, useState } from "react";
 import { FaArrowRight } from "react-icons/fa";
+import { GoTrash } from "react-icons/go";
 import { useDispatch, useSelector } from "react-redux";
+import { Link, useNavigate } from "react-router-dom";
 import {
   allCustomerProducts,
   clearProductError,
@@ -9,11 +13,7 @@ import {
 } from "../../../redux/features/product/productSlice";
 import AddRegisteredComplaintModal from "../userRegisteredComplaint/AddRegisteredComplaintModal";
 import CustomerAddSkeleton from "./customerAddSkeleton/CustomerAddSkeleton";
-import moment from "moment";
-import { toast } from "react-toastify";
 import DeletePopUpModal from "./deleteModal/DeletePopUpModal";
-import { Link, useNavigate } from "react-router-dom";
-import { AnimatePresence, motion } from "framer-motion";
 
 const RippleButton = ({ label, rippleColor, onClick, children }) => {
   const [ripplePosition, setRipplePosition] = useState({ x: 0, y: 0 });
@@ -103,10 +103,10 @@ const UserAllProducts = () => {
 
   const handleDeleteConfirm = useCallback(
     (id) => () => {
-      dispatch(deleteCustomerProduct({ id, toast }));
+      dispatch(deleteCustomerProduct({ id, enqueueSnackbar }));
       handleClose();
     },
-    [dispatch, toast]
+    [dispatch, enqueueSnackbar]
   );
 
   useEffect(() => {
@@ -130,8 +130,11 @@ const UserAllProducts = () => {
       });
       setOpenModal(true);
     } else {
-      toast.info(
-        "You can only register a complaint for products with 'Approved' or 'Discount' status."
+      enqueueSnackbar(
+        "You can only register a complaint for products with 'Approved' or 'Discount' status.",
+        {
+          variant: "error",
+        }
       );
     }
   };
@@ -140,7 +143,9 @@ const UserAllProducts = () => {
     if (customer.status === "Approved" || customer.status === "Discount") {
       navigate(`/baltra-extended-warranty/${customer.id}`);
     } else {
-      toast.info("Customer must be Approved to extend the warranty");
+      enqueueSnackbar("Customer must be Approved to extend the warranty", {
+        variant: "error",
+      });
     }
   };
 

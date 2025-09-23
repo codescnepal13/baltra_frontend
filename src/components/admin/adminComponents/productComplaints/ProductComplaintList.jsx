@@ -1,9 +1,9 @@
 import moment from "moment";
-import React, { useEffect, useState } from "react";
-import { FaEye, FaSearch, FaTrash, FaTrashAlt } from "react-icons/fa";
+import { enqueueSnackbar } from "notistack";
+import { useEffect, useState } from "react";
+import { FaEye, FaSyncAlt, FaTrash, FaTrashAlt } from "react-icons/fa";
 import { useDispatch, useSelector } from "react-redux";
 import { Link } from "react-router-dom";
-import { toast } from "react-toastify";
 import {
   allProductComplaints,
   clearCustomerError,
@@ -44,7 +44,7 @@ const ProductComplaintList = () => {
       dispatch(
         deleteMultipleProductComplaints({
           complaint_ids: selectedProductsId,
-          toast,
+          enqueueSnackbar,
         })
       ).then(() => {
         dispatch(allProductComplaints());
@@ -58,6 +58,12 @@ const ProductComplaintList = () => {
     setSelectedProductId(id);
   };
 
+  const handleReset = () => {
+    setSelectedProductId(null);
+    setSelectedProductsId([]);
+    dispatch(allProductComplaints(page));
+  };
+
   const handleCloseModal = () => {
     setSelectedProductId(null);
   };
@@ -65,7 +71,10 @@ const ProductComplaintList = () => {
   const handleDeleteConfirm = () => {
     if (selectedProductId !== null) {
       dispatch(
-        deleteProductComplaint({ complaint_id: selectedProductId, toast })
+        deleteProductComplaint({
+          complaint_id: selectedProductId,
+          enqueueSnackbar,
+        })
       );
       setSelectedProductId(null);
     }
@@ -82,7 +91,7 @@ const ProductComplaintList = () => {
   }, [dispatch]);
   return (
     <>
-      <div className="font-gothamNarrow container mx-auto px-8 py-8">
+      <div className="font-gothamNarrow container mx-auto px-4 py-8">
         <div className="flex justify-between mb-4">
           <h2 className="text-lg font-semibold font-gothamNarrow">
             Product Complaints List
@@ -90,33 +99,35 @@ const ProductComplaintList = () => {
         </div>
         <div className="bg-[#FFFFFF] px-2 py-4">
           <div className="flex mb-2 text-xs">
-            <div className="relative mr-2 flex items-center">
-              <input
-                type="text"
-                placeholder="Search by modelname"
-                className="w-42 pl-4 pr-10 py-2 border border-gray-300 rounded-sm text-sm focus:outline-none focus:border-red-500 focus:ring-gray-300 font-gothamNarrow"
-              />
-              <button className="bg-red-600 hover:bg-red-700 text-white py-3 px-4 ml-1 inline-flex items-center rounded-sm font-gothamNarrow">
-                <FaSearch />
-              </button>
-            </div>
-            <div className="relative mr-2 flex items-center">
-              <select className="w-42 pl-4 pr-10 py-2 border border-gray-300 rounded-sm text-sm focus:outline-none focus:border-red-500 focus:ring-gray-300 font-gothamNarrow">
-                <option value="All">All</option>
-                <option value="All">UnVerified</option>
-                <option value="All">Verified</option>
-              </select>
-            </div>
+            <button
+              className="flex cursor-pointer items-center gap-1 px-4 py-2 text-sm border border-gray-300 rounded-md hover:bg-gray-50 transition-colors"
+              onClick={handleReset}
+            >
+              <FaSyncAlt className="text-gray-500" /> Reset
+            </button>
           </div>
+
+          {selectedProductsId.length > 0 && (
+            <div className="flex flex-wrap gap-2 mb-4 p-3 bg-blue-50 rounded-lg border border-blue-200">
+              <span className="text-sm text-blue-700 font-medium mr-2">
+                {selectedProductsId.length} item(s) selected
+              </span>
+            </div>
+          )}
 
           <div className="bg-white font-sans table-container hide-scrollbar overflow-x-auto">
             {selectedProductsId?.length > 0 && (
-              <button
-                className="h-4 w-4 text-red-600 hover:text-red-700"
-                onClick={handleMultipleDelete}
-              >
-                <FaTrashAlt />
-              </button>
+              <div className="mb-3 flex justify-start">
+                <button
+                  className="flex items-center gap-2 px-3 py-1.5 rounded-lg 
+                   bg-red-500 text-white text-sm font-medium
+                   hover:bg-red-600 transition"
+                  onClick={handleMultipleDelete}
+                >
+                  <FaTrashAlt className="text-white" />
+                  Delete Selected
+                </button>
+              </div>
             )}
             <table className="min-w-full divide-y divide-gray-200 border border-gray-300">
               <thead className="font-gothamNarrow">

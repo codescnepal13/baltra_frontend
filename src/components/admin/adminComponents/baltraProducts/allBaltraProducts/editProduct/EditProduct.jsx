@@ -1,12 +1,13 @@
-import React, { useEffect, useState } from "react";
+import { enqueueSnackbar } from "notistack";
+import { useEffect, useState } from "react";
 import { BlockPicker } from "react-color";
 import { FaTimes, FaTrash } from "react-icons/fa";
 import { HiOutlineArrowLeftCircle } from "react-icons/hi2";
 import { IoCloudUploadOutline } from "react-icons/io5";
 import ReactQuill from "react-quill";
+import "react-quill/dist/quill.snow.css";
 import { useDispatch, useSelector } from "react-redux";
 import { Link, useParams } from "react-router-dom";
-import { toast } from "react-toastify";
 import {
   clearAdminError,
   editProduct,
@@ -55,62 +56,45 @@ const presetColors = [
   "#9E9E9E",
   "#607D8B",
   "#FFFFFF",
-  "#FFCDD2",
-  "#F8BBD0",
-  "#E1BEE7",
-  "#D1C4E9",
-  "#C5CAE9",
-  "#BBDEFB",
-  "#B3E5FC",
-  "#B2EBF2",
-  "#B2DFDB",
-  "#C8E6C9",
-  "#DCEDC8",
-  "#F0F4C3",
-  "#FFF9C4",
-  "#FFECB3",
-  "#FFE0B2",
-  "#FFCCBC",
-  "#D7CCC8",
-  "#F5F5F5",
-  "#CFD8DC",
-  "#E57373",
-  "#F06292",
-  "#BA68C8",
-  "#9575CD",
-  "#7986CB",
-  "#64B5F6",
-  "#4FC3F7",
-  "#4DD0E1",
-  "#4DB6AC",
-  "#81C784",
-  "#AED581",
-  "#DCE775",
-  "#FFF176",
-  "#FFD54F",
-  "#FFB74D",
-  "#FF8A65",
-  "#A1887F",
-  "#E0E0E0",
-  "#90A4AE",
-  "#F48FB1",
-  "#CE93D8",
-  "#B39DDB",
-  "#9FA8DA",
-  "#90CAF9",
-  "#81D4FA",
-  "#80DEEA",
-  "#80CBC4",
-  "#A5D6A7",
-  "#C5E1A5",
-  "#E6EE9C",
-  "#FFF59D",
-  "#FFE082",
-  "#FFCC80",
-  "#FFAB91",
-  "#BCAAA4",
-  "#EEEEEE",
-  "#B0BEC5",
+];
+
+const quillModules = {
+  toolbar: [
+    [{ header: [1, 2, 3, false] }],
+    [{ font: [] }],
+    [{ size: ["small", false, "large", "huge"] }],
+    ["bold", "italic", "underline", "strike"],
+    [{ color: [] }, { background: [] }],
+    [{ script: "sub" }, { script: "super" }],
+    [{ list: "ordered" }, { list: "bullet" }],
+    [{ indent: "-1" }, { indent: "+1" }],
+    [{ align: [] }],
+    ["link", "image", "video"],
+    ["blockquote", "code-block"],
+    ["clean"],
+  ],
+};
+
+const quillFormats = [
+  "header",
+  "font",
+  "size",
+  "bold",
+  "italic",
+  "underline",
+  "strike",
+  "color",
+  "background",
+  "script",
+  "list",
+  "bullet",
+  "indent",
+  "align",
+  "link",
+  "image",
+  "video",
+  "blockquote",
+  "code-block",
 ];
 const EditProduct = () => {
   const {
@@ -195,36 +179,12 @@ const EditProduct = () => {
     setProductSpecification(value);
   };
 
-  const removeSpecificationParagraphTags = (specification) => {
-    // Remove <p> and </p> tags
-    specification = specification.replace(/<p[^>]*>|<\/p>/g, "");
-
-    // Remove unnecessary <br> tags (e.g., consecutive <br> tags)
-    specification = specification.replace(/(<br\s*\/?>\s*)+/g, " ");
-
-    return specification;
-  };
-
   const handleSizingChange = (value) => {
     setProductSizing(value);
   };
 
-  const removeSizingParagraphTags = (sizing) => {
-    // Remove <p> and </p> tags
-    sizing = sizing.replace(/<p[^>]*>|<\/p>/g, "");
-
-    // Remove unnecessary <br> tags (e.g., consecutive <br> tags)
-    sizing = sizing.replace(/(<br\s*\/?>\s*)+/g, " ");
-
-    return sizing;
-  };
-
   const handleUsageChange = (value) => {
     setProductUsage(value);
-  };
-
-  const removeUsageParagraphTags = (usage) => {
-    return usage.replace(/<p[^>]*>|<\/p>|<br\s*\/?>/g, "");
   };
 
   const handleMainFileChange = (e) => {
@@ -533,10 +493,12 @@ const EditProduct = () => {
   };
 
   const handleColorChange = (color) => {
-    setEditProductValue((prevValue) => ({
-      ...prevValue,
-      color_styles: [...prevValue.color_styles, color.hex],
-    }));
+    if (!color_styles.includes(color.hex)) {
+      setEditProductValue((prevValue) => ({
+        ...prevValue,
+        color_styles: [...prevValue.color_styles, color.hex],
+      }));
+    }
   };
 
   const handleRemoveColor = (colorToRemove) => {
@@ -563,12 +525,6 @@ const EditProduct = () => {
 
   const handleSubmit = (e) => {
     e.preventDefault();
-    const sanitizedSpecification =
-      removeSpecificationParagraphTags(productSpecification);
-
-    const sanitizedSizing = removeSizingParagraphTags(productSizing);
-
-    const sanitizedUsage = removeUsageParagraphTags(productUsage);
 
     const formData = new FormData();
     formData.append("name", name);
@@ -585,9 +541,9 @@ const EditProduct = () => {
       "reward_points",
       reward_points ? parseInt(reward_points) : 0
     );
-    formData.append("specification", sanitizedSpecification);
-    formData.append("sizing", sanitizedSizing);
-    formData.append("usage", sanitizedUsage);
+    formData.append("specification", productSpecification);
+    formData.append("sizing", productSizing);
+    formData.append("usage", productUsage);
     if (warranty_icon) {
       formData.append("warranty_icon", warranty_icon);
     }
@@ -636,12 +592,14 @@ const EditProduct = () => {
       });
     }
 
-    dispatch(editProduct({ product_id: id, formData, toast }));
+    dispatch(editProduct({ product_id: id, formData, enqueueSnackbar }));
   };
 
   useEffect(() => {
     if (error) {
-      toast.error(error);
+      enqueueSnackbar(error, {
+        variant: "error",
+      });
       dispatch(clearAdminError());
     }
   }, [dispatch, error]);
@@ -899,11 +857,13 @@ const EditProduct = () => {
                     </div>
                   ))}
                 </div>
-                <BlockPicker
-                  colors={presetColors}
-                  width="95%"
-                  onChangeComplete={handleColorChange}
-                />
+                <div className="border border-gray-200 rounded-lg p-4">
+                  <BlockPicker
+                    colors={presetColors}
+                    width="100%"
+                    onChangeComplete={handleColorChange}
+                  />
+                </div>
               </div>
               <div>
                 <label
@@ -952,14 +912,17 @@ const EditProduct = () => {
                   htmlFor="specification"
                   className="text-black font-normal mb-2 font-outfit"
                 >
-                  Product Specification(Specification must be in List Format)
+                  Product Specification
                 </label>
                 <div className="my-1">
                   <ReactQuill
                     theme="snow"
                     value={productSpecification}
                     onChange={handleSpecificationChange}
-                    className="tex-lg"
+                    modules={quillModules}
+                    formats={quillFormats}
+                    className="bg-white"
+                    placeholder="Enter detailed product description..."
                   />
                 </div>
               </div>
@@ -969,14 +932,17 @@ const EditProduct = () => {
                   htmlFor="sizing"
                   className="text-black font-normal mb-2 font-outfit"
                 >
-                  Product Sizing(description format)
+                  Product Sizing
                 </label>
                 <div className="my-1">
                   <ReactQuill
                     theme="snow"
                     value={productSizing}
                     onChange={handleSizingChange}
-                    className="tex-lg"
+                    modules={quillModules}
+                    formats={quillFormats}
+                    className="bg-white"
+                    placeholder="Enter detailed product Sizing..."
                   />
                 </div>
               </div>
@@ -985,14 +951,17 @@ const EditProduct = () => {
                   htmlFor="usage"
                   className="text-black font-normal mb-2 font-outfit"
                 >
-                  Product Usage(Both description and List format)
+                  Product Usage
                 </label>
                 <div className="my-1">
                   <ReactQuill
                     theme="snow"
                     value={productUsage}
                     onChange={handleUsageChange}
-                    className="tex-lg"
+                    modules={quillModules}
+                    formats={quillFormats}
+                    className="bg-white"
+                    placeholder="Enter detailed product Usage..."
                   />
                 </div>
               </div>
@@ -1078,9 +1047,7 @@ const EditProduct = () => {
                   />
                 </div>
               </div>
-              {/* <button type="submit" className="btn btn-primary">
-                Upload Video
-              </button> */}
+
               <div className="lg:w-full">
                 <span className="font-gothamNarrow font-normal">
                   Add Gallery Image(One)

@@ -1,15 +1,15 @@
-import React, { useEffect, useState } from "react";
-import { HiOutlineArrowLeftCircle } from "react-icons/hi2";
-import { Link, useNavigate } from "react-router-dom";
-import { IoCloudUploadOutline } from "react-icons/io5";
+import { enqueueSnackbar } from "notistack";
+import { useEffect, useState } from "react";
 import { useForm } from "react-hook-form";
+import { FaInfoCircle } from "react-icons/fa";
+import { HiOutlineArrowLeftCircle } from "react-icons/hi2";
+import { IoCloudUploadOutline } from "react-icons/io5";
 import { useDispatch, useSelector } from "react-redux";
+import { Link, useNavigate } from "react-router-dom";
 import {
   addCategory,
   clearAdminError,
 } from "../../../../../../redux/features/admin/adminSlice";
-import { toast } from "react-toastify";
-import { FaInfoCircle } from "react-icons/fa";
 
 const AddCategoryProduct = () => {
   const { loading, error } = useSelector((state) => state.admin);
@@ -68,12 +68,14 @@ const AddCategoryProduct = () => {
     if (image) formData.append("image", image);
     if (banner) formData.append("banner", banner);
 
-    dispatch(addCategory({ formData, toast, navigate }));
+    dispatch(addCategory({ formData, enqueueSnackbar, navigate }));
   };
 
   useEffect(() => {
     if (error) {
-      toast.error(error);
+      enqueueSnackbar(error, {
+        variant: "error",
+      });
       dispatch(clearAdminError());
     }
   }, [dispatch, error]);

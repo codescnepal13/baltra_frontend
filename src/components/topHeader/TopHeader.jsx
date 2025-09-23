@@ -1,25 +1,24 @@
-import React, { useCallback, useMemo, useState } from "react";
-import BaltraLogo from "../../assets/images/BALTRALOGO.png";
-import { HiSearch, HiOutlineUser, HiOutlineUserCircle } from "react-icons/hi";
-import { NavLink, useNavigate } from "react-router-dom";
-import { useSelector, useDispatch } from "react-redux";
 import { jwtDecode } from "jwt-decode";
-import { setLogout } from "../../redux/features/auth/authSlice";
-import { toast } from "react-toastify";
+import { enqueueSnackbar } from "notistack";
+import { useCallback, useMemo, useState } from "react";
 import { AiOutlineProduct } from "react-icons/ai";
 import { CiTrophy } from "react-icons/ci";
+import { FaBookOpen, FaHome } from "react-icons/fa";
+import { GoSignOut, GoStack } from "react-icons/go";
+import { HiOutlineUser, HiOutlineUserCircle, HiSearch } from "react-icons/hi";
+import { HiMiniBars3 } from "react-icons/hi2";
 import {
-  MdOutlineMedicalServices,
   MdOutlineDashboardCustomize,
+  MdOutlineMedicalServices,
   MdPersonOutline,
 } from "react-icons/md";
-import { GoSignOut } from "react-icons/go";
-import { baltraSearchProducts } from "../../redux/features/product/productSlice";
-import { HiMiniBars3 } from "react-icons/hi2";
-import SideBarLayout from "../layout/sideBarLayout/SideBarLayout";
-import { FaBookOpen, FaHome } from "react-icons/fa";
 import { RiCustomerService2Line } from "react-icons/ri";
-import { GoStack } from "react-icons/go";
+import { useDispatch, useSelector } from "react-redux";
+import { NavLink, useNavigate } from "react-router-dom";
+import BaltraLogo from "../../assets/images/BALTRALOGO.png";
+import { setLogout } from "../../redux/features/auth/authSlice";
+import { baltraSearchProducts } from "../../redux/features/product/productSlice";
+import SideBarLayout from "../layout/sideBarLayout/SideBarLayout";
 
 const TopHeader = () => {
   const { isAuthenticated, customer } = useSelector((state) => state.auth);
@@ -70,7 +69,9 @@ const TopHeader = () => {
 
   const handleLogout = () => {
     dispatch(setLogout());
-    toast.success("Logout successFully!");
+    enqueueSnackbar("Logout SuccessFully", {
+      variant: "success",
+    });
     navigate("/baltra-allProducts");
   };
 
@@ -82,7 +83,9 @@ const TopHeader = () => {
         dispatch(setLogout());
         localStorage.clear();
         navigate("/baltra-allProducts");
-        toast.warn("Your session has expired,Please login!");
+        enqueueSnackbar("session expired,login first", {
+          variant: "warning",
+        });
       }
     } catch (error) {
       dispatch(setLogout());

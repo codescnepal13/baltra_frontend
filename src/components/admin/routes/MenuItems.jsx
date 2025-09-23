@@ -1,16 +1,14 @@
+import { BsListCheck, BsMinecartLoaded } from "react-icons/bs";
+import { GrCatalog } from "react-icons/gr";
+import { HiOutlinePhone, HiOutlineUserGroup } from "react-icons/hi2";
+import { IoSettingsOutline } from "react-icons/io5";
 import {
   MdOutlineDashboardCustomize,
   MdOutlineShoppingCart,
   MdOutlineTrackChanges,
 } from "react-icons/md";
-import { BsMinecartLoaded } from "react-icons/bs";
-import { BsListCheck } from "react-icons/bs";
-import { HiOutlineUserGroup } from "react-icons/hi2";
-import { VscWorkspaceTrusted } from "react-icons/vsc";
-import { HiOutlinePhone } from "react-icons/hi2";
-import { IoSettingsOutline } from "react-icons/io5";
-import { GrCatalog } from "react-icons/gr";
 import { RiImageEditLine } from "react-icons/ri";
+import { VscWorkspaceTrusted } from "react-icons/vsc";
 
 export const items = [
   {
@@ -118,15 +116,15 @@ export const items = [
         ),
         label: "All Customers",
       },
-      {
-        key: "all-user-List",
-        icon: (
-          <div className="fs-4">
-            <BsListCheck />
-          </div>
-        ),
-        label: "All Users",
-      },
+      // {
+      //   key: "all-user-List",
+      //   icon: (
+      //     <div className="fs-4">
+      //       <BsListCheck />
+      //     </div>
+      //   ),
+      //   label: "All Users",
+      // },
     ],
   },
   {
@@ -153,7 +151,7 @@ export const items = [
     key: "Warrranty Complaints",
     icon: (
       <div className="fs-4">
-        <MdOutlineTrackChanges  />
+        <MdOutlineTrackChanges />
       </div>
     ),
     label: "Warrranty Complaints",

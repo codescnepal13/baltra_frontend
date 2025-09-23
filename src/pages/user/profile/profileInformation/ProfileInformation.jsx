@@ -1,11 +1,10 @@
 import moment from "moment";
+import { enqueueSnackbar } from "notistack";
 import React, { useCallback, useEffect, useState } from "react";
 import { useForm } from "react-hook-form";
 import { FaArrowRightLong, FaKey } from "react-icons/fa6";
 import { MdOutlineCloudUpload } from "react-icons/md";
 import { useDispatch, useSelector } from "react-redux";
-import { useNavigate } from "react-router-dom";
-import { toast } from "react-toastify";
 import LogoutPopUp from "../../../../components/layout/logoutPopUp/LogoutPopUp";
 import {
   clearAuthError,
@@ -15,8 +14,9 @@ import {
   updateProfile,
 } from "../../../../redux/features/auth/authSlice";
 import EditPassword from "../editPassword/EditPassword";
+
 const ProfileInformation = () => {
-  const { customer, error, isError, isLoading, isProcessing } = useSelector(
+  const { customer, error, isError, isLoading } = useSelector(
     (state) => state.auth
   );
 
@@ -28,7 +28,7 @@ const ProfileInformation = () => {
   } = useForm();
 
   const dispatch = useDispatch();
-  const navigate = useNavigate();
+
   const [isMember, setIsMember] = useState(customer?.membership || false);
   const [isToggleEnabled, setIsToggleEnabled] = useState(!customer?.membership);
 
@@ -45,7 +45,10 @@ const ProfileInformation = () => {
     };
 
     if (customer?.membership === true) {
-      toast.warn("Membership is already active.");
+      enqueueSnackbar("Membership is already active", {
+        variant: "error",
+      });
+
       return;
     }
 
@@ -71,7 +74,7 @@ const ProfileInformation = () => {
   const handleLogout = useCallback(() => {
     setOpenModal(false);
     dispatch(setLogout());
-  }, [dispatch]);
+  }, []);
 
   const handleFileInputChange = (e) => {
     const file = e.target.files[0];
@@ -89,6 +92,7 @@ const ProfileInformation = () => {
       };
     }
   };
+
   useEffect(() => {
     if (customer) {
       Object.keys(customer).forEach((key) => {
@@ -100,10 +104,9 @@ const ProfileInformation = () => {
 
   useEffect(() => {
     if (error) {
-      toast.error(error);
       dispatch(clearAuthError());
     }
-  }, [dispatch, error]);
+  }, [error]);
 
   useEffect(() => {
     dispatch(getProfileMe());
@@ -111,7 +114,9 @@ const ProfileInformation = () => {
 
   useEffect(() => {
     if (isError) {
-      toast.error(isError);
+      enqueueSnackbar(isError, {
+        variant: "error",
+      });
       dispatch(clearAuthError());
     }
   }, [dispatch, isError]);
@@ -126,296 +131,391 @@ const ProfileInformation = () => {
     if (image) {
       formData.append("image", image);
     }
-    dispatch(updateProfile({ formData, toast }));
+    dispatch(updateProfile({ formData, enqueueSnackbar }));
   };
+
   return (
     <>
-      <div className="w-full mx-auto px-4 sm:px-8 md:px-16 lg:px-24 2xl:px-32 flex justify-center items-start py-12">
-        <div className="bg-white rounded-sm backdrop-blur-2xl flex flex-col lg:flex-row lg:justify-between w-full max-w-screen-2xl mx-auto gap-8">
-          <div className="flex flex-col justify-start items-start gap-6 lg:w-1/2">
-            <div className="flex flex-col lg:flex-row justify-start items-start gap-2">
-              <div className="relative">
-                <div className="my-5">
-                  <div className="w-48 h-48 border-2 rounded-full border-gray-400 relative mx-auto">
-                    <label
-                      htmlFor="imgFile"
-                      className="w-full h-full rounded-full flex items-center justify-center cursor-pointer"
-                    >
-                      {avatarPreview ? (
-                        <img
-                          src={avatarPreview}
-                          alt="profile"
-                          className="object-cover w-full h-full rounded-full"
-                        />
-                      ) : (
-                        <span className="text-sm font-gothamNarrow">
-                          <MdOutlineCloudUpload size={32} />
-                        </span>
-                      )}
-                    </label>
-                    <input
-                      id="imgFile"
-                      type="file"
-                      name="image"
-                      accept="image/*"
-                      className="hidden"
-                      onChange={handleFileInputChange}
-                    />
-                  </div>
-                </div>
+      <div className="min-h-screen bg-gradient-to-br from-slate-50 via-gray-50 to-zinc-50">
+        {/* Header Section */}
+
+        {/* Main Content */}
+        <div className="max-w-8xl mx-auto px-4 sm:px-8 md:px-16 lg:px-24 2xl:px-32 py-12">
+          <div className="bg-white rounded-3xl shadow-2xl border border-slate-100 overflow-hidden">
+            {/* Profile Header Card */}
+            <div className="bg-gradient-to-r from-red-500 via-red-600 to-red-700 p-8 lg:p-12 relative overflow-hidden">
+              {/* Background Pattern */}
+              <div className="absolute inset-0 opacity-10">
+                <div className="absolute inset-0 bg-[radial-gradient(circle_at_20%_50%,rgba(255,255,255,0.2)_0%,transparent_50%)]"></div>
+                <div className="absolute inset-0 bg-[radial-gradient(circle_at_80%_80%,rgba(255,255,255,0.1)_0%,transparent_50%)]"></div>
               </div>
-              <div className="flex flex-col justify-start pt-8 items-start lg:mt-0 lg:ml-4">
-                <div className="text-gray-800 text-[28px] sm:text-[34px] font-semibold font-gothamNarrow">
-                  {customer?.firstname} {customer?.lastname}
-                </div>
-                <div className="text-gray-800 text-xl sm:text-2xl font-normal font-gothamNarrow mt-2">
-                  {customer?.email}
-                </div>
-                <div className="text-gray-800 text-xl sm:text-2xl font-normal font-gothamNarrow">
-                  Joined: {moment(customer?.createdAt).format("DD/MM/YYYY")}
-                </div>
 
-                {/* Membership section with rounded toggle */}
-                <div className="flex items-center justify-between w-full mt-2">
-                  <div className="text-gray-800 text-xl sm:text-2xl font-semibold font-gothamNarrow">
-                    Reward Points:
-                  </div>
-
-                  {/* Rounded Toggle Button */}
-                  <div className="ml-4">
-                    <label className="relative inline-flex items-center cursor-pointer font-gothamNarrow">
+              <div className="relative z-10 flex flex-col lg:flex-row lg:justify-between items-center lg:items-start gap-8">
+                {/* Left Side - Profile Info */}
+                <div className="flex flex-col lg:flex-row items-center lg:items-start gap-6 flex-1">
+                  {/* Profile Image */}
+                  <div className="relative group">
+                    <div className="w-36 h-36 border-4 border-white rounded-full shadow-2xl bg-white p-1 relative overflow-hidden">
+                      <label
+                        htmlFor="imgFile"
+                        className="w-full h-full rounded-full flex items-center justify-center cursor-pointer overflow-hidden relative group"
+                      >
+                        {avatarPreview ? (
+                          <>
+                            <img
+                              src={avatarPreview}
+                              alt="profile"
+                              className="object-cover w-full h-full rounded-full transition-all duration-500 group-hover:scale-110"
+                            />
+                            {/* Hover Overlay */}
+                            <div className="absolute inset-0 bg-black bg-opacity-0 group-hover:bg-opacity-40 transition-all duration-300 rounded-full flex items-center justify-center">
+                              <MdOutlineCloudUpload className="text-white text-2xl opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
+                            </div>
+                          </>
+                        ) : (
+                          <div className="w-full h-full rounded-full bg-slate-100 flex items-center justify-center">
+                            <MdOutlineCloudUpload className="text-4xl text-slate-400" />
+                          </div>
+                        )}
+                      </label>
                       <input
-                        type="checkbox"
-                        className="sr-only peer"
-                        checked={isMember}
-                        disabled={!isToggleEnabled}
-                        onChange={handleMembershipToggle}
+                        id="imgFile"
+                        type="file"
+                        name="image"
+                        accept="image/*"
+                        className="hidden"
+                        onChange={handleFileInputChange}
                       />
-                      <div className="w-11 h-6 bg-gray-300 focus:outline-none rounded-full peer dark:bg-gray-700 peer-checked:after:translate-x-5 peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-green-500"></div>
-                      <span
-                        className={`ml-6 text-lg font-medium font-gothamNarrow ${
-                          isMember ? "text-green-500" : "text-red-500"
-                        }`}
-                      >
-                        {isMember ? "Active" : "Inactive"}
-                      </span>
-                    </label>
-                  </div>
-                </div>
-              </div>
-            </div>
-
-            <div className="w-full flex gap-x-4 items-center mt-6">
-              <div className="w-full sm:w-[216px] h-[53px] px-8 py-4 bg-slate-950 border border-slate-950 flex justify-center items-center gap-2">
-                <button
-                  type="submit"
-                  className="text-white text-sm font-normal font-gothamNarrow"
-                >
-                  Switch Account
-                </button>
-              </div>
-              <div className="w-full sm:w-[216px] h-[53px] group bg-gradient-to-br px-8 py-4 border border-slate-950 flex justify-center items-center gap-2">
-                <button
-                  type="submit"
-                  className="text-[#000C22] text-sm font-semibold font-gothamNarrow"
-                  onClick={() => setOpenModal(true)}
-                >
-                  Log Out
-                </button>
-                {openModal && (
-                  <LogoutPopUp
-                    onClose={handleClose}
-                    handleDelete={handleLogout}
-                  />
-                )}
-              </div>
-            </div>
-          </div>
-
-          <div className="flex flex-col justify-start items-start gap-6 lg:w-1/2 mt-8 lg:mt-0">
-            <div className="self-stretch h-20 flex justify-between items-center">
-              <div>
-                {changeComponent ? (
-                  <>
-                    <div className="text-zinc-900 text-2xl sm:text-3xl font-bold font-gothamNarrow leading-[36px] sm:leading-[48px]">
-                      Change Password
                     </div>
-                    <div className="text-zinc-900 text-base sm:text-lg font-normal font-gothamNarrow">
-                      You can change your Password
+                    {/* Edit Badge */}
+                    <div className="absolute -bottom-2 -right-2 bg-white rounded-full p-2 shadow-lg border-2 border-red-500">
+                      <MdOutlineCloudUpload className="text-red-500 text-sm" />
                     </div>
-                  </>
-                ) : (
-                  <>
-                    <div className="text-zinc-900 text-2xl sm:text-3xl font-bold font-gothamNarrow leading-[36px] sm:leading-[48px]">
-                      My Profile
-                    </div>
-                    <div className="text-zinc-900 text-base sm:text-lg font-normal font-gothamNarrow">
-                      Store all important data
-                    </div>
-                  </>
-                )}
-              </div>
-
-              <button
-                className="flex items-center gap-2 text-red-600 hover:text-red-800 transition-colors"
-                onClick={handleReplace}
-              >
-                <FaKey size={20} />
-                <span className="text-sm sm:text-base font-gothamNarrow whitespace-nowrap">
-                  {changeComponent ? "View Profile" : "Change Password"}
-                </span>
-              </button>
-            </div>
-
-            {changeComponent ? (
-              <EditPassword />
-            ) : (
-              <form className="w-full" onSubmit={handleSubmit(onSubmit)}>
-                <div className="flex flex-col justify-start items-start gap-2">
-                  <div className="w-full h-[86px] flex flex-col justify-start items-start gap-2">
-                    <div className="text-[#4F4F4F] font-semibold font-gothamNarrow">
-                      FirstName
-                    </div>
-                    <input
-                      type="text"
-                      name="firstname"
-                      placeholder="Enter Your firstName"
-                      className="block font-gothamNarrow appearance-none text-sm w-full bg-neutral-50 text-neutral-600 border border-stone-300 rounded-sm py-4 px-4 leading-tight focus:outline-none focus:border-red-600 tracking-normal"
-                      {...register("firstname")}
-                    />
                   </div>
 
-                  <div className="w-full h-[86px] flex flex-col justify-start items-start gap-2">
-                    <div className="text-[#4F4F4F] font-semibold font-gothamNarrow">
-                      LastName
+                  {/* User Details */}
+                  <div className="text-center lg:text-left">
+                    <div className="mb-4">
+                      <h2 className="text-3xl lg:text-4xl font-bold text-white mb-2">
+                        {customer?.firstname} {customer?.lastname}
+                      </h2>
+                      <div className="flex flex-col gap-1">
+                        <p className="text-red-100 text-lg">
+                          {customer?.email}
+                        </p>
+                        <p className="text-red-200 text-sm">
+                          Member since{" "}
+                          {moment(customer?.createdAt).format("MMMM YYYY")}
+                        </p>
+                      </div>
                     </div>
-                    <input
-                      type="text"
-                      name="lastname"
-                      placeholder="Enter Your lastname"
-                      className="block font-gothamNarrow appearance-none text-sm w-full bg-neutral-50 text-neutral-600 border border-stone-300 rounded-sm py-4 px-4 leading-tight focus:outline-none focus:border-red-600 tracking-normal"
-                      {...register("lastname")}
-                    />
-                  </div>
 
-                  <div className="w-full h-[86px] flex flex-col justify-start items-start gap-2">
-                    <div className="text-[#4F4F4F] font-semibold font-gothamNarrow">
-                      Email
-                    </div>
-                    <input
-                      type="email"
-                      name="email"
-                      placeholder="Enter your email"
-                      className="block font-gothamNarrow appearance-none text-sm w-full bg-neutral-50 text-neutral-600 border border-stone-300 rounded-sm py-4 px-4 leading-tight focus:outline-none focus:border-red-600 tracking-normal"
-                      {...register("email")}
-                      readOnly
-                    />
-                  </div>
-                  <div className="w-full h-[86px] flex flex-col justify-start items-start gap-2">
-                    <div className="text-[#4F4F4F] font-semibold font-gothamNarrow">
-                      Address
-                    </div>
-                    <input
-                      type="text"
-                      name="customerAddress"
-                      placeholder="Enter Your Address"
-                      className="block font-gothamNarrow appearance-none text-sm w-full bg-neutral-50 text-neutral-600 border border-stone-300 rounded-sm py-4 px-4 leading-tight focus:outline-none focus:border-red-600 tracking-normal"
-                      {...register("customerAddress")}
-                    />
-                  </div>
-                  <div className="w-full h-[86px] flex flex-col justify-start items-start gap-2">
-                    <div className="text-[#4F4F4F] font-semibold font-gothamNarrow">
-                      District
-                    </div>
-                    <input
-                      type="text"
-                      name="district"
-                      placeholder="Enter Your district"
-                      className="block font-gothamNarrow appearance-none text-sm w-full bg-neutral-50 text-neutral-600 border border-stone-300 rounded-sm py-4 px-4 leading-tight focus:outline-none focus:border-red-600 tracking-normal"
-                      {...register("district")}
-                    />
-                  </div>
-                  <div className="w-full h-[86px] flex flex-col justify-start items-start gap-2">
-                    <div className="text-[#4F4F4F] font-semibold font-gothamNarrow">
-                      City
-                    </div>
-                    <input
-                      type="text"
-                      name="city"
-                      placeholder="Enter Your City"
-                      className="block font-gothamNarrow appearance-none text-sm w-full bg-neutral-50 text-neutral-600 border border-stone-300 rounded-sm py-4 px-4 leading-tight focus:outline-none focus:border-red-600 tracking-normal"
-                      {...register("city")}
-                    />
-                  </div>
+                    {/* Membership Status Card */}
+                    <div className="bg-white bg-opacity-20 backdrop-blur-lg rounded-2xl p-4 border border-white border-opacity-30 max-w-sm">
+                      <div className="flex items-center justify-between">
+                        <div>
+                          <h3 className="text-white font-semibold text-lg mb-1">
+                            Reward Points
+                          </h3>
+                          <p className="text-red-100 text-sm">
+                            {isMember ? "Premium Member" : "Standard Member"}
+                          </p>
+                        </div>
 
-                  <div className="w-full h-[86px] flex flex-col justify-start items-start gap-2">
-                    <div className="text-[#4F4F4F] font-semibold font-gothamNarrow">
-                      Phone
-                    </div>
-                    <input
-                      type="tel"
-                      name="contact"
-                      placeholder="+977-9861884972"
-                      className="block font-gothamNarrow appearance-none text-sm w-full bg-neutral-50 text-neutral-600 border border-stone-300 rounded-sm py-4 px-4 leading-tight focus:outline-none focus:border-red-600 tracking-normal"
-                      {...register("contact")}
-                      readOnly
-                    />
-                  </div>
-
-                  <div className="w-full h-[86px] flex flex-col justify-start items-start gap-2">
-                    <div className="text-[#4F4F4F] font-semibold font-gothamNarrow">
-                      Gender
-                    </div>
-                    <div className="relative w-full">
-                      <select
-                        className="block font-gothamNarrow appearance-none text-sm w-full bg-neutral-50 text-neutral-600 border border-stone-300 rounded-sm py-4 px-4 leading-tight focus:outline-none focus:border-red-600 tracking-normal pr-10"
-                        id="gender"
-                        name="gender"
-                        {...register("gender")}
-                      >
-                        <option value="" disabled selected>
-                          Select Gender
-                        </option>
-                        <option value="male">Male</option>
-                        <option value="female">Female</option>
-                      </select>
-
-                      <div className="absolute inset-y-0 right-3 flex items-center pointer-events-none">
-                        ⌄
+                        <div className="flex items-center gap-3">
+                          <label className="relative inline-flex items-center cursor-pointer">
+                            <input
+                              type="checkbox"
+                              className="sr-only peer"
+                              checked={isMember}
+                              disabled={!isToggleEnabled}
+                              onChange={handleMembershipToggle}
+                            />
+                            <div className="w-14 h-7 bg-white bg-opacity-30 focus:outline-none rounded-full peer peer-checked:after:translate-x-7 peer-checked:after:border-white after:content-[''] after:absolute after:top-0.5 after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-6 after:w-6 after:transition-all peer-checked:bg-green-500 peer-checked:bg-opacity-80"></div>
+                          </label>
+                          <span
+                            className={`font-bold text-sm ${
+                              isMember ? "text-green-200" : "text-red-200"
+                            }`}
+                          >
+                            {isMember ? "Active" : "Inactive"}
+                          </span>
+                        </div>
                       </div>
                     </div>
                   </div>
+                </div>
 
-                  <div className="w-full h-[86px] flex flex-col justify-start items-start gap-2">
-                    <div className="text-[#4F4F4F] font-semibold font-gothamNarrow">
-                      Date Of Birth
-                    </div>
-                    <input
-                      type="date"
-                      name="dob"
-                      className="block font-gothamNarrow appearance-none text-sm w-full bg-neutral-50 text-neutral-600 border border-stone-300 rounded-sm py-4 px-4 leading-tight focus:outline-none focus:border-red-600 tracking-normal"
-                      {...register("dob")}
-                    />
-                  </div>
-
-                  <div className="w-full flex justify-center lg:justify-start">
+                {/* Right Side - Action Buttons */}
+                <div className="flex flex-col gap-3 lg:min-w-[240px]">
+                  <div className="bg-white bg-opacity-20 backdrop-blur-lg border border-white border-opacity-30 rounded-xl px-6 py-3 hover:bg-opacity-30 transition-all duration-300 cursor-pointer">
                     <button
                       type="submit"
-                      className="relative w-full sm:w-[395px] h-[53px] px-8 py-4 bg-gradient-to-r from-red-600 to-red-600 hover:bg-red-700 text-white font-normal font-gothamNarrow justify-center flex gap-x-4 items-center"
-                      disabled={isLoading}
+                      className="text-white font-semibold w-full text-center"
                     >
-                      {isLoading && (
-                        <span className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2">
-                          <div className="animate-spin rounded-full h-4 w-4 border-t-2 border-b-2 border-white"></div>
-                        </span>
-                      )}
-                      <span>Save Changes</span>
-                      <FaArrowRightLong />
+                      Switch Account
                     </button>
                   </div>
+                  <div className="bg-red-800 hover:bg-red-900 border border-red-700 rounded-xl px-6 py-3 transition-all duration-300 cursor-pointer">
+                    <button
+                      type="submit"
+                      className="text-white font-semibold w-full text-center"
+                      onClick={() => setOpenModal(true)}
+                    >
+                      Log Out
+                    </button>
+                    {openModal && (
+                      <LogoutPopUp
+                        onClose={handleClose}
+                        handleDelete={handleLogout}
+                      />
+                    )}
+                  </div>
                 </div>
-              </form>
-            )}
+              </div>
+            </div>
+
+            {/* Form Section */}
+            <div className="p-8 lg:p-12">
+              {/* Section Header */}
+              <div className="flex flex-col lg:flex-row lg:items-center justify-between mb-10 pb-6 border-b border-slate-200">
+                <div className="mb-4 lg:mb-0">
+                  {changeComponent ? (
+                    <>
+                      <h3 className="text-3xl font-bold text-slate-900 mb-2">
+                        Change Password
+                      </h3>
+                      <p className="text-slate-600 text-lg">
+                        Update your password to keep your account secure
+                      </p>
+                    </>
+                  ) : (
+                    <>
+                      <h3 className="text-3xl font-bold text-slate-900 mb-2">
+                        Personal Information
+                      </h3>
+                      <p className="text-slate-600 text-lg">
+                        Keep your profile information up to date
+                      </p>
+                    </>
+                  )}
+                </div>
+
+                <button
+                  className="flex items-center gap-3 bg-slate-100 hover:bg-slate-200 text-slate-700 hover:text-red-600 px-6 py-3 rounded-xl font-semibold transition-all duration-300 border border-slate-200 hover:border-red-200"
+                  onClick={handleReplace}
+                >
+                  <FaKey size={18} />
+                  <span className="whitespace-nowrap">
+                    {changeComponent ? "View Profile" : "Change Password"}
+                  </span>
+                </button>
+              </div>
+
+              {/* Content */}
+              {changeComponent ? (
+                <div className="w-full">
+                  <div className="bg-gradient-to-br from-slate-50 to-gray-50 rounded-2xl p-4 lg:p-8 border border-slate-200">
+                    <EditPassword />
+                  </div>
+                </div>
+              ) : (
+                <form className="w-full" onSubmit={handleSubmit(onSubmit)}>
+                  <div className="max-w-5xl mx-auto">
+                    <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 lg:gap-12">
+                      {/* Left Column */}
+                      <div className="space-y-6">
+                        <div className="bg-gradient-to-br from-slate-50 to-gray-50 rounded-2xl p-6 border border-slate-200">
+                          <h4 className="text-xl font-bold text-slate-900 mb-6 flex items-center gap-2">
+                            <div className="w-2 h-6 bg-red-500 rounded-full"></div>
+                            Personal Details
+                          </h4>
+
+                          <div className="space-y-5">
+                            <div className="group">
+                              <label className="text-slate-700 font-semibold text-sm mb-3 block">
+                                First Name
+                              </label>
+                              <input
+                                type="text"
+                                name="firstname"
+                                placeholder="Enter Your firstName"
+                                className="block w-full bg-white text-slate-700 border-2 border-slate-200 rounded-xl py-4 px-5 text-sm leading-tight focus:outline-none focus:border-red-500 focus:ring-4 focus:ring-red-100 transition-all duration-300 hover:border-slate-300"
+                                {...register("firstname")}
+                              />
+                            </div>
+
+                            <div className="group">
+                              <label className="text-slate-700 font-semibold text-sm mb-3 block">
+                                Last Name
+                              </label>
+                              <input
+                                type="text"
+                                name="lastname"
+                                placeholder="Enter Your lastname"
+                                className="block w-full bg-white text-slate-700 border-2 border-slate-200 rounded-xl py-4 px-5 text-sm leading-tight focus:outline-none focus:border-red-500 focus:ring-4 focus:ring-red-100 transition-all duration-300 hover:border-slate-300"
+                                {...register("lastname")}
+                              />
+                            </div>
+
+                            <div className="group">
+                              <label className="text-slate-700 font-semibold text-sm mb-3 block">
+                                Email Address
+                              </label>
+                              <input
+                                type="email"
+                                name="email"
+                                placeholder="Enter your email"
+                                className="block w-full bg-slate-50 text-slate-500 border-2 border-slate-200 rounded-xl py-4 px-5 text-sm leading-tight cursor-not-allowed"
+                                {...register("email")}
+                                readOnly
+                              />
+                            </div>
+
+                            <div className="group">
+                              <label className="text-slate-700 font-semibold text-sm mb-3 block">
+                                Phone Number
+                              </label>
+                              <input
+                                type="tel"
+                                name="contact"
+                                placeholder="+977-9861884972"
+                                className="block w-full bg-slate-50 text-slate-500 border-2 border-slate-200 rounded-xl py-4 px-5 text-sm leading-tight cursor-not-allowed"
+                                {...register("contact")}
+                                readOnly
+                              />
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+
+                      {/* Right Column */}
+                      <div className="space-y-6">
+                        <div className="bg-gradient-to-br from-slate-50 to-gray-50 rounded-2xl p-6 border border-slate-200">
+                          <h4 className="text-xl font-bold text-slate-900 mb-6 flex items-center gap-2">
+                            <div className="w-2 h-6 bg-red-500 rounded-full"></div>
+                            Location & Details
+                          </h4>
+
+                          <div className="space-y-5">
+                            <div className="group">
+                              <label className="text-slate-700 font-semibold text-sm mb-3 block">
+                                Address
+                              </label>
+                              <input
+                                type="text"
+                                name="customerAddress"
+                                placeholder="Enter Your Address"
+                                className="block w-full bg-white text-slate-700 border-2 border-slate-200 rounded-xl py-4 px-5 text-sm leading-tight focus:outline-none focus:border-red-500 focus:ring-4 focus:ring-red-100 transition-all duration-300 hover:border-slate-300"
+                                {...register("customerAddress")}
+                              />
+                            </div>
+
+                            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                              <div className="group">
+                                <label className="text-slate-700 font-semibold text-sm mb-3 block">
+                                  District
+                                </label>
+                                <input
+                                  type="text"
+                                  name="district"
+                                  placeholder="Enter Your district"
+                                  className="block w-full bg-white text-slate-700 border-2 border-slate-200 rounded-xl py-4 px-5 text-sm leading-tight focus:outline-none focus:border-red-500 focus:ring-4 focus:ring-red-100 transition-all duration-300 hover:border-slate-300"
+                                  {...register("district")}
+                                />
+                              </div>
+
+                              <div className="group">
+                                <label className="text-slate-700 font-semibold text-sm mb-3 block">
+                                  City
+                                </label>
+                                <input
+                                  type="text"
+                                  name="city"
+                                  placeholder="Enter Your City"
+                                  className="block w-full bg-white text-slate-700 border-2 border-slate-200 rounded-xl py-4 px-5 text-sm leading-tight focus:outline-none focus:border-red-500 focus:ring-4 focus:ring-red-100 transition-all duration-300 hover:border-slate-300"
+                                  {...register("city")}
+                                />
+                              </div>
+                            </div>
+
+                            <div className="group">
+                              <label className="text-slate-700 font-semibold text-sm mb-3 block">
+                                Gender
+                              </label>
+                              <div className="relative">
+                                <select
+                                  className="block w-full bg-white text-slate-700 border-2 border-slate-200 rounded-xl py-4 px-5 text-sm leading-tight focus:outline-none focus:border-red-500 focus:ring-4 focus:ring-red-100 transition-all duration-300 hover:border-slate-300 appearance-none cursor-pointer"
+                                  id="gender"
+                                  name="gender"
+                                  {...register("gender")}
+                                >
+                                  <option value="" disabled>
+                                    Select Gender
+                                  </option>
+                                  <option value="male">Male</option>
+                                  <option value="female">Female</option>
+                                </select>
+                                <div className="absolute inset-y-0 right-4 flex items-center pointer-events-none">
+                                  <svg
+                                    className="w-5 h-5 text-slate-400"
+                                    fill="none"
+                                    stroke="currentColor"
+                                    viewBox="0 0 24 24"
+                                  >
+                                    <path
+                                      strokeLinecap="round"
+                                      strokeLinejoin="round"
+                                      strokeWidth={2}
+                                      d="M19 9l-7 7-7-7"
+                                    />
+                                  </svg>
+                                </div>
+                              </div>
+                            </div>
+
+                            <div className="group">
+                              <label className="text-slate-700 font-semibold text-sm mb-3 block">
+                                Date Of Birth
+                              </label>
+                              <input
+                                type="date"
+                                name="dob"
+                                className="block w-full bg-white text-slate-700 border-2 border-slate-200 rounded-xl py-4 px-5 text-sm leading-tight focus:outline-none focus:border-red-500 focus:ring-4 focus:ring-red-100 transition-all duration-300 hover:border-slate-300"
+                                {...register("dob")}
+                              />
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* Save Button */}
+                    <div className="flex justify-center mt-12">
+                      <button
+                        type="submit"
+                        className="relative bg-gradient-to-r from-red-500 to-red-600 hover:from-red-600 hover:to-red-700 text-white font-semibold px-12 py-4 rounded-2xl text-lg shadow-xl hover:shadow-2xl transform hover:scale-105 transition-all duration-300 flex gap-4 items-center disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none"
+                        disabled={isLoading}
+                      >
+                        {isLoading && (
+                          <span className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2">
+                            <div className="animate-spin rounded-full h-5 w-5 border-2 border-white border-t-transparent"></div>
+                          </span>
+                        )}
+                        <span
+                          className={isLoading ? "opacity-0" : "opacity-100"}
+                        >
+                          Save Changes
+                        </span>
+                        <FaArrowRightLong
+                          className={isLoading ? "opacity-0" : "opacity-100"}
+                        />
+                      </button>
+                    </div>
+                  </div>
+                </form>
+              )}
+            </div>
           </div>
         </div>
       </div>
@@ -423,4 +523,4 @@ const ProfileInformation = () => {
   );
 };
 
-export default ProfileInformation;
+export default React.memo(ProfileInformation);

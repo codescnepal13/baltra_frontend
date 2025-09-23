@@ -1,18 +1,18 @@
-import React, { useCallback, useEffect, useState } from "react";
+import { enqueueSnackbar } from "notistack";
+import { useCallback, useEffect, useState } from "react";
 import { useForm } from "react-hook-form";
+import { FaInfoCircle } from "react-icons/fa";
+import { HiOutlineArrowLeftCircle } from "react-icons/hi2";
+import { MdOutlineCloudUpload } from "react-icons/md";
 import { useDispatch, useSelector } from "react-redux";
+import { Link } from "react-router-dom";
 import {
   clearAuthError,
   getProfileMe,
   updateProfile,
 } from "../../../../redux/features/auth/authSlice";
-import FormSkeleton from "../adminLayout/formSkeleton/FormSkeleton";
-import { toast } from "react-toastify";
-import { MdOutlineCloudUpload } from "react-icons/md";
 import MetaData from "../../../layout/metaData/MetaData";
-import { FaInfoCircle } from "react-icons/fa";
-import { Link } from "react-router-dom";
-import { HiOutlineArrowLeftCircle } from "react-icons/hi2";
+import FormSkeleton from "../adminLayout/formSkeleton/FormSkeleton";
 
 const AdminProfile = () => {
   const { customer, loading, isLoading, error, isError } = useSelector(
@@ -42,7 +42,6 @@ const AdminProfile = () => {
     }
   }, []);
 
-
   useEffect(() => {
     if (customer) {
       Object.keys(customer).forEach((key) => {
@@ -52,13 +51,11 @@ const AdminProfile = () => {
     }
   }, [customer, setValue]);
 
- 
   useEffect(() => {
     if (error) {
       dispatch(clearAuthError());
     }
   }, [dispatch, error]);
-
 
   useEffect(() => {
     dispatch(getProfileMe());
@@ -66,7 +63,9 @@ const AdminProfile = () => {
 
   useEffect(() => {
     if (isError) {
-      toast.error(isError);
+      enqueueSnackbar(isError, {
+        variant: "error",
+      });
       dispatch(clearAuthError());
     }
   }, [dispatch, isError]);
@@ -81,7 +80,7 @@ const AdminProfile = () => {
     if (image) {
       formData.append("image", image);
     }
-    dispatch(updateProfile({ formData, toast }));
+    dispatch(updateProfile({ formData, enqueueSnackbar }));
   };
 
   return (
@@ -98,10 +97,7 @@ const AdminProfile = () => {
       ) : customer ? (
         <div className="bg-[#ffffff] py-5">
           <div className="flex justify-between mb-4 px-6">
-            <Link
-              to="/baltra-admin-dashboard"
-              className="flex items-center"
-            >
+            <Link to="/baltra-admin-dashboard" className="flex items-center">
               <HiOutlineArrowLeftCircle size={24} className="mr-2" />
               View Admin Dashboard
             </Link>

@@ -1,10 +1,10 @@
-import React, { useEffect, useState } from "react";
+import ClassicEditor from "@ckeditor/ckeditor5-build-classic";
+import { CKEditor } from "@ckeditor/ckeditor5-react";
+import { enqueueSnackbar } from "notistack";
+import { useEffect, useState } from "react";
 import { HiOutlineArrowLeftCircle } from "react-icons/hi2";
 import { useDispatch, useSelector } from "react-redux";
 import { Link, useNavigate, useParams } from "react-router-dom";
-import { toast } from "react-toastify";
-import { CKEditor } from "@ckeditor/ckeditor5-react";
-import ClassicEditor from "@ckeditor/ckeditor5-build-classic";
 import {
   clearAdminError,
   dropdownSubCategoryList,
@@ -64,12 +64,14 @@ const EditWarrantyPackage = () => {
         editWarrantyForm({
           form_id: id,
           warrantyValue: sanitizedWarrantyValue,
-          toast,
+          enqueueSnackbar,
           navigate,
         })
       );
     } else {
-      toast.warn("Invalid Input!");
+      enqueueSnackbar("Invalid Input", {
+        variant: "error",
+      });
     }
   };
 
@@ -110,7 +112,9 @@ const EditWarrantyPackage = () => {
 
   useEffect(() => {
     if (error) {
-      toast.error(error);
+      enqueueSnackbar(error, {
+        variant: "error",
+      });
       dispatch(clearAdminError());
     }
   }, [dispatch, error]);

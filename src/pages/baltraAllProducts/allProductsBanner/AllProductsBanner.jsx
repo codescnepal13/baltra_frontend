@@ -1,11 +1,11 @@
 import React, { useCallback, useState } from "react";
-import { FiSearch, FiFilter } from "react-icons/fi";
-import { useNavigate } from "react-router-dom";
-import RiceCookerImg from "../../../assets/images/RiceCookerImg.png";
-import FanImg from "../../../assets/images/FanImg.png";
-import UserProductHeader from "../../userProductPage/userProductHeader/UserProductHeader";
-import { baltraSearchProducts } from "../../../redux/features/product/productSlice";
+import { FiFilter, FiSearch } from "react-icons/fi";
 import { useDispatch } from "react-redux";
+import { useNavigate } from "react-router-dom";
+import FanImg from "../../../assets/images/FanImg.png";
+import RiceCookerImg from "../../../assets/images/RiceCookerImg.png";
+import { baltraSearchProducts } from "../../../redux/features/product/productSlice";
+import UserProductHeader from "../../userProductPage/userProductHeader/UserProductHeader";
 
 const AllProductsBanner = () => {
   const dispatch = useDispatch();
@@ -86,4 +86,4 @@ const AllProductsBanner = () => {
   );
 };
 
-export default AllProductsBanner;
+export default React.memo(AllProductsBanner);

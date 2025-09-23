@@ -1,16 +1,16 @@
-import React, { useEffect, useRef, useState } from "react";
-import userAuthImg from "../../../assets/images/userAuthImg.png";
+import { enqueueSnackbar } from "notistack";
+import { useEffect, useRef, useState } from "react";
+import { Controller, useForm } from "react-hook-form";
+import { FaArrowRight } from "react-icons/fa";
 import { useDispatch, useSelector } from "react-redux";
 import { useNavigate } from "react-router-dom";
-import { Controller, useForm } from "react-hook-form";
+import userAuthImg from "../../../assets/images/userAuthImg.png";
+import MetaData from "../../../components/layout/metaData/MetaData";
 import {
   clearAuthError,
   verifyResetOTP,
 } from "../../../redux/features/auth/authSlice";
-import { toast } from "react-toastify";
 import BaltraSubCategoryHeader from "../../baltraSubCategoryProducts/baltraSubCategoryHeader/BaltraSubCategoryHeader";
-import { FaArrowRight } from "react-icons/fa";
-import MetaData from "../../../components/layout/metaData/MetaData";
 
 const ResetOTPVerify = () => {
   const { loading, error, customer } = useSelector((state) => state.auth);
@@ -54,12 +54,14 @@ const ResetOTPVerify = () => {
       otp: parseInt(otp),
     };
 
-    dispatch(verifyResetOTP({ OTPData, toast, navigate }));
+    dispatch(verifyResetOTP({ OTPData, enqueueSnackbar, navigate }));
   };
 
   useEffect(() => {
     if (error) {
-      toast.error(error);
+      enqueueSnackbar(error, {
+        variant: "error",
+      });
       dispatch(clearAuthError());
     }
   }, [dispatch, error]);

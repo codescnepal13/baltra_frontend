@@ -1623,3 +1623,1508 @@ const BaltraPersonalization = ({ closeModal }) => {
 };
 
 export default BaltraPersonalization;
+
+
+//profile Information
+import moment from "moment";
+import { enqueueSnackbar } from "notistack";
+import { useCallback, useEffect, useState } from "react";
+import { useForm } from "react-hook-form";
+import { FaArrowRightLong, FaKey } from "react-icons/fa6";
+import { MdOutlineCloudUpload } from "react-icons/md";
+import { useDispatch, useSelector } from "react-redux";
+import LogoutPopUp from "../../../../components/layout/logoutPopUp/LogoutPopUp";
+import {
+  clearAuthError,
+  getProfileMe,
+  setLogout,
+  updateMemberShipStatus,
+  updateProfile,
+} from "../../../../redux/features/auth/authSlice";
+import EditPassword from "../editPassword/EditPassword";
+
+const ProfileInformation = () => {
+  const { customer, error, isError, isLoading } = useSelector(
+    (state) => state.auth
+  );
+
+  const {
+    handleSubmit,
+    register,
+    setValue,
+    formState: { errors },
+  } = useForm();
+
+  const dispatch = useDispatch();
+
+  const [isMember, setIsMember] = useState(customer?.membership || false);
+  const [isToggleEnabled, setIsToggleEnabled] = useState(!customer?.membership);
+
+  useEffect(() => {
+    setIsMember(customer?.membership);
+    setIsToggleEnabled(!customer?.membership);
+  }, [customer]);
+
+  // Handle membership toggle change
+  const handleMembershipToggle = () => {
+    const data = {
+      customer_id: customer?.id,
+      enable_membership: true,
+    };
+
+    if (customer?.membership === true) {
+      enqueueSnackbar("Membership is already active", {
+        variant: "error",
+      });
+
+      return;
+    }
+
+    if (!isMember) {
+      setIsMember(true);
+      dispatch(updateMemberShipStatus({ data, toast }));
+    }
+  };
+
+  const [image, setImage] = useState(null);
+  const [avatarPreview, setAvatarPreview] = useState(null);
+  const [openModal, setOpenModal] = useState(false);
+  const [changeComponent, setChangeComponent] = useState(false);
+
+  const handleReplace = () => {
+    setChangeComponent((prevState) => !prevState);
+  };
+
+  const handleClose = () => {
+    setOpenModal(!openModal);
+  };
+
+  const handleLogout = useCallback(() => {
+    setOpenModal(false);
+    dispatch(setLogout());
+  }, []);
+
+  const handleFileInputChange = (e) => {
+    const file = e.target.files[0];
+    if (file) {
+      const reader = new FileReader();
+      reader.readAsDataURL(file);
+
+      reader.onloadend = () => {
+        setAvatarPreview(reader.result);
+        setImage(file);
+      };
+
+      reader.onerror = () => {
+        console.error("There was an error reading the file!");
+      };
+    }
+  };
+
+  useEffect(() => {
+    if (customer) {
+      Object.keys(customer).forEach((key) => {
+        setValue(key, customer[key]);
+      });
+      setAvatarPreview(customer?.image_url);
+    }
+  }, [customer, setValue]);
+
+  useEffect(() => {
+    if (error) {
+      dispatch(clearAuthError());
+    }
+  }, [error]);
+
+  useEffect(() => {
+    dispatch(getProfileMe());
+  }, [dispatch]);
+
+  useEffect(() => {
+    if (isError) {
+      enqueueSnackbar(isError, {
+        variant: "error",
+      });
+      dispatch(clearAuthError());
+    }
+  }, [dispatch, isError]);
+
+  const onSubmit = (editData) => {
+    const formData = new FormData();
+    Object.entries(editData).forEach(([key, value]) => {
+      if (value !== customer[key]) {
+        formData.append(key, value);
+      }
+    });
+    if (image) {
+      formData.append("image", image);
+    }
+    dispatch(updateProfile({ formData, enqueueSnackbar }));
+  };
+
+  return (
+    <>
+      <div className="min-h-screen bg-gradient-to-br from-slate-50 via-gray-50 to-zinc-50">
+        {/* Header Section */}
+        <div className="bg-gradient-to-r from-slate-900 via-gray-900 to-zinc-900 py-8">
+          <div className="max-w-7xl mx-auto px-4 sm:px-8 md:px-16 lg:px-24 2xl:px-32">
+            <div className="text-center">
+              <h1 className="text-4xl md:text-5xl font-bold text-white mb-3">
+                Account Dashboard
+              </h1>
+              <p className="text-slate-300 text-lg">
+                Manage your profile and account settings
+              </p>
+              <div className="w-24 h-1 bg-gradient-to-r from-red-500 to-red-600 mx-auto mt-4 rounded-full"></div>
+            </div>
+          </div>
+        </div>
+
+        {/* Main Content */}
+        <div className="max-w-7xl mx-auto px-4 sm:px-8 md:px-16 lg:px-24 2xl:px-32 py-12">
+          <div className="bg-white rounded-3xl shadow-2xl border border-slate-100 overflow-hidden">
+            {/* Profile Header Card */}
+            <div className="bg-gradient-to-r from-red-500 via-red-600 to-red-700 p-8 lg:p-12 relative overflow-hidden">
+              {/* Background Pattern */}
+              <div className="absolute inset-0 opacity-10">
+                <div className="absolute inset-0 bg-[radial-gradient(circle_at_20%_50%,rgba(255,255,255,0.2)_0%,transparent_50%)]"></div>
+                <div className="absolute inset-0 bg-[radial-gradient(circle_at_80%_80%,rgba(255,255,255,0.1)_0%,transparent_50%)]"></div>
+              </div>
+
+              <div className="relative z-10 flex flex-col lg:flex-row lg:justify-between items-center lg:items-start gap-8">
+                {/* Left Side - Profile Info */}
+                <div className="flex flex-col lg:flex-row items-center lg:items-start gap-6 flex-1">
+                  {/* Profile Image */}
+                  <div className="relative group">
+                    <div className="w-36 h-36 border-4 border-white rounded-full shadow-2xl bg-white p-1 relative overflow-hidden">
+                      <label
+                        htmlFor="imgFile"
+                        className="w-full h-full rounded-full flex items-center justify-center cursor-pointer overflow-hidden relative group"
+                      >
+                        {avatarPreview ? (
+                          <>
+                            <img
+                              src={avatarPreview}
+                              alt="profile"
+                              className="object-cover w-full h-full rounded-full transition-all duration-500 group-hover:scale-110"
+                            />
+                            {/* Hover Overlay */}
+                            <div className="absolute inset-0 bg-black bg-opacity-0 group-hover:bg-opacity-40 transition-all duration-300 rounded-full flex items-center justify-center">
+                              <MdOutlineCloudUpload className="text-white text-2xl opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
+                            </div>
+                          </>
+                        ) : (
+                          <div className="w-full h-full rounded-full bg-slate-100 flex items-center justify-center">
+                            <MdOutlineCloudUpload className="text-4xl text-slate-400" />
+                          </div>
+                        )}
+                      </label>
+                      <input
+                        id="imgFile"
+                        type="file"
+                        name="image"
+                        accept="image/*"
+                        className="hidden"
+                        onChange={handleFileInputChange}
+                      />
+                    </div>
+                    {/* Edit Badge */}
+                    <div className="absolute -bottom-2 -right-2 bg-white rounded-full p-2 shadow-lg border-2 border-red-500">
+                      <MdOutlineCloudUpload className="text-red-500 text-sm" />
+                    </div>
+                  </div>
+
+                  {/* User Details */}
+                  <div className="text-center lg:text-left">
+                    <div className="mb-4">
+                      <h2 className="text-3xl lg:text-4xl font-bold text-white mb-2">
+                        {customer?.firstname} {customer?.lastname}
+                      </h2>
+                      <div className="flex flex-col gap-1">
+                        <p className="text-red-100 text-lg">
+                          {customer?.email}
+                        </p>
+                        <p className="text-red-200 text-sm">
+                          Member since{" "}
+                          {moment(customer?.createdAt).format("MMMM YYYY")}
+                        </p>
+                      </div>
+                    </div>
+
+                    {/* Membership Status Card */}
+                    <div className="bg-white bg-opacity-20 backdrop-blur-lg rounded-2xl p-4 border border-white border-opacity-30 max-w-sm">
+                      <div className="flex items-center justify-between">
+                        <div>
+                          <h3 className="text-white font-semibold text-lg mb-1">
+                            Reward Points
+                          </h3>
+                          <p className="text-red-100 text-sm">
+                            {isMember ? "Premium Member" : "Standard Member"}
+                          </p>
+                        </div>
+
+                        <div className="flex items-center gap-3">
+                          <label className="relative inline-flex items-center cursor-pointer">
+                            <input
+                              type="checkbox"
+                              className="sr-only peer"
+                              checked={isMember}
+                              disabled={!isToggleEnabled}
+                              onChange={handleMembershipToggle}
+                            />
+                            <div className="w-14 h-7 bg-white bg-opacity-30 focus:outline-none rounded-full peer peer-checked:after:translate-x-7 peer-checked:after:border-white after:content-[''] after:absolute after:top-0.5 after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-6 after:w-6 after:transition-all peer-checked:bg-green-500 peer-checked:bg-opacity-80"></div>
+                          </label>
+                          <span
+                            className={`font-bold text-sm ${
+                              isMember ? "text-green-200" : "text-red-200"
+                            }`}
+                          >
+                            {isMember ? "Active" : "Inactive"}
+                          </span>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Right Side - Action Buttons */}
+                <div className="flex flex-col gap-3 lg:min-w-[240px]">
+                  <div className="bg-white bg-opacity-20 backdrop-blur-lg border border-white border-opacity-30 rounded-xl px-6 py-3 hover:bg-opacity-30 transition-all duration-300 cursor-pointer">
+                    <button
+                      type="submit"
+                      className="text-white font-semibold w-full text-center"
+                    >
+                      Switch Account
+                    </button>
+                  </div>
+                  <div className="bg-red-800 hover:bg-red-900 border border-red-700 rounded-xl px-6 py-3 transition-all duration-300 cursor-pointer">
+                    <button
+                      type="submit"
+                      className="text-white font-semibold w-full text-center"
+                      onClick={() => setOpenModal(true)}
+                    >
+                      Log Out
+                    </button>
+                    {openModal && (
+                      <LogoutPopUp
+                        onClose={handleClose}
+                        handleDelete={handleLogout}
+                      />
+                    )}
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            {/* Form Section */}
+            <div className="p-8 lg:p-12">
+              {/* Section Header */}
+              <div className="flex flex-col lg:flex-row lg:items-center justify-between mb-10 pb-6 border-b border-slate-200">
+                <div className="mb-4 lg:mb-0">
+                  {changeComponent ? (
+                    <>
+                      <h3 className="text-3xl font-bold text-slate-900 mb-2">
+                        Change Password
+                      </h3>
+                      <p className="text-slate-600 text-lg">
+                        Update your password to keep your account secure
+                      </p>
+                    </>
+                  ) : (
+                    <>
+                      <h3 className="text-3xl font-bold text-slate-900 mb-2">
+                        Personal Information
+                      </h3>
+                      <p className="text-slate-600 text-lg">
+                        Keep your profile information up to date
+                      </p>
+                    </>
+                  )}
+                </div>
+
+                <button
+                  className="flex items-center gap-3 bg-slate-100 hover:bg-slate-200 text-slate-700 hover:text-red-600 px-6 py-3 rounded-xl font-semibold transition-all duration-300 border border-slate-200 hover:border-red-200"
+                  onClick={handleReplace}
+                >
+                  <FaKey size={18} />
+                  <span className="whitespace-nowrap">
+                    {changeComponent ? "View Profile" : "Change Password"}
+                  </span>
+                </button>
+              </div>
+
+              {/* Content */}
+              {changeComponent ? (
+                <div className="max-w-2xl mx-auto">
+                  <div className="bg-gradient-to-br from-slate-50 to-gray-50 rounded-2xl p-8 border border-slate-200">
+                    <EditPassword />
+                  </div>
+                </div>
+              ) : (
+                <form className="w-full" onSubmit={handleSubmit(onSubmit)}>
+                  <div className="max-w-5xl mx-auto">
+                    <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 lg:gap-12">
+                      {/* Left Column */}
+                      <div className="space-y-6">
+                        <div className="bg-gradient-to-br from-slate-50 to-gray-50 rounded-2xl p-6 border border-slate-200">
+                          <h4 className="text-xl font-bold text-slate-900 mb-6 flex items-center gap-2">
+                            <div className="w-2 h-6 bg-red-500 rounded-full"></div>
+                            Personal Details
+                          </h4>
+
+                          <div className="space-y-5">
+                            <div className="group">
+                              <label className="text-slate-700 font-semibold text-sm mb-3 block">
+                                First Name
+                              </label>
+                              <input
+                                type="text"
+                                name="firstname"
+                                placeholder="Enter Your firstName"
+                                className="block w-full bg-white text-slate-700 border-2 border-slate-200 rounded-xl py-4 px-5 text-sm leading-tight focus:outline-none focus:border-red-500 focus:ring-4 focus:ring-red-100 transition-all duration-300 hover:border-slate-300"
+                                {...register("firstname")}
+                              />
+                            </div>
+
+                            <div className="group">
+                              <label className="text-slate-700 font-semibold text-sm mb-3 block">
+                                Last Name
+                              </label>
+                              <input
+                                type="text"
+                                name="lastname"
+                                placeholder="Enter Your lastname"
+                                className="block w-full bg-white text-slate-700 border-2 border-slate-200 rounded-xl py-4 px-5 text-sm leading-tight focus:outline-none focus:border-red-500 focus:ring-4 focus:ring-red-100 transition-all duration-300 hover:border-slate-300"
+                                {...register("lastname")}
+                              />
+                            </div>
+
+                            <div className="group">
+                              <label className="text-slate-700 font-semibold text-sm mb-3 block">
+                                Email Address
+                              </label>
+                              <input
+                                type="email"
+                                name="email"
+                                placeholder="Enter your email"
+                                className="block w-full bg-slate-50 text-slate-500 border-2 border-slate-200 rounded-xl py-4 px-5 text-sm leading-tight cursor-not-allowed"
+                                {...register("email")}
+                                readOnly
+                              />
+                            </div>
+
+                            <div className="group">
+                              <label className="text-slate-700 font-semibold text-sm mb-3 block">
+                                Phone Number
+                              </label>
+                              <input
+                                type="tel"
+                                name="contact"
+                                placeholder="+977-9861884972"
+                                className="block w-full bg-slate-50 text-slate-500 border-2 border-slate-200 rounded-xl py-4 px-5 text-sm leading-tight cursor-not-allowed"
+                                {...register("contact")}
+                                readOnly
+                              />
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+
+                      {/* Right Column */}
+                      <div className="space-y-6">
+                        <div className="bg-gradient-to-br from-slate-50 to-gray-50 rounded-2xl p-6 border border-slate-200">
+                          <h4 className="text-xl font-bold text-slate-900 mb-6 flex items-center gap-2">
+                            <div className="w-2 h-6 bg-red-500 rounded-full"></div>
+                            Location & Details
+                          </h4>
+
+                          <div className="space-y-5">
+                            <div className="group">
+                              <label className="text-slate-700 font-semibold text-sm mb-3 block">
+                                Address
+                              </label>
+                              <input
+                                type="text"
+                                name="customerAddress"
+                                placeholder="Enter Your Address"
+                                className="block w-full bg-white text-slate-700 border-2 border-slate-200 rounded-xl py-4 px-5 text-sm leading-tight focus:outline-none focus:border-red-500 focus:ring-4 focus:ring-red-100 transition-all duration-300 hover:border-slate-300"
+                                {...register("customerAddress")}
+                              />
+                            </div>
+
+                            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                              <div className="group">
+                                <label className="text-slate-700 font-semibold text-sm mb-3 block">
+                                  District
+                                </label>
+                                <input
+                                  type="text"
+                                  name="district"
+                                  placeholder="Enter Your district"
+                                  className="block w-full bg-white text-slate-700 border-2 border-slate-200 rounded-xl py-4 px-5 text-sm leading-tight focus:outline-none focus:border-red-500 focus:ring-4 focus:ring-red-100 transition-all duration-300 hover:border-slate-300"
+                                  {...register("district")}
+                                />
+                              </div>
+
+                              <div className="group">
+                                <label className="text-slate-700 font-semibold text-sm mb-3 block">
+                                  City
+                                </label>
+                                <input
+                                  type="text"
+                                  name="city"
+                                  placeholder="Enter Your City"
+                                  className="block w-full bg-white text-slate-700 border-2 border-slate-200 rounded-xl py-4 px-5 text-sm leading-tight focus:outline-none focus:border-red-500 focus:ring-4 focus:ring-red-100 transition-all duration-300 hover:border-slate-300"
+                                  {...register("city")}
+                                />
+                              </div>
+                            </div>
+
+                            <div className="group">
+                              <label className="text-slate-700 font-semibold text-sm mb-3 block">
+                                Gender
+                              </label>
+                              <div className="relative">
+                                <select
+                                  className="block w-full bg-white text-slate-700 border-2 border-slate-200 rounded-xl py-4 px-5 text-sm leading-tight focus:outline-none focus:border-red-500 focus:ring-4 focus:ring-red-100 transition-all duration-300 hover:border-slate-300 appearance-none cursor-pointer"
+                                  id="gender"
+                                  name="gender"
+                                  {...register("gender")}
+                                >
+                                  <option value="" disabled>
+                                    Select Gender
+                                  </option>
+                                  <option value="male">Male</option>
+                                  <option value="female">Female</option>
+                                </select>
+                                <div className="absolute inset-y-0 right-4 flex items-center pointer-events-none">
+                                  <svg
+                                    className="w-5 h-5 text-slate-400"
+                                    fill="none"
+                                    stroke="currentColor"
+                                    viewBox="0 0 24 24"
+                                  >
+                                    <path
+                                      strokeLinecap="round"
+                                      strokeLinejoin="round"
+                                      strokeWidth={2}
+                                      d="M19 9l-7 7-7-7"
+                                    />
+                                  </svg>
+                                </div>
+                              </div>
+                            </div>
+
+                            <div className="group">
+                              <label className="text-slate-700 font-semibold text-sm mb-3 block">
+                                Date Of Birth
+                              </label>
+                              <input
+                                type="date"
+                                name="dob"
+                                className="block w-full bg-white text-slate-700 border-2 border-slate-200 rounded-xl py-4 px-5 text-sm leading-tight focus:outline-none focus:border-red-500 focus:ring-4 focus:ring-red-100 transition-all duration-300 hover:border-slate-300"
+                                {...register("dob")}
+                              />
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* Save Button */}
+                    <div className="flex justify-center mt-12">
+                      <button
+                        type="submit"
+                        className="relative bg-gradient-to-r from-red-500 to-red-600 hover:from-red-600 hover:to-red-700 text-white font-semibold px-12 py-4 rounded-2xl text-lg shadow-xl hover:shadow-2xl transform hover:scale-105 transition-all duration-300 flex gap-4 items-center disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none"
+                        disabled={isLoading}
+                      >
+                        {isLoading && (
+                          <span className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2">
+                            <div className="animate-spin rounded-full h-5 w-5 border-2 border-white border-t-transparent"></div>
+                          </span>
+                        )}
+                        <span
+                          className={isLoading ? "opacity-0" : "opacity-100"}
+                        >
+                          Save Changes
+                        </span>
+                        <FaArrowRightLong
+                          className={isLoading ? "opacity-0" : "opacity-100"}
+                        />
+                      </button>
+                    </div>
+                  </div>
+                </form>
+              )}
+            </div>
+          </div>
+        </div>
+      </div>
+    </>
+  );
+};
+
+export default ProfileInformation;
+
+
+//previous Product View page
+import { AnimatePresence, motion } from "framer-motion";
+import { enqueueSnackbar } from "notistack";
+import { useEffect, useState } from "react";
+import { CiShare2 } from "react-icons/ci";
+import { FaTimes } from "react-icons/fa";
+import {
+  FaArrowRight,
+  FaFacebook,
+  FaInstagram,
+  FaTwitter,
+  FaYoutube,
+} from "react-icons/fa6";
+import { useDispatch, useSelector } from "react-redux";
+import { Link } from "react-router-dom";
+import { toast } from "react-toastify";
+import ProductViewSkeleton from "../../../components/layout/productViewSkeleton/ProductViewSkeleton";
+import { baltraProductsRelated } from "../../../redux/features/product/productSlice";
+import BaltraPersonalization from "../../baltraPersonalization/BaltraPersonalization";
+import BaltraQuoteModal from "../../baltraQuoteModal/BaltraQuoteModal";
+import RelatedProducts from "../relatedProducts/RelatedProducts";
+import "./ProductViewDetails.css";
+import ProductDescription from "./productDescription/ProductDescription";
+import ProductDetailsVideo from "./productDetailsVideo/ProductDetailsVideo";
+import ProductVaccum from "./productVaccum/ProductVaccum";
+import RatingReviewsSection from "./ratingReviewsSection/RatingReviewsSection";
+import StarRating from "./ratingReviewsSection/starRating/StarRating";
+
+const RippleButton = ({ label, rippleColor, onClick, children }) => {
+  const [ripplePosition, setRipplePosition] = useState({ x: 0, y: 0 });
+  const [isHovered, setIsHovered] = useState(false);
+
+  const handleMouseEnter = (e) => {
+    const rect = e.target.getBoundingClientRect();
+    const x = e.clientX - rect.left;
+    const y = e.clientY - rect.top;
+    setRipplePosition({ x, y });
+    setIsHovered(true);
+  };
+
+  const handleMouseLeave = () => {
+    setIsHovered(false);
+  };
+
+  return (
+    <motion.button
+      whileTap={{ scale: 0.95 }}
+      className="w-full py-3 sm:py-3 border border-[#202D31] flex justify-center items-center relative overflow-hidden"
+      onMouseEnter={handleMouseEnter}
+      onMouseLeave={handleMouseLeave}
+      onClick={onClick}
+    >
+      {/* Ripple Effect */}
+      <AnimatePresence>
+        {isHovered && (
+          <motion.div
+            className="absolute rounded-full"
+            style={{
+              top: ripplePosition.y,
+              left: ripplePosition.x,
+              width: 0,
+              height: 0,
+              transform: "translate(-50%, -50%)",
+              backgroundColor: rippleColor,
+            }}
+            animate={{
+              width: 1500,
+              height: 700,
+              opacity: 1,
+            }}
+            exit={{
+              opacity: 0,
+              transition: { duration: 0.5 },
+            }}
+            transition={{
+              duration: 0.5,
+              ease: "easeInOut",
+            }}
+          />
+        )}
+      </AnimatePresence>
+
+      {/* Button Text and Children */}
+      <span
+        className={`relative z-10 text-center text-sm sm:text-base lg:text-lg font-semibold font-gothamNarrow flex items-center ${
+          isHovered ? "text-white" : "text-black"
+        }`}
+      >
+        {label}
+        {children && <span className="ml-2">{children}</span>}
+      </span>
+    </motion.button>
+  );
+};
+
+const ProductViewDetails = ({ singleProduct, loading }) => {
+  const { isFetching, allRelatedProducts, statRatingReview } = useSelector(
+    (state) => state.product
+  );
+  const { isAuthenticated, customer } = useSelector((state) => state.auth);
+
+  const { average_rating = 0, total_reviews = 0 } = statRatingReview || {};
+
+  const { id } = singleProduct || {};
+  const dispatch = useDispatch();
+
+  const [selectedColor, setSelectedColor] = useState("");
+  const [selectedSize, setSelectedSize] = useState("");
+  const [isPopupVisible, setPopupVisible] = useState(false);
+  const [selectedImage, setSelectedImage] = useState("");
+  const [selectedModalName, setSelectedModalName] = useState("");
+  const [selectedModalNumber, setSelectedModalNumber] = useState("");
+
+  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [quoteModalOpen, setQuoteModalOpen] = useState(false);
+
+  const [zoomPosition, setZoomPosition] = useState({
+    backgroundPositionX: "0%",
+    backgroundPositionY: "0%",
+  });
+  const [isZoomVisible, setIsZoomVisible] = useState(false);
+
+  const handleMouseMove = (event) => {
+    const { offsetX, offsetY, target } = event.nativeEvent;
+    const { offsetWidth, offsetHeight } = target;
+
+    const xPercent = (offsetX / offsetWidth) * 100;
+    const yPercent = (offsetY / offsetHeight) * 100;
+
+    setZoomPosition({
+      backgroundPositionX: `${xPercent}%`,
+      backgroundPositionY: `${yPercent}%`,
+    });
+    setIsZoomVisible(true);
+  };
+
+  const handleMouseOut = () => {
+    setIsZoomVisible(false);
+  };
+  const isBottleOrFlaskCategory = () => {
+    const name = singleProduct?.category?.category_name?.toLowerCase() || "";
+    return (
+      name.includes("bottle") ||
+      (name.includes("bottles") &&
+        (name.includes("flask") || name.includes("flasks")))
+    );
+  };
+  const handlePersonalizationClick = () => {
+    if (isBottleOrFlaskCategory()) {
+      if (singleProduct?.sizes?.length > 0 && !selectedSize) {
+        enqueueSnackbar("Please Select a size.", {
+          variant: "error",
+        });
+      } else if (singleProduct?.color_styles?.length > 0 && !selectedColor) {
+        enqueueSnackbar("Please Select a color.", {
+          variant: "error",
+        });
+      } else {
+        setIsModalOpen(true);
+      }
+    } else {
+      enqueueSnackbar(
+        "Personalization is only available for Bottles and Flasks.",
+        {
+          variant: "error",
+        }
+      );
+    }
+  };
+
+  const handleBulkQuoteClick = () => {
+    if (isAuthenticated) {
+      setQuoteModalOpen(true);
+    } else {
+      toast.info("please login first!");
+    }
+  };
+
+  useEffect(() => {
+    setSelectedImage(singleProduct?.main_image);
+    setSelectedModalName(singleProduct?.model_name);
+    setSelectedModalNumber(singleProduct?.model_num);
+  }, [singleProduct]);
+
+  const closeModal = () => {
+    setIsModalOpen(false);
+  };
+
+  const QuoteCloseModal = () => {
+    setQuoteModalOpen(false);
+  };
+
+  const handleMouseLeave = () => {
+    setSelectedImage(singleProduct?.main_image);
+  };
+
+  const handleTogglePopup = () => {
+    setPopupVisible(!isPopupVisible);
+  };
+
+  const handleColorSelection = (color) => {
+    setSelectedColor(color);
+  };
+  const handleSizeSelection = (size) => {
+    setSelectedSize(size);
+  };
+
+  useEffect(() => {
+    if (id) {
+      dispatch(baltraProductsRelated(id));
+    }
+  }, [dispatch, id]);
+
+  return (
+    <>
+      {loading ? (
+        <ProductViewSkeleton />
+      ) : (
+        <div className="px-4 md:px-12 lg:px-24 my-8">
+          <div className="text-sm text-gray-500 mb-4">
+            <Link
+              to={`/category/${singleProduct?.category?.id}`}
+              className="hover:underline font-gothamNarrow"
+            >
+              {singleProduct?.category?.category_name}
+            </Link>
+            {" / "}
+            <Link
+              to={`/subcategory/${singleProduct?.sub_category?.id}`}
+              className="hover:underline font-gothamNarrow"
+            >
+              {singleProduct?.sub_category?.sub_category_name}
+            </Link>
+            {" / "}
+            <span className=" font-gothamNarrow">{singleProduct?.name}</span>
+          </div>
+          <div className="bg-[#ffffff] px-8 py-8 flex flex-col md:flex-row gap-y-8 md:gap-x-12 lg:gap-x-32 overflow-hidden">
+            <div className="flex flex-col items-center">
+              {/* Main Image */}
+              <div className="relative mb-8 flex flex-col items-center">
+                <img
+                  className="w-64 h-64 sm:w-72 sm:h-72 md:w-80 md:h-80 object-contain"
+                  src={selectedImage}
+                  alt="singleProductImg"
+                  loading="lazy"
+                  onMouseMove={handleMouseMove}
+                  onMouseOut={handleMouseOut}
+                />
+
+                {isZoomVisible && (
+                  <div
+                    className="absolute inset-0 w-full h-full bg-contain bg-no-repeat pointer-events-none cursor-pointer"
+                    style={{
+                      backgroundImage: `url(${selectedImage})`,
+                      backgroundPositionX: zoomPosition.backgroundPositionX,
+                      backgroundPositionY: zoomPosition.backgroundPositionY,
+                      backgroundSize: "200%",
+                    }}
+                  ></div>
+                )}
+
+                {/* Warranty Icon */}
+                <img
+                  className="absolute top-0 right-[-24px] sm:right-[-40px] md:right-[-74px] lg:right-[-150px] w-12 h-12 sm:w-16 sm:h-16 md:w-24 md:h-24"
+                  src={singleProduct?.warranty_icon}
+                  alt="WarrantyImg"
+                />
+              </div>
+
+              {/* Variant Images */}
+              {singleProduct?.images?.length > 0 && (
+                <div className="my-2">
+                  <div className="flex gap-2 md:gap-3 lg:gap-4 overflow-x-auto lg:overflow-x-visible scrollbar-hide">
+                    {singleProduct.images.map((image, index) => (
+                      <img
+                        key={index}
+                        className="w-16 h-16 md:w-20 md:h-20 lg:w-24 lg:h-24 object-contain border border-gray-200 flex-shrink-0 cursor-pointer"
+                        src={image.image_url}
+                        alt={`Variant ${index + 1}`}
+                        onMouseEnter={() => setSelectedImage(image.image_url)}
+                        onMouseLeave={handleMouseLeave}
+                      />
+                    ))}
+                  </div>
+                </div>
+              )}
+            </div>
+            {/* Right side - Content Section */}
+            <div className="flex flex-col gap-2 ml-0 md:ml-8 md:w-1/2 lg:w-7/12">
+              <div className="text-right">
+                <i className="icon-share"></i>
+              </div>
+              <div>
+                <div className="flex justify-between items-center">
+                  <div className="text-[#77777E] text-base font-gothamNarrow">
+                    {singleProduct?.model_name}
+                  </div>
+                  <div className="flex items-center">
+                    <Link to="#" onClick={(e) => e.preventDefault()}>
+                      <CiShare2 size={22} onClick={handleTogglePopup} />
+                    </Link>
+                  </div>
+                  {isPopupVisible && (
+                    <div className="font-gothamNarrow fixed inset-0 flex items-center px-8 sm:px-0 lg:justify-center z-50">
+                      <div className="absolute inset-0 bg-black opacity-50"></div>
+                      <div className="relative bg-white p-6 sm:p-8 rounded-lg shadow-lg z-10 max-w-xs sm:max-w-md w-full overflow-hidden">
+                        <button
+                          className="absolute top-2 right-2 text-gray-500 hover:text-gray-800"
+                          onClick={handleTogglePopup}
+                        >
+                          <FaTimes size={24} />
+                        </button>
+                        <div className="flex flex-col items-center">
+                          <h2 className="text-xl font-normal mb-4 font-gothamNarrow">
+                            Share via:
+                          </h2>
+                          <div className="flex flex-wrap justify-center space-x-4">
+                            <a
+                              href="https://www.facebook.com"
+                              target="_blank"
+                              rel="noopener noreferrer"
+                            >
+                              <FaFacebook size={32} className="text-blue-600" />
+                            </a>
+                            <a
+                              href="https://www.instagram.com"
+                              target="_blank"
+                              rel="noopener noreferrer"
+                            >
+                              <FaInstagram
+                                size={32}
+                                className="text-pink-500"
+                              />
+                            </a>
+                            <a
+                              href="https://www.twitter.com"
+                              target="_blank"
+                              rel="noopener noreferrer"
+                            >
+                              <FaTwitter size={32} className="text-blue-400" />
+                            </a>
+                            <a
+                              href="https://www.youtube.com"
+                              target="_blank"
+                              rel="noopener noreferrer"
+                            >
+                              <FaYoutube size={32} className="text-red-600" />
+                            </a>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  )}
+                </div>
+                <h2 className="text-2xl md:text-3xl text-[#202D31] font-bold font-gothamNarrow my-1">
+                  {singleProduct?.name}
+                </h2>
+
+                <h2 className="text-sm md:text-base font-semibold text-[#202D31] font-gothamNarrow my-1">
+                  {singleProduct?.model_num}
+                </h2>
+                <p className="text-[#000000] text-base md:text-lg font-gothamNarrow">
+                  {singleProduct?.sub_heading}
+                </p>
+              </div>
+              <div className="text-[#ED1C24] text-xl md:text-2xl font-medium tracking-normal">
+                MRP. {singleProduct?.price}
+              </div>
+              <div className="flex items-center gap-1 font-/* The `gothamNarrow` is a custom font class gothamNarrow">
+                <StarRating rating={average_rating} />
+                <span className="text-gray-500 text-sm font-gothamNarrow">
+                  ({total_reviews.toLocaleString()})
+                </span>
+              </div>
+              <hr className="border-t w-full border-gray-300" />
+              {singleProduct?.color_styles?.length > 0 && (
+                <div>
+                  <div className="text-[#4D5159] text-sm font-gothamNarrow">
+                    Color
+                  </div>
+                  <div className="my-2">
+                    {singleProduct?.color_styles &&
+                      singleProduct?.color_styles?.length > 0 && (
+                        <div className="flex items-center flex-wrap justify-start my-2 gap-4">
+                          {singleProduct?.color_styles?.map((color, index) => (
+                            <div
+                              key={index}
+                              className={`relative w-6 h-6 rounded-full cursor-pointer border ${
+                                selectedColor === color
+                                  ? "border-red"
+                                  : "border-gray-400"
+                              }`}
+                              style={{ backgroundColor: color }}
+                              onClick={() => handleColorSelection(color)}
+                            >
+                              {selectedColor === color && (
+                                <div className="absolute inset-0 flex items-center justify-center">
+                                  <svg
+                                    className="w-4 h-4 text-white"
+                                    fill="none"
+                                    stroke="currentColor"
+                                    viewBox="0 0 24 24"
+                                    xmlns="http://www.w3.org/2000/svg"
+                                  >
+                                    <path
+                                      strokeLinecap="round"
+                                      strokeLinejoin="round"
+                                      strokeWidth="2"
+                                      d="M5 13l4 4L19 7"
+                                    ></path>
+                                  </svg>
+                                </div>
+                              )}
+                            </div>
+                          ))}
+                        </div>
+                      )}
+                  </div>
+                </div>
+              )}
+              {singleProduct?.sizes?.length > 0 && (
+                <div>
+                  <div className="text-[#4D5159] text-sm font-gothamNarrow">
+                    Size Selection
+                  </div>
+                  {singleProduct?.sizes && singleProduct?.sizes?.length > 0 && (
+                    <div className="flex items-center flex-wrap justify-start my-2 gap-3">
+                      {singleProduct?.sizes?.map((size, index) => (
+                        <div
+                          key={index}
+                          className={`w-12 h-12 border cursor-pointer font-gothamNarrow flex items-center justify-center ${
+                            selectedSize === size
+                              ? "border-[#f3232B]"
+                              : "border-gray-300"
+                          }`}
+                          onClick={() => handleSizeSelection(size)}
+                        >
+                          <span className="text-black text-sm text-center font-gothamNarrow">
+                            {size}
+                          </span>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                </div>
+              )}
+              <div className="text-[#4D5159] text-sm font-gothamNarrow">
+                Packaging
+              </div>
+              <div className="text-lg text-[#4A4545] font-medium font-gothamNarrow">
+                {singleProduct?.packaging}
+              </div>
+              <div className="text-[#4D5159] text-sm font-gothamNarrow">
+                Power
+              </div>
+              <div className="text-xl text-[#4A4545] font-gothamNarrow">
+                {singleProduct?.power}
+              </div>
+              <div className="flex w-full flex-col gap-4 my-2">
+                {/* Link to request a bulk quote */}
+                <Link to={"#"} className="w-full">
+                  <RippleButton
+                    label="REQUEST A BULK QUOTE"
+                    rippleColor="#071C2E"
+                    className="flex justify-center items-center w-full py-3 px-4 border border-gray-500 text-center text-[#272626] font-semibold font-gothamNarrow"
+                    onClick={handleBulkQuoteClick}
+                  >
+                    <FaArrowRight className="ml-2" />
+                  </RippleButton>
+                </Link>
+
+                {/* Link to add personalization */}
+
+                <RippleButton
+                  label="ADD PERSONALIZATION"
+                  rippleColor="#071C2E"
+                  className="flex justify-center items-center w-full py-3 px-4 border border-gray-500 text-center text-[#000000] font-semibold font-gothamNarrow"
+                  onClick={handlePersonalizationClick}
+                >
+                  <FaArrowRight className="ml-2" />
+                </RippleButton>
+
+                {isModalOpen && (
+                  <div className="fixed inset-0 z-50 flex justify-center items-center bg-black bg-opacity-50">
+                    <div className="bg-white w-full max-w-4xl p-6 relative mx-4 md:mx-6">
+                      <BaltraPersonalization
+                        selectedColor={selectedColor}
+                        selectedSize={selectedSize}
+                        mainImage={selectedImage}
+                        productId={singleProduct.id}
+                        closeModal={closeModal}
+                      />
+                    </div>
+                  </div>
+                )}
+
+                {quoteModalOpen && (
+                  <div className="fixed inset-0 z-50 flex justify-center items-center">
+                    <div className="w-full max-w-4xl p-6 relative mx-4 md:mx-6">
+                      <BaltraQuoteModal
+                        productId={singleProduct.id}
+                        bulkImage={selectedImage}
+                        QuoteCloseModal={QuoteCloseModal}
+                        model_name={selectedModalName}
+                        model_num={selectedModalNumber}
+                        customer={customer}
+                      />
+                    </div>
+                  </div>
+                )}
+              </div>
+
+              <hr className="border-t w-full border-gray-300" />
+            </div>
+          </div>
+          <ProductDescription singleProduct={singleProduct} />
+          <ProductVaccum singleProduct={singleProduct} />
+          <ProductDetailsVideo singleProduct={singleProduct} />
+          <RatingReviewsSection />
+          <RelatedProducts
+            allRelatedProducts={allRelatedProducts}
+            isFetching={isFetching}
+          />
+        </div>
+      )}
+    </>
+  );
+};
+
+export default ProductViewDetails;
+
+
+//previous Profile Information
+import moment from "moment";
+import { enqueueSnackbar } from "notistack";
+import { useCallback, useEffect, useState } from "react";
+import { useForm } from "react-hook-form";
+import { FaArrowRightLong, FaKey } from "react-icons/fa6";
+import { MdOutlineCloudUpload } from "react-icons/md";
+import { useDispatch, useSelector } from "react-redux";
+import LogoutPopUp from "../../../../components/layout/logoutPopUp/LogoutPopUp";
+import {
+  clearAuthError,
+  getProfileMe,
+  setLogout,
+  updateMemberShipStatus,
+  updateProfile,
+} from "../../../../redux/features/auth/authSlice";
+import EditPassword from "../editPassword/EditPassword";
+const ProfileInformation = () => {
+  const { customer, error, isError, isLoading } = useSelector(
+    (state) => state.auth
+  );
+
+  const {
+    handleSubmit,
+    register,
+    setValue,
+    formState: { errors },
+  } = useForm();
+
+  const dispatch = useDispatch();
+
+  const [isMember, setIsMember] = useState(customer?.membership || false);
+  const [isToggleEnabled, setIsToggleEnabled] = useState(!customer?.membership);
+
+  useEffect(() => {
+    setIsMember(customer?.membership);
+    setIsToggleEnabled(!customer?.membership);
+  }, [customer]);
+
+  // Handle membership toggle change
+  const handleMembershipToggle = () => {
+    const data = {
+      customer_id: customer?.id,
+      enable_membership: true,
+    };
+
+    if (customer?.membership === true) {
+      enqueueSnackbar("Membership is already Active", {
+        variant: "error",
+      });
+      return;
+    }
+
+    if (!isMember) {
+      setIsMember(true);
+      dispatch(updateMemberShipStatus({ data, enqueueSnackbar }));
+    }
+  };
+
+  const [image, setImage] = useState(null);
+  const [avatarPreview, setAvatarPreview] = useState(null);
+  const [openModal, setOpenModal] = useState(false);
+  const [changeComponent, setChangeComponent] = useState(false);
+
+  const handleReplace = () => {
+    setChangeComponent((prevState) => !prevState);
+  };
+
+  const handleClose = () => {
+    setOpenModal(!openModal);
+  };
+
+  const handleLogout = useCallback(() => {
+    setOpenModal(false);
+    dispatch(setLogout());
+  }, [dispatch]);
+
+  const handleFileInputChange = (e) => {
+    const file = e.target.files[0];
+    if (file) {
+      const reader = new FileReader();
+      reader.readAsDataURL(file);
+
+      reader.onloadend = () => {
+        setAvatarPreview(reader.result);
+        setImage(file);
+      };
+
+      reader.onerror = () => {
+        console.error("There was an error reading the file!");
+      };
+    }
+  };
+  useEffect(() => {
+    if (customer) {
+      Object.keys(customer).forEach((key) => {
+        setValue(key, customer[key]);
+      });
+      setAvatarPreview(customer?.image_url);
+    }
+  }, [customer, setValue]);
+
+  useEffect(() => {
+    if (error) {
+      dispatch(clearAuthError());
+    }
+  }, [dispatch, error]);
+
+  useEffect(() => {
+    dispatch(getProfileMe());
+  }, [dispatch]);
+
+  useEffect(() => {
+    if (isError) {
+      enqueueSnackbar(isError, {
+        variant: "error",
+      }),
+        dispatch(clearAuthError());
+    }
+  }, [dispatch, isError]);
+
+  const onSubmit = (editData) => {
+    const formData = new FormData();
+    Object.entries(editData).forEach(([key, value]) => {
+      if (value !== customer[key]) {
+        formData.append(key, value);
+      }
+    });
+    if (image) {
+      formData.append("image", image);
+    }
+    dispatch(updateProfile({ formData, enqueueSnackbar }));
+  };
+  return (
+    <>
+      <div className="w-full mx-auto px-4 sm:px-8 md:px-16 lg:px-24 2xl:px-32 flex justify-center items-start py-12">
+        <div className="bg-white rounded-sm backdrop-blur-2xl flex flex-col lg:flex-row lg:justify-between w-full max-w-screen-2xl mx-auto gap-8">
+          <div className="flex flex-col justify-start items-start gap-6 lg:w-1/2">
+            <div className="flex flex-col lg:flex-row justify-start items-start gap-2">
+              <div className="relative">
+                <div className="my-5">
+                  <div className="w-48 h-48 border-2 rounded-full border-gray-400 relative mx-auto">
+                    <label
+                      htmlFor="imgFile"
+                      className="w-full h-full rounded-full flex items-center justify-center cursor-pointer"
+                    >
+                      {avatarPreview ? (
+                        <img
+                          src={avatarPreview}
+                          alt="profile"
+                          className="object-cover w-full h-full rounded-full"
+                        />
+                      ) : (
+                        <span className="text-sm font-gothamNarrow">
+                          <MdOutlineCloudUpload size={32} />
+                        </span>
+                      )}
+                    </label>
+                    <input
+                      id="imgFile"
+                      type="file"
+                      name="image"
+                      accept="image/*"
+                      className="hidden"
+                      onChange={handleFileInputChange}
+                    />
+                  </div>
+                </div>
+              </div>
+              <div className="flex flex-col justify-start pt-8 items-start lg:mt-0 lg:ml-4">
+                <div className="text-gray-800 text-[28px] sm:text-[34px] font-semibold font-gothamNarrow">
+                  {customer?.firstname} {customer?.lastname}
+                </div>
+                <div className="text-gray-800 text-xl sm:text-2xl font-normal font-gothamNarrow mt-2">
+                  {customer?.email}
+                </div>
+                <div className="text-gray-800 text-xl sm:text-2xl font-normal font-gothamNarrow">
+                  Joined: {moment(customer?.createdAt).format("DD/MM/YYYY")}
+                </div>
+
+                {/* Membership section with rounded toggle */}
+                <div className="flex items-center justify-between w-full mt-2">
+                  <div className="text-gray-800 text-xl sm:text-2xl font-semibold font-gothamNarrow">
+                    Reward Points:
+                  </div>
+
+                  {/* Rounded Toggle Button */}
+                  <div className="ml-4">
+                    <label className="relative inline-flex items-center cursor-pointer font-gothamNarrow">
+                      <input
+                        type="checkbox"
+                        className="sr-only peer"
+                        checked={isMember}
+                        disabled={!isToggleEnabled}
+                        onChange={handleMembershipToggle}
+                      />
+                      <div className="w-11 h-6 bg-gray-300 focus:outline-none rounded-full peer dark:bg-gray-700 peer-checked:after:translate-x-5 peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-green-500"></div>
+                      <span
+                        className={`ml-6 text-lg font-medium font-gothamNarrow ${
+                          isMember ? "text-green-500" : "text-red-500"
+                        }`}
+                      >
+                        {isMember ? "Active" : "Inactive"}
+                      </span>
+                    </label>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <div className="w-full flex gap-x-4 items-center mt-6">
+              <div className="w-full sm:w-[216px] h-[53px] px-8 py-4 bg-slate-950 border border-slate-950 flex justify-center items-center gap-2">
+                <button
+                  type="submit"
+                  className="text-white text-sm font-normal font-gothamNarrow"
+                >
+                  Switch Account
+                </button>
+              </div>
+              <div className="w-full sm:w-[216px] h-[53px] group bg-gradient-to-br px-8 py-4 border border-slate-950 flex justify-center items-center gap-2">
+                <button
+                  type="submit"
+                  className="text-[#000C22] text-sm font-semibold font-gothamNarrow"
+                  onClick={() => setOpenModal(true)}
+                >
+                  Log Out
+                </button>
+                {openModal && (
+                  <LogoutPopUp
+                    onClose={handleClose}
+                    handleDelete={handleLogout}
+                  />
+                )}
+              </div>
+            </div>
+          </div>
+
+          <div className="flex flex-col justify-start items-start gap-6 lg:w-1/2 mt-8 lg:mt-0">
+            <div className="self-stretch h-20 flex justify-between items-center">
+              <div>
+                {changeComponent ? (
+                  <>
+                    <div className="text-zinc-900 text-2xl sm:text-3xl font-bold font-gothamNarrow leading-[36px] sm:leading-[48px]">
+                      Change Password
+                    </div>
+                    <div className="text-zinc-900 text-base sm:text-lg font-normal font-gothamNarrow">
+                      You can change your Password
+                    </div>
+                  </>
+                ) : (
+                  <>
+                    <div className="text-zinc-900 text-2xl sm:text-3xl font-bold font-gothamNarrow leading-[36px] sm:leading-[48px]">
+                      My Profile
+                    </div>
+                    <div className="text-zinc-900 text-base sm:text-lg font-normal font-gothamNarrow">
+                      Store all important data
+                    </div>
+                  </>
+                )}
+              </div>
+
+              <button
+                className="flex items-center gap-2 text-red-600 hover:text-red-800 transition-colors"
+                onClick={handleReplace}
+              >
+                <FaKey size={20} />
+                <span className="text-sm sm:text-base font-gothamNarrow whitespace-nowrap">
+                  {changeComponent ? "View Profile" : "Change Password"}
+                </span>
+              </button>
+            </div>
+
+            {changeComponent ? (
+              <EditPassword />
+            ) : (
+              <form className="w-full" onSubmit={handleSubmit(onSubmit)}>
+                <div className="flex flex-col justify-start items-start gap-2">
+                  <div className="w-full h-[86px] flex flex-col justify-start items-start gap-2">
+                    <div className="text-[#4F4F4F] font-semibold font-gothamNarrow">
+                      FirstName
+                    </div>
+                    <input
+                      type="text"
+                      name="firstname"
+                      placeholder="Enter Your firstName"
+                      className="block font-gothamNarrow appearance-none text-sm w-full bg-neutral-50 text-neutral-600 border border-stone-300 rounded-sm py-4 px-4 leading-tight focus:outline-none focus:border-red-600 tracking-normal"
+                      {...register("firstname")}
+                    />
+                  </div>
+
+                  <div className="w-full h-[86px] flex flex-col justify-start items-start gap-2">
+                    <div className="text-[#4F4F4F] font-semibold font-gothamNarrow">
+                      LastName
+                    </div>
+                    <input
+                      type="text"
+                      name="lastname"
+                      placeholder="Enter Your lastname"
+                      className="block font-gothamNarrow appearance-none text-sm w-full bg-neutral-50 text-neutral-600 border border-stone-300 rounded-sm py-4 px-4 leading-tight focus:outline-none focus:border-red-600 tracking-normal"
+                      {...register("lastname")}
+                    />
+                  </div>
+
+                  <div className="w-full h-[86px] flex flex-col justify-start items-start gap-2">
+                    <div className="text-[#4F4F4F] font-semibold font-gothamNarrow">
+                      Email
+                    </div>
+                    <input
+                      type="email"
+                      name="email"
+                      placeholder="Enter your email"
+                      className="block font-gothamNarrow appearance-none text-sm w-full bg-neutral-50 text-neutral-600 border border-stone-300 rounded-sm py-4 px-4 leading-tight focus:outline-none focus:border-red-600 tracking-normal"
+                      {...register("email")}
+                      readOnly
+                    />
+                  </div>
+                  <div className="w-full h-[86px] flex flex-col justify-start items-start gap-2">
+                    <div className="text-[#4F4F4F] font-semibold font-gothamNarrow">
+                      Address
+                    </div>
+                    <input
+                      type="text"
+                      name="customerAddress"
+                      placeholder="Enter Your Address"
+                      className="block font-gothamNarrow appearance-none text-sm w-full bg-neutral-50 text-neutral-600 border border-stone-300 rounded-sm py-4 px-4 leading-tight focus:outline-none focus:border-red-600 tracking-normal"
+                      {...register("customerAddress")}
+                    />
+                  </div>
+                  <div className="w-full h-[86px] flex flex-col justify-start items-start gap-2">
+                    <div className="text-[#4F4F4F] font-semibold font-gothamNarrow">
+                      District
+                    </div>
+                    <input
+                      type="text"
+                      name="district"
+                      placeholder="Enter Your district"
+                      className="block font-gothamNarrow appearance-none text-sm w-full bg-neutral-50 text-neutral-600 border border-stone-300 rounded-sm py-4 px-4 leading-tight focus:outline-none focus:border-red-600 tracking-normal"
+                      {...register("district")}
+                    />
+                  </div>
+                  <div className="w-full h-[86px] flex flex-col justify-start items-start gap-2">
+                    <div className="text-[#4F4F4F] font-semibold font-gothamNarrow">
+                      City
+                    </div>
+                    <input
+                      type="text"
+                      name="city"
+                      placeholder="Enter Your City"
+                      className="block font-gothamNarrow appearance-none text-sm w-full bg-neutral-50 text-neutral-600 border border-stone-300 rounded-sm py-4 px-4 leading-tight focus:outline-none focus:border-red-600 tracking-normal"
+                      {...register("city")}
+                    />
+                  </div>
+
+                  <div className="w-full h-[86px] flex flex-col justify-start items-start gap-2">
+                    <div className="text-[#4F4F4F] font-semibold font-gothamNarrow">
+                      Phone
+                    </div>
+                    <input
+                      type="tel"
+                      name="contact"
+                      placeholder="+977-9861884972"
+                      className="block font-gothamNarrow appearance-none text-sm w-full bg-neutral-50 text-neutral-600 border border-stone-300 rounded-sm py-4 px-4 leading-tight focus:outline-none focus:border-red-600 tracking-normal"
+                      {...register("contact")}
+                      readOnly
+                    />
+                  </div>
+
+                  <div className="w-full h-[86px] flex flex-col justify-start items-start gap-2">
+                    <div className="text-[#4F4F4F] font-semibold font-gothamNarrow">
+                      Gender
+                    </div>
+                    <div className="relative w-full">
+                      <select
+                        className="block font-gothamNarrow appearance-none text-sm w-full bg-neutral-50 text-neutral-600 border border-stone-300 rounded-sm py-4 px-4 leading-tight focus:outline-none focus:border-red-600 tracking-normal pr-10"
+                        id="gender"
+                        name="gender"
+                        {...register("gender")}
+                      >
+                        <option value="" disabled selected>
+                          Select Gender
+                        </option>
+                        <option value="male">Male</option>
+                        <option value="female">Female</option>
+                      </select>
+
+                      <div className="absolute inset-y-0 right-3 flex items-center pointer-events-none">
+                        ⌄
+                      </div>
+                    </div>
+                  </div>
+
+                  <div className="w-full h-[86px] flex flex-col justify-start items-start gap-2">
+                    <div className="text-[#4F4F4F] font-semibold font-gothamNarrow">
+                      Date Of Birth
+                    </div>
+                    <input
+                      type="date"
+                      name="dob"
+                      className="block font-gothamNarrow appearance-none text-sm w-full bg-neutral-50 text-neutral-600 border border-stone-300 rounded-sm py-4 px-4 leading-tight focus:outline-none focus:border-red-600 tracking-normal"
+                      {...register("dob")}
+                    />
+                  </div>
+
+                  <div className="w-full flex justify-center lg:justify-start">
+                    <button
+                      type="submit"
+                      className="relative w-full sm:w-[395px] h-[53px] px-8 py-4 bg-gradient-to-r from-red-600 to-red-600 hover:bg-red-700 text-white font-normal font-gothamNarrow justify-center flex gap-x-4 items-center"
+                      disabled={isLoading}
+                    >
+                      {isLoading && (
+                        <span className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2">
+                          <div className="animate-spin rounded-full h-4 w-4 border-t-2 border-b-2 border-white"></div>
+                        </span>
+                      )}
+                      <span>Save Changes</span>
+                      <FaArrowRightLong />
+                    </button>
+                  </div>
+                </div>
+              </form>
+            )}
+          </div>
+        </div>
+      </div>
+    </>
+  );
+};
+
+export default ProfileInformation;

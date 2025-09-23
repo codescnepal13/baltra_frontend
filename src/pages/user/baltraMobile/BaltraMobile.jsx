@@ -1,15 +1,15 @@
-import React, { useEffect } from "react";
-import userAuthImg from "../../../assets/images/userAuthImg.png";
+import { enqueueSnackbar } from "notistack";
+import { useEffect } from "react";
 import { useForm } from "react-hook-form";
+import { FaArrowRight } from "react-icons/fa";
 import { useDispatch, useSelector } from "react-redux";
 import { Link, useNavigate } from "react-router-dom";
-import { toast } from "react-toastify";
+import userAuthImg from "../../../assets/images/userAuthImg.png";
 import {
   clearAuthError,
   mobileVerify,
 } from "../../../redux/features/auth/authSlice";
 import BaltraSubCategoryHeader from "../../baltraSubCategoryProducts/baltraSubCategoryHeader/BaltraSubCategoryHeader";
-import { FaArrowRight } from "react-icons/fa";
 
 const BaltraMobile = () => {
   const { loading, error } = useSelector((state) => state.auth);
@@ -23,15 +23,19 @@ const BaltraMobile = () => {
 
   const onSubmit = (mobileData) => {
     if (Object.keys(errors).length === 0) {
-      dispatch(mobileVerify({ mobileData, toast, navigate }));
+      dispatch(mobileVerify({ mobileData, enqueueSnackbar, navigate }));
     } else {
-      return toast.warn("InValid Input!");
+      return enqueueSnackbar("Invalid Input", {
+        variant: "error",
+      });
     }
   };
 
   useEffect(() => {
     if (error) {
-      toast.error(error);
+      enqueueSnackbar(error, {
+        variant: "error",
+      });
       dispatch(clearAuthError());
     }
   }, [dispatch, error]);

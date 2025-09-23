@@ -1,4 +1,5 @@
-import React, { useState } from "react";
+import { enqueueSnackbar } from "notistack";
+import { useState } from "react";
 import {
   FaAngleDown,
   FaExternalLinkAlt,
@@ -6,11 +7,9 @@ import {
   FaUser,
 } from "react-icons/fa";
 import { HiOutlineUserCircle } from "react-icons/hi2";
-// import { IoNotificationsOutline } from "react-icons/io5";
 import { useDispatch, useSelector } from "react-redux";
 import { Link, Outlet, useNavigate } from "react-router-dom";
 import { setLogout } from "../../../redux/features/auth/authSlice";
-import { toast } from "react-toastify";
 
 const AdminHeader = ({ collapsed, toggleCollapsed }) => {
   const { customer } = useSelector((state) => state.auth);
@@ -37,7 +36,9 @@ const AdminHeader = ({ collapsed, toggleCollapsed }) => {
   const handleLogout = () => {
     dispatch(setLogout());
     localStorage.clear();
-    toast.success("Logout successfully!");
+    enqueueSnackbar("Logout SuccessFully", {
+      variant: "success",
+    });
     navigate("/baltra-aboutUs-Page");
   };
 

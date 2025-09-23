@@ -1,16 +1,16 @@
-import React, { useEffect, useState } from "react";
+import { enqueueSnackbar } from "notistack";
+import { useEffect, useState } from "react";
 import { useForm } from "react-hook-form";
 import { FaArrowRight, FaEye, FaEyeSlash } from "react-icons/fa";
 import { useDispatch, useSelector } from "react-redux";
 import { useNavigate } from "react-router-dom";
-import { toast } from "react-toastify";
+import userAuthImg from "../../../assets/images/userAuthImg.png";
+import MetaData from "../../../components/layout/metaData/MetaData";
 import {
   clearAuthError,
   resetPassword,
 } from "../../../redux/features/auth/authSlice";
-import userAuthImg from "../../../assets/images/userAuthImg.png";
 import BaltraSubCategoryHeader from "../../baltraSubCategoryProducts/baltraSubCategoryHeader/BaltraSubCategoryHeader";
-import MetaData from "../../../components/layout/metaData/MetaData";
 
 const ResetPassword = () => {
   const { loading, error, customer } = useSelector((state) => state.auth);
@@ -36,18 +36,22 @@ const ResetPassword = () => {
       dispatch(
         resetPassword({
           resetData: { ...resetData, contact: customer.contact },
-          toast,
+          enqueueSnackbar,
           navigate,
         })
       );
     } else {
-      return toast.warn("Invalid Input!");
+      return enqueueSnackbar("Invalid Input", {
+        variant: "error",
+      });
     }
   };
 
   useEffect(() => {
     if (error) {
-      toast.error(error);
+      enqueueSnackbar(error, {
+        variant: "error",
+      });
       dispatch(clearAuthError());
     }
   }, [dispatch, error]);

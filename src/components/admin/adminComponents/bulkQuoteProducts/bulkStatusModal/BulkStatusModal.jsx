@@ -1,7 +1,7 @@
-import React, { useEffect, useState } from "react";
+import { enqueueSnackbar } from "notistack";
+import { useEffect, useState } from "react";
 import { FaTimes } from "react-icons/fa";
 import { useDispatch, useSelector } from "react-redux";
-import { toast } from "react-toastify";
 import {
   clearAdminError,
   verifiedBulkQuoteProduct,
@@ -15,7 +15,9 @@ const BulkStatusModal = ({ item, onClose }) => {
 
   const handleUpdate = async () => {
     if (!status) {
-      toast.warning("Please select a status!");
+      enqueueSnackbar("Please select a Status", {
+        variant: "error",
+      });
       return;
     }
 
@@ -23,13 +25,17 @@ const BulkStatusModal = ({ item, onClose }) => {
       action: status.toLowerCase(),
     };
 
-    await dispatch(verifiedBulkQuoteProduct({ quote_id, data, toast }));
+    await dispatch(
+      verifiedBulkQuoteProduct({ quote_id, data, enqueueSnackbar })
+    );
     onClose();
   };
 
   useEffect(() => {
     if (error) {
-      toast.error(error);
+      enqueueSnackbar(error, {
+        variant: "error",
+      });
       dispatch(clearAdminError());
     }
   }, [dispatch, error]);

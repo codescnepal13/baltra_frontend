@@ -1,9 +1,9 @@
-import React, { useEffect, useState } from "react";
+import { enqueueSnackbar } from "notistack";
+import { useEffect, useState } from "react";
 import { FaTimes } from "react-icons/fa";
 import { FaArrowRightLong } from "react-icons/fa6";
-import MetaData from "../../components/layout/metaData/MetaData";
 import { useDispatch, useSelector } from "react-redux";
-import { toast } from "react-toastify";
+import MetaData from "../../components/layout/metaData/MetaData";
 import {
   addBaltraPersonalization,
   clearProductError,
@@ -72,19 +72,25 @@ const BaltraPersonalization = ({
       const file = await urlToFile(mainImage);
       formData.append("main_image", file);
       try {
-        await dispatch(addBaltraPersonalization({ formData, toast }));
+        await dispatch(addBaltraPersonalization({ formData, enqueueSnackbar }));
         closeModal();
       } catch (error) {
-        toast.error("An error occurred while submitting");
+        enqueueSnackbar("An error occurred while submitting", {
+          variant: "error",
+        });
       }
     } else {
-      toast.info("Please enter valid input");
+      enqueueSnackbar("Please enter valid input", {
+        variant: "error",
+      });
     }
   };
 
   useEffect(() => {
     if (error) {
-      toast.error(error);
+      enqueueSnackbar(error, {
+        variant: "error",
+      });
       dispatch(clearProductError());
     }
   }, [dispatch, error]);

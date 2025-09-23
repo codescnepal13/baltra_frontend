@@ -1,16 +1,16 @@
-import React, { useEffect } from "react";
-import userAuthImg from "../../../assets/images/userAuthImg.png";
+import { enqueueSnackbar } from "notistack";
+import { useEffect } from "react";
+import { useForm } from "react-hook-form";
+import { FaArrowRight } from "react-icons/fa";
 import { useDispatch, useSelector } from "react-redux";
 import { useNavigate } from "react-router-dom";
-import { useForm } from "react-hook-form";
+import userAuthImg from "../../../assets/images/userAuthImg.png";
+import MetaData from "../../../components/layout/metaData/MetaData";
 import {
   clearAuthError,
   forgotPassword,
 } from "../../../redux/features/auth/authSlice";
-import { toast } from "react-toastify";
 import BaltraSubCategoryHeader from "../../baltraSubCategoryProducts/baltraSubCategoryHeader/BaltraSubCategoryHeader";
-import { FaArrowRight } from "react-icons/fa";
-import MetaData from "../../../components/layout/metaData/MetaData";
 
 const ForgotPassword = () => {
   const { loading, error } = useSelector((state) => state.auth);
@@ -24,15 +24,19 @@ const ForgotPassword = () => {
 
   const onSubmit = (forgotData) => {
     if (Object.keys(errors).length === 0) {
-      dispatch(forgotPassword({ forgotData, toast, navigate }));
+      dispatch(forgotPassword({ forgotData, enqueueSnackbar, navigate }));
     } else {
-      return toast.warn("InValid Input!");
+      return enqueueSnackbar("Invalid Input", {
+        variant: "error",
+      });
     }
   };
 
   useEffect(() => {
     if (error) {
-      toast.error(error);
+      enqueueSnackbar(error, {
+        variant: "error",
+      });
       dispatch(clearAuthError());
     }
   }, [dispatch, error]);

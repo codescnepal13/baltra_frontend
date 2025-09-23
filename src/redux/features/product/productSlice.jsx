@@ -1,6 +1,6 @@
-import { createSlice, createAsyncThunk } from "@reduxjs/toolkit";
-import API from "../../api/api";
+import { createAsyncThunk, createSlice } from "@reduxjs/toolkit";
 import { getErrorMessage } from "../../../utils/ErrorHandle";
+import API from "../../api/api";
 
 /**
  * @typedef {Object} ProductState
@@ -56,7 +56,7 @@ const initialState = {
   subCategoryProducts: [],
   subCategoryProduct: null,
   allKitchenProducts: [],
-  categoryInfo: {},
+  categoryInfo: null,
   subCategoryRelatedProducts: [],
   ratingReview: null,
   statRatingReview: {},
@@ -140,10 +140,15 @@ export const singleProductView = createAsyncThunk(
 //addRatingAndReviews
 export const addRatingReview = createAsyncThunk(
   "products/addRatingReview",
-  async ({ data, product_id, toast }, { rejectWithValue, dispatch }) => {
+  async (
+    { data, product_id, enqueueSnackbar },
+    { rejectWithValue, dispatch }
+  ) => {
     try {
       const response = await API.post(`/products/addrating`, data);
-      toast.success(response.data.message || "review added successFully");
+      enqueueSnackbar(response.data.message || "review added successFully!", {
+        variant: "success",
+      });
       dispatch(allRatingsReviewsById(product_id));
       return response.data;
     } catch (error) {
@@ -181,10 +186,12 @@ export const baltraProductsRelated = createAsyncThunk(
 //CustomerAdd
 export const baltraCustomerAdd = createAsyncThunk(
   "products/baltraCustomerAdd",
-  async ({ formData, toast }, { rejectWithValue, dispatch }) => {
+  async ({ formData, enqueueSnackbar }, { rejectWithValue, dispatch }) => {
     try {
       const response = await API.post(`/stocks/myproduct`, formData);
-      toast.success(response.data.message || "product added Success!");
+      enqueueSnackbar(response.data.message || "item added successFully!", {
+        variant: "success",
+      });
       dispatch(allCustomerProducts());
       return response.data;
     } catch (error) {
@@ -223,10 +230,13 @@ export const SingleUserProductPage = createAsyncThunk(
 
 export const deleteCustomerProduct = createAsyncThunk(
   "/products/deleteCustomerProduct",
-  async ({ id, toast }, { rejectWithValue }) => {
+  async ({ id, enqueueSnackbar }, { rejectWithValue }) => {
     try {
       const response = await API.delete(`/stocks/deletemyproduct/${id}`);
-      toast.success(response.data.message || "item deleted success!");
+
+      enqueueSnackbar(response.data.message || "item deleted success", {
+        variant: "success",
+      });
       return response.data;
     } catch (error) {
       return rejectWithValue({ message: getErrorMessage(error) });
@@ -237,13 +247,18 @@ export const deleteCustomerProduct = createAsyncThunk(
 //RegisteredComplaint
 export const addRegisteredComplaint = createAsyncThunk(
   "/products/addRegisteredComplaint",
-  async ({ stock_id, formData, toast }, { rejectWithValue }) => {
+  async ({ stock_id, formData, enqueueSnackbar }, { rejectWithValue }) => {
     try {
       const response = await API.post(
         `/stocks/registercomplaint/${stock_id}`,
         formData
       );
-      toast.success(response.data.message || "added Register Complaint!");
+      enqueueSnackbar(
+        response.data.message || "Register Complaint added successFully",
+        {
+          variant: "success",
+        }
+      );
       return response.data;
     } catch (error) {
       return rejectWithValue({ message: getErrorMessage(error) });
@@ -307,10 +322,13 @@ export const getRewardPointValue = createAsyncThunk(
 //addRedeemPoint
 export const addRedeemPoint = createAsyncThunk(
   "products/addRedeemPoint",
-  async ({ data, toast }, { rejectWithValue }) => {
+  async ({ data, enqueueSnackbar }, { rejectWithValue }) => {
     try {
       const response = await API.post(`/stocks/redeemloyaltypoints`, data);
-      toast.success(response.data.message || "Redeem Warranty Success!");
+
+      enqueueSnackbar(response.data.message || "Redeem Warranty Success", {
+        variant: "success",
+      });
       return response.data;
     } catch (error) {
       return rejectWithValue({ message: getErrorMessage(error) });
@@ -334,11 +352,14 @@ export const allProductsCatalog = createAsyncThunk(
 //Add Baltra Personalization
 export const addBaltraPersonalization = createAsyncThunk(
   "products/addBaltraPersonalization",
-  async ({ formData, toast }, { rejectWithValue }) => {
+  async ({ formData, enqueueSnackbar }, { rejectWithValue }) => {
     try {
       const response = await API.post(`/customer/personalize`, formData);
-      toast.success(
-        response.data.message || "your personalization added Success!"
+      enqueueSnackbar(
+        response.data.message || "personalization added successFully!",
+        {
+          variant: "success",
+        }
       );
       return response.data;
     } catch (error) {
@@ -350,10 +371,12 @@ export const addBaltraPersonalization = createAsyncThunk(
 //addBulkQuote
 export const addBulkQuote = createAsyncThunk(
   "products/addBulkQuote",
-  async ({ data, toast }, { rejectWithValue }) => {
+  async ({ data, enqueueSnackbar }, { rejectWithValue }) => {
     try {
       const response = await API.post(`/products/postquotation`, data);
-      toast.success(response.data.message || "bulk added successFully");
+      enqueueSnackbar(response.data.message || "quote added successFully!", {
+        variant: "success",
+      });
       return response.data;
     } catch (error) {
       return rejectWithValue({ message: getErrorMessage(error) });
@@ -416,6 +439,7 @@ const productSlice = createSlice({
       .addCase(baltraCategoryProducts.fulfilled, (state, action) => {
         state.loading = false;
         state.categoryProducts = action.payload.data;
+        state.categoryInfo = action.payload.first_category_info;
         state.allKitchenProducts = action.payload.subcategory_data;
       })
       .addCase(baltraCategoryProducts.rejected, (state, action) => {

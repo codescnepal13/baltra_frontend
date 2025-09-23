@@ -1,13 +1,12 @@
-import React, { useEffect, useState, useRef } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import "./LandingPage.css";
 import LandImg1 from "../../assets/images/LandImg1.png";
 import LandImg2 from "../../assets/images/LandImg2.png";
 import LandImg3 from "../../assets/images/LandImg3.png";
 import InfoLayoutModal from "../../components/layout/infoLayout/InfoLayoutModal";
+import "./LandingPage.css";
 
 const BaltraLandingPage = () => {
-
   const [animateText, setAnimateText] = useState(false);
   const [animateContent, setAnimateContent] = useState(false);
   const [hideComponent, setHideComponent] = useState(false);
@@ -76,7 +75,6 @@ const BaltraLandingPage = () => {
 
   return (
     <>
-
       <div
         className={`w-full h-auto min-h-screen bg-gradient-to-b from-[#DA1F1F] to-[#940E0E] flex flex-col items-center justify-center transform transition-all duration-1000 ease-in-out ${
           hideComponent ? "scroll-up" : ""

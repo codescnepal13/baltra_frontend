@@ -1,16 +1,16 @@
-import React, { useCallback, useEffect, useState } from "react";
-import MetaData from "../../../../layout/metaData/MetaData";
+import { enqueueSnackbar } from "notistack";
+import { useCallback, useEffect, useState } from "react";
+import { useForm } from "react-hook-form";
 import { HiOutlineArrowLeftCircle } from "react-icons/hi2";
-import { Link, useNavigate, useParams } from "react-router-dom";
-import FormSkeleton from "../../adminLayout/formSkeleton/FormSkeleton";
 import { useDispatch, useSelector } from "react-redux";
+import { Link, useNavigate, useParams } from "react-router-dom";
 import {
   clearAdminError,
   getSingleUser,
   updateUserRole,
 } from "../../../../../redux/features/admin/adminSlice";
-import { useForm } from "react-hook-form";
-import { toast } from "react-toastify";
+import MetaData from "../../../../layout/metaData/MetaData";
+import FormSkeleton from "../../adminLayout/formSkeleton/FormSkeleton";
 
 const SingleUserRole = () => {
   const { user, loading, isLoading, error } = useSelector(
@@ -51,13 +51,18 @@ const SingleUserRole = () => {
 
   useEffect(() => {
     if (error) {
-      toast.error(error);
+      enqueueSnackbar(error, {
+        variant: "error",
+      });
       dispatch(clearAdminError());
     }
+  }, [dispatch, error]);
+
+  useEffect(() => {
     if (id) {
       dispatch(getSingleUser(id));
     }
-  }, [dispatch, error, id]);
+  }, [dispatch, id]);
 
   const onSubmit = (editData) => {
     const formData = new FormData();
@@ -69,7 +74,7 @@ const SingleUserRole = () => {
     if (image) {
       formData.append("image", image);
     }
-    dispatch(updateUserRole({ id, formData, toast, navigate }));
+    dispatch(updateUserRole({ id, formData, enqueueSnackbar, navigate }));
   };
   return (
     <>

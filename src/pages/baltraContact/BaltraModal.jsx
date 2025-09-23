@@ -1,9 +1,9 @@
-import React, { useEffect } from "react";
+import { enqueueSnackbar } from "notistack";
+import { useEffect } from "react";
 import { useForm } from "react-hook-form";
 import { FaArrowRight } from "react-icons/fa";
 import { HiOutlineMail, HiOutlinePhone } from "react-icons/hi";
 import { useDispatch, useSelector } from "react-redux";
-import { toast } from "react-toastify";
 import ContactImg from "../../assets/images/ContactImg.png";
 import {
   addContact,
@@ -23,14 +23,16 @@ const BaltraModal = () => {
 
   const onSubmit = (contactData) => {
     if (Object.entries(errors).length === 0) {
-      dispatch(addContact({ contactData, toast }));
+      dispatch(addContact({ contactData, enqueueSnackbar }));
       reset();
     }
   };
 
   useEffect(() => {
     if (error) {
-      toast.error(error);
+      enqueueSnackbar(error, {
+        variant: "error",
+      });
       dispatch(clearContactError());
     }
   }, [dispatch, error]);

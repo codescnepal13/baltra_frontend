@@ -1,6 +1,5 @@
-import React from "react";
-import userAuthImg from "../../../assets/images/userAuthImg.png";
 import SuccessImg from "../../../assets/images/SuccessImg.png";
+import userAuthImg from "../../../assets/images/userAuthImg.png";
 
 const BaltraSuccessModal = () => {
   const handleSubmit = () => {};

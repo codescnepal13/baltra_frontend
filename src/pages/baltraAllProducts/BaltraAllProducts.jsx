@@ -28,4 +28,4 @@ const BaltraAllProducts = () => {
   );
 };
 
-export default BaltraAllProducts;
+export default React.memo(BaltraAllProducts);

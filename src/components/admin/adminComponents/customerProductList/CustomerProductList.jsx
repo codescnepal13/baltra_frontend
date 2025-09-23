@@ -1,17 +1,15 @@
 import moment from "moment";
-import React, { useEffect, useState } from "react";
+import { enqueueSnackbar } from "notistack";
+import { useEffect, useState } from "react";
 import {
   FaEye,
   FaInfoCircle,
-  FaPencilAlt,
-  FaPlusCircle,
-  FaSearch,
+  FaSyncAlt,
   FaTrash,
   FaTrashAlt,
 } from "react-icons/fa";
 import { useDispatch, useSelector } from "react-redux";
 import { Link } from "react-router-dom";
-import { toast } from "react-toastify";
 import {
   clearCustomerError,
   deleteCustomerProduct,
@@ -57,7 +55,7 @@ const CustomerProductList = () => {
       dispatch(
         deleteMultipleCustomer({
           stock_ids: selectedCustomersId,
-          toast,
+          enqueueSnackbar,
         })
       ).then(() => {
         dispatch(getAllCustomerAddedProductList(page));
@@ -74,9 +72,19 @@ const CustomerProductList = () => {
     setSelectedCustomerId(null);
   };
 
+  const handleReset = () => {
+    setOpenUpdateModal(false);
+    setSelectedItem(null);
+    selectedCustomersId([]);
+    selectedCustomerId(null);
+    dispatch(getAllCustomerAddedProductList(page));
+  };
+
   const handleDeleteConfirm = () => {
     if (selectedCustomerId !== null) {
-      dispatch(deleteCustomerProduct({ stock_id: selectedCustomerId, toast }));
+      dispatch(
+        deleteCustomerProduct({ stock_id: selectedCustomerId, enqueueSnackbar })
+      );
       setSelectedCustomerId(null);
     }
   };
@@ -108,7 +116,7 @@ const CustomerProductList = () => {
   }, [dispatch]);
   return (
     <>
-      <div className="flex items-center w-full my-2 px-8">
+      <div className="flex items-center w-full my-2 px-4">
         <FaInfoCircle className="text-black mr-2" size={20} />
         <p className="text-xs md:text-sm text-black font-outfit flex-grow">
           To approve a Customer Added Product from the Dashboard, click the
@@ -117,47 +125,43 @@ const CustomerProductList = () => {
           select and update.
         </p>
       </div>
-      <div className="font-gothamNarrow container mx-auto px-8 py-8">
+      <div className="font-gothamNarrow container mx-auto px-4 py-8">
         <div className="flex justify-between mb-4">
           <h2 className="text-lg font-semibold font-gothamNarrow">
             Customer Products List
           </h2>
-          <Link to={"#"}>
-            <button className="bg-red-600 hover:bg-red-700 text-white py-2 px-4 rounded inline-flex items-center font-gothamNarrow">
-              <FaPlusCircle className="mr-1" />
-              Add
-            </button>
-          </Link>
         </div>
         <div className="bg-[#FFFFFF] px-2 py-4">
           <div className="flex mb-2 text-xs">
-            <div className="relative mr-2 flex items-center">
-              <input
-                type="text"
-                placeholder="Search by modelname"
-                className="w-42 pl-4 pr-10 py-2 border border-gray-300 rounded-sm text-sm focus:outline-none focus:border-red-500 focus:ring-gray-300 font-gothamNarrow"
-              />
-              <button className="bg-red-600 hover:bg-red-700 text-white py-3 px-4 ml-1 inline-flex items-center rounded-sm font-gothamNarrow">
-                <FaSearch />
-              </button>
-            </div>
-            <div className="relative mr-2 flex items-center">
-              <select className="w-42 pl-4 pr-10 py-2 border border-gray-300 rounded-sm text-sm focus:outline-none focus:border-red-500 focus:ring-gray-300 font-gothamNarrow">
-                <option value="All">All</option>
-                <option value="All">UnVerified</option>
-                <option value="All">Verified</option>
-              </select>
-            </div>
+            <button
+              className="flex cursor-pointer items-center gap-1 px-4 py-2 text-sm border border-gray-300 rounded-md hover:bg-gray-50 transition-colors"
+              onClick={handleReset}
+            >
+              <FaSyncAlt className="text-gray-500" /> Reset
+            </button>
           </div>
 
+          {selectedCustomersId.length > 0 && (
+            <div className="flex flex-wrap gap-2 mb-4 p-3 bg-blue-50 rounded-lg border border-blue-200">
+              <span className="text-sm text-blue-700 font-medium mr-2">
+                {selectedCustomersId.length} item(s) selected
+              </span>
+            </div>
+          )}
+
           <div className="bg-white font-sans table-container hide-scrollbar overflow-x-auto">
-            {selectedCustomersId.length > 0 && (
-              <button
-                className="h-4 w-4 text-red-600 hover:text-red-700"
-                onClick={handleMultipleDelete}
-              >
-                <FaTrashAlt />
-              </button>
+            {selectedCustomersId?.length > 0 && (
+              <div className="mb-3 flex justify-start">
+                <button
+                  className="flex items-center gap-2 px-3 py-1.5 rounded-lg 
+                   bg-red-500 text-white text-sm font-medium
+                   hover:bg-red-600 transition"
+                  onClick={handleMultipleDelete}
+                >
+                  <FaTrashAlt className="text-white" />
+                  Delete Selected
+                </button>
+              </div>
             )}
             <table className="min-w-full divide-y divide-gray-200 border border-gray-300">
               <thead className="font-gothamNarrow">
@@ -357,12 +361,6 @@ const CustomerProductList = () => {
                             <FaEye
                               className="text-blue-500 hover:text-blue-700"
                               title="View"
-                            />
-                          </Link>
-                          <Link to={`#`}>
-                            <FaPencilAlt
-                              className="text-green-500 hover:text-green-700"
-                              title="Edit"
                             />
                           </Link>
 
