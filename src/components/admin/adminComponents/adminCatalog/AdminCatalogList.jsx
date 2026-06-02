@@ -1,7 +1,13 @@
 import moment from "moment";
 import { enqueueSnackbar } from "notistack";
 import { useEffect, useState } from "react";
-import { FaPlusCircle, FaSyncAlt, FaTrash } from "react-icons/fa";
+import {
+  FaFilePdf,
+  FaPlusCircle,
+  FaSearch,
+  FaSyncAlt,
+  FaTrash,
+} from "react-icons/fa";
 import { useDispatch, useSelector } from "react-redux";
 import { Link } from "react-router-dom";
 import {
@@ -13,24 +19,18 @@ import ProductCatalogDeleteModal from "./addCatalog/ProductCatalogDeleteModal";
 
 const AdminCatalogList = () => {
   const { loading, error, allProductCatalogList } = useSelector(
-    (state) => state.admin
+    (state) => state.admin,
   );
   const dispatch = useDispatch();
-
   const [selectedCatalogId, setSelectedCatalogId] = useState(null);
 
-  const handleOpenModal = (catalogId) => {
-    setSelectedCatalogId(catalogId);
-  };
-
-  const handleCloseModal = () => {
-    setSelectedCatalogId(null);
-  };
+  const handleOpenModal = (catalogId) => setSelectedCatalogId(catalogId);
+  const handleCloseModal = () => setSelectedCatalogId(null);
 
   const handleDeleteConfirm = () => {
     if (selectedCatalogId !== null) {
       dispatch(
-        deleteProductCatalog({ id: selectedCatalogId, enqueueSnackbar })
+        deleteProductCatalog({ id: selectedCatalogId, enqueueSnackbar }),
       );
       setSelectedCatalogId(null);
     }
@@ -42,145 +42,198 @@ const AdminCatalogList = () => {
   };
 
   useEffect(() => {
-    if (error) {
-      dispatch(clearAdminError());
-    }
+    if (error) dispatch(clearAdminError());
   }, [dispatch, error]);
 
   useEffect(() => {
     dispatch(allProductCatalog());
   }, [dispatch]);
+
   return (
-    <>
-      <div className="font-gothamNarrow container mx-auto px-8 py-8">
-        <div className="flex justify-between mb-4">
-          <h2 className="text-lg font-semibold font-gothamNarrow">
-            All CataLog List
-          </h2>
-          <Link to="/baltra-admin-dashboard/add/product-catalog">
-            <button className="bg-red-600 hover:bg-red-700 text-white py-2 px-4 rounded inline-flex items-center font-gothamNarrow">
-              <FaPlusCircle className="mr-2" />
-              Add Catalog
-            </button>
-          </Link>
+    <div className="font-inter px-4 py-4 max-w-screen-2xl mx-auto">
+      {/* Page header */}
+      <div className="flex items-center justify-between mb-6">
+        <div>
+          <h1 className="text-[15px] font-semibold tracking-[-0.01em] text-gray-900">
+            Product Catalogs
+          </h1>
+          <p className="text-[12px] text-gray-400 tracking-[0.01em] mt-0.5">
+            Manage catalog covers and PDF files
+          </p>
+        </div>
+        <Link
+          to="/baltra-admin-dashboard/add/product-catalog"
+          className="inline-flex items-center gap-1.5 bg-red-600 hover:bg-red-700 text-white text-[12.5px] font-medium tracking-[0.02em] px-3.5 py-2 rounded-lg transition-colors"
+        >
+          <FaPlusCircle size={12} />
+          Add Catalog
+        </Link>
+      </div>
+
+      {/* Table card */}
+      <div className="bg-white rounded-xl border border-gray-200 overflow-hidden">
+        {/* Toolbar */}
+        <div className="flex flex-wrap items-center gap-2 px-4 py-3 border-b border-gray-100">
+          <button
+            onClick={handleReset}
+            className="inline-flex items-center gap-1.5 px-3 py-1.5 text-[12px] font-medium tracking-[0.02em] text-gray-500 border border-gray-200 rounded-lg hover:bg-gray-50 transition-colors"
+          >
+            <FaSyncAlt size={10} />
+            Reset
+          </button>
+
+          <span className="ml-auto text-[11px] text-gray-300 tracking-[0.03em]">
+            {allProductCatalogList?.length ?? 0} catalog
+            {allProductCatalogList?.length !== 1 ? "s" : ""}
+          </span>
         </div>
 
-        <div className="bg-[#FFFFFF] px-2 py-4">
-          <div className="flex mb-2 text-xs items-center">
-            <button
-              className="flex cursor-pointer items-center gap-1 px-4 py-2 text-sm border border-gray-300 rounded-md hover:bg-gray-50 transition-colors"
-              onClick={handleReset}
-            >
-              <FaSyncAlt className="text-gray-500" /> Reset
-            </button>
-          </div>
+        {/* Table */}
+        <div className="overflow-x-auto hide-scrollbar">
+          <table className="min-w-full text-[12.5px]">
+            <thead>
+              <tr className="bg-gray-50 border-b border-gray-200">
+                {[
+                  "S.N.",
+                  "Catalog Name",
+                  "Cover",
+                  "PDF File",
+                  "Created At",
+                  "Actions",
+                ].map((col) => (
+                  <th
+                    key={col}
+                    className="px-4 py-3 text-left text-[11px] font-semibold tracking-[0.08em] uppercase text-gray-400 whitespace-nowrap"
+                  >
+                    {col}
+                  </th>
+                ))}
+              </tr>
+            </thead>
 
-          <div className="bg-white font-sans table-container hide-scrollbar overflow-x-auto">
-            <table className="min-w-full divide-y divide-gray-200 border border-gray-300">
-              <thead className="font-gothamNarrow">
+            <tbody className="divide-y divide-gray-100">
+              {loading ? (
                 <tr>
-                  <th className="px-4 py-2 font-gothamNarrow text-left text-sm font-semibold text-black whitespace-nowrap">
-                    S.N.
-                  </th>
-
-                  <th className="px-4 py-3 font-gothamNarrow text-left text-sm font-semibold text-black border-l border-r border-gray-300 whitespace-nowrap">
-                    Catalog Name
-                  </th>
-                  <th className="px-4 py-3 font-gothamNarrow text-left text-sm font-semibold text-black border-l border-r border-gray-300 whitespace-nowrap">
-                    Catalog Cover
-                  </th>
-                  <th className="px-4 py-3 font-gothamNarrow text-left text-sm font-semibold text-black border-l border-r border-gray-300 whitespace-nowrap">
-                    Catalog PDF
-                  </th>
-
-                  <th className="px-4 py-3 font-gothamNarrow text-left text-sm font-semibold text-black border-l border-r border-gray-300 whitespace-nowrap">
-                    Created At
-                  </th>
-                  <th className="px-4 py-3 font-gothamNarrow text-left text-sm font-semibold text-black border-l border-r border-gray-300 whitespace-nowrap">
-                    Actions
-                  </th>
+                  <td colSpan={6} className="text-center py-10">
+                    <div className="inline-block animate-spin rounded-full h-5 w-5 border-t-2 border-red-500" />
+                  </td>
                 </tr>
-              </thead>
-              <tbody className="bg-white divide-y divide-gray-200">
-                {loading ? (
-                  <tr>
-                    <td colSpan={12} className="text-center">
-                      <div className="inline-block animate-spin rounded-full h-4 w-4 border-t-2 border-gray-800 border-t-gray-800"></div>
+              ) : allProductCatalogList && allProductCatalogList.length > 0 ? (
+                allProductCatalogList.map((catalog, index) => (
+                  <tr
+                    key={catalog.id}
+                    className="hover:bg-[#FFF0E5]/60 transition-colors cursor-pointer"
+                  >
+                    {/* S.N. */}
+                    <td className="px-4 py-3 text-gray-400 tabular-nums w-10">
+                      {index + 1}
                     </td>
-                  </tr>
-                ) : allProductCatalogList &&
-                  allProductCatalogList?.length > 0 ? (
-                  allProductCatalogList?.map((catalog, index) => (
-                    <tr
-                      key={catalog.id}
-                      className="hover:bg-[#FFF0E5] hover:shadow-sm border-t border-b border-r border-l border-gray-300 cursor-pointer"
-                    >
-                      <td className="px-4 py-2 font-gothamNarrow text-sm text-black whitespace-nowrap">
-                        {index + 1}
-                      </td>
 
-                      <td className="px-4 py-2 font-gothamNarrow text-sm text-black whitespace-nowrap">
+                    {/* Catalog Name */}
+                    <td className="px-4 py-3">
+                      <span className="font-medium text-gray-800 tracking-[0.01em]">
                         {catalog?.catalogue_type}
-                      </td>
+                      </span>
+                    </td>
 
-                      <td className="px-4 py-1 whitespace-nowrap text-xs text-gray-500">
-                        <img
-                          src={catalog?.catalogue_image}
-                          alt={`Category Photo ${catalog?.catalogue_type}`}
-                          className="h-10 w-12"
-                        />
-                      </td>
-
-                      <td className="px-4 py-1 whitespace-nowrap text-sm text-gray-500">
-                        {catalog?.file?.endsWith(".pdf") ? (
-                          <a
-                            href={catalog?.file}
-                            target="_blank"
-                            rel="noopener noreferrer"
-                            className="font-gothamNarrow text-black"
-                          >
-                            View PDF
-                          </a>
-                        ) : (
+                    {/* Cover image */}
+                    <td className="px-4 py-3">
+                      <div className="w-12 h-10 rounded-lg overflow-hidden border border-gray-100 bg-gray-50 flex items-center justify-center">
+                        {catalog?.catalogue_image ? (
                           <img
-                            src={catalog?.file}
-                            alt={`Category Photo ${catalog?.catalogue_type}`}
-                            className="h-8 w-8 object-contain"
+                            src={catalog.catalogue_image}
+                            alt={catalog.catalogue_type}
+                            className="w-full h-full object-cover"
                           />
+                        ) : (
+                          <span className="text-[10px] text-gray-300">
+                            None
+                          </span>
                         )}
-                      </td>
+                      </div>
+                    </td>
 
-                      <td className="px-4 font-gothamNarrow py-1 whitespace-nowrap text-sm text-[#000000]">
-                        {moment(catalog.date_joined).format("dddd, D MMM YYYY")}
-                      </td>
-                      <td className="px-4 py-2 font-gothamNarrow text-sm text-black whitespace-nowrap">
-                        <FaTrash
-                          className="text-red-500 hover:text-red-700 cursor-pointer"
-                          title="Delete"
-                          onClick={() => handleOpenModal(catalog.id)}
-                        />
-                        {selectedCatalogId !== null && (
-                          <ProductCatalogDeleteModal
-                            onClose={handleCloseModal}
-                            onConfirm={handleDeleteConfirm}
+                    {/* PDF / file */}
+                    <td className="px-4 py-3">
+                      {catalog?.file?.endsWith(".pdf") ? (
+                        <a
+                          href={catalog.file}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-red-50 border border-red-100 text-[11px] font-medium text-red-500 hover:bg-red-100 transition-colors"
+                        >
+                          <FaFilePdf size={11} />
+                          View PDF
+                        </a>
+                      ) : catalog?.file ? (
+                        <div className="w-10 h-10 rounded-lg overflow-hidden border border-gray-100 bg-gray-50">
+                          <img
+                            src={catalog.file}
+                            alt={catalog.catalogue_type}
+                            className="w-full h-full object-contain"
                           />
-                        )}
-                      </td>
-                    </tr>
-                  ))
-                ) : (
-                  <tr>
-                    <td colSpan={12} className="text-center">
-                      No data available
+                        </div>
+                      ) : (
+                        <span className="text-[11px] text-gray-300">—</span>
+                      )}
+                    </td>
+
+                    {/* Created At */}
+                    <td className="px-4 py-3 text-gray-500 whitespace-nowrap tabular-nums tracking-[0.01em]">
+                      {moment(catalog.date_joined).format("D MMM YYYY")}
+                    </td>
+
+                    {/* Actions */}
+                    <td className="px-4 py-3">
+                      <button
+                        onClick={() => handleOpenModal(catalog.id)}
+                        className="p-1.5 rounded-lg text-red-400 hover:text-red-600 hover:bg-red-50 transition-colors"
+                        title="Delete catalog"
+                      >
+                        <FaTrash size={12} />
+                      </button>
+                      {selectedCatalogId === catalog.id && (
+                        <ProductCatalogDeleteModal
+                          onClose={handleCloseModal}
+                          onConfirm={handleDeleteConfirm}
+                        />
+                      )}
                     </td>
                   </tr>
-                )}
-              </tbody>
-            </table>
-          </div>
+                ))
+              ) : (
+                <tr>
+                  <td colSpan={6} className="text-center py-14">
+                    <div className="flex flex-col items-center gap-2">
+                      <div className="w-8 h-8 rounded-full bg-gray-100 flex items-center justify-center">
+                        <FaSearch className="text-gray-300" size={14} />
+                      </div>
+                      <p className="text-[12.5px] text-gray-400 tracking-[0.02em]">
+                        No catalogs found
+                      </p>
+                      <button
+                        onClick={handleReset}
+                        className="text-[11.5px] text-red-400 hover:text-red-600 tracking-[0.02em] transition-colors"
+                      >
+                        Refresh list
+                      </button>
+                    </div>
+                  </td>
+                </tr>
+              )}
+            </tbody>
+          </table>
+        </div>
+
+        {/* Footer */}
+        <div className="px-4 py-3 border-t border-gray-100">
+          <span className="text-[11px] text-gray-300 tracking-[0.03em]">
+            Showing {allProductCatalogList?.length ?? 0} result
+            {allProductCatalogList?.length !== 1 ? "s" : ""}
+          </span>
         </div>
       </div>
-    </>
+    </div>
   );
 };
 

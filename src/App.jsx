@@ -31,7 +31,6 @@ import AllSubCategoryList from "./components/admin/adminComponents/baltraProduct
 import AddSubCategory from "./components/admin/adminComponents/baltraProducts/subCategory/addSubCategory/AddSubCategory";
 import SingleSubCategory from "./components/admin/adminComponents/baltraProducts/subCategory/singleSubCategory/SingleSubCategory";
 import AllBulkQuoteProducts from "./components/admin/adminComponents/bulkQuoteProducts/AllBulkQuoteProducts";
-import SingleBulkQuote from "./components/admin/adminComponents/bulkQuoteProducts/singleBulkQuote/SingleBulkQuote";
 import CustomerProductList from "./components/admin/adminComponents/customerProductList/CustomerProductList";
 import SingleCustomerProductList from "./components/admin/adminComponents/customerProductList/singleCustomerProductList/SingleCustomerProductList";
 import ProductComplaintList from "./components/admin/adminComponents/productComplaints/ProductComplaintList";
@@ -56,81 +55,89 @@ import BaltraMobile from "./pages/user/baltraMobile/BaltraMobile";
 import BaltraSuccessModal from "./pages/user/baltraSuccessModal/BaltraSuccessModal";
 import Register from "./pages/user/register/Register";
 import VerifyOTP from "./pages/user/verifyOTP/VerifyOTP";
+import { ProductRoles } from "./types/rolePermission";
+const AddRole = lazy(
+  () => import("./components/admin/adminComponents/manageRoles/add/AddRole"),
+);
+const ManageRoleList = lazy(
+  () => import("./components/admin/adminComponents/manageRoles/ManageRoleList"),
+);
 const Home = lazy(() => import("./pages/home/Home"));
 const ReadAboutUs = lazy(() => import("./pages/readAboutUs/ReadAboutUs"));
 const Profile = lazy(() => import("./pages/user/profile/Profile"));
-const BaltraAllProducts = lazy(() =>
-  import("./pages/baltraAllProducts/BaltraAllProducts")
+const BaltraAllProducts = lazy(
+  () => import("./pages/baltraAllProducts/BaltraAllProducts"),
 );
-const BaltraSubCategoryProducts = lazy(() =>
-  import("./pages/baltraSubCategoryProducts/BaltraSubCategoryProducts")
+const BaltraSubCategoryProducts = lazy(
+  () => import("./pages/baltraSubCategoryProducts/BaltraSubCategoryProducts"),
 );
 
 const BaltraCatalog = lazy(() => import("./pages/baltraCatalog/BaltraCatalog"));
-const BaltraTracking = lazy(() =>
-  import("./pages/baltraTracking/BaltraTracking")
+const BaltraTracking = lazy(
+  () => import("./pages/baltraTracking/BaltraTracking"),
 );
-const TrackingProductDetails = lazy(() =>
-  import("./pages/trackingProductDetails/TrackingProductDetails")
+const TrackingProductDetails = lazy(
+  () => import("./pages/trackingProductDetails/TrackingProductDetails"),
 );
-const UserProductPage = lazy(() =>
-  import("./pages/userProductPage/UserProductPage")
+const UserProductPage = lazy(
+  () => import("./pages/userProductPage/UserProductPage"),
 );
-const UserRegisteredProductPage = lazy(() =>
-  import(
-    "./pages/userProductPage/userRegisteredProductPage/UserRegisteredProductPage"
-  )
+const UserRegisteredProductPage = lazy(
+  () =>
+    import("./pages/userProductPage/userRegisteredProductPage/UserRegisteredProductPage"),
 );
-const BaltraExtendWarranty = lazy(() =>
-  import("./pages/baltraExtendWarranty/BaltraExtendWarranty")
+const BaltraExtendWarranty = lazy(
+  () => import("./pages/baltraExtendWarranty/BaltraExtendWarranty"),
 );
-const BaltraRewardsPoint = lazy(() =>
-  import("./pages/baltraRewardsPoint/BaltraRewardsPoint")
+const BaltraRewardsPoint = lazy(
+  () => import("./pages/baltraRewardsPoint/BaltraRewardsPoint"),
 );
-const BaltraProductView = lazy(() =>
-  import("./pages/productView/BaltraProductView")
+const BaltraProductView = lazy(
+  () => import("./pages/productView/BaltraProductView"),
 );
-const AdminDashboard = lazy(() =>
-  import("./components/admin/adminComponents/adminDashboard/AdminDashboard")
+const AdminDashboard = lazy(
+  () =>
+    import("./components/admin/adminComponents/adminDashboard/AdminDashboard"),
 );
-const MainLayout = lazy(() =>
-  import("./components/admin/mainLayout/MainLayout")
+const MainLayout = lazy(
+  () => import("./components/admin/mainLayout/MainLayout"),
 );
-const TermsAndConditions = lazy(() =>
-  import("./components/layout/termsAndConditions/TermsAndConditions")
+const TermsAndConditions = lazy(
+  () => import("./components/layout/termsAndConditions/TermsAndConditions"),
 );
-const BaltraPrivacyPolicy = lazy(() =>
-  import("./components/layout/metaData/privacyPolicy/BaltraPrivacyPolicy")
+const BaltraPrivacyPolicy = lazy(
+  () =>
+    import("./components/layout/metaData/privacyPolicy/BaltraPrivacyPolicy"),
 );
 const BaltraLogin = lazy(() => import("./pages/user/login/BaltraLogin"));
-const ForgotPassword = lazy(() =>
-  import("./pages/user/forgotPassword/ForgotPassword")
+const ForgotPassword = lazy(
+  () => import("./pages/user/forgotPassword/ForgotPassword"),
 );
-const ResetOTPVerify = lazy(() =>
-  import("./pages/user/resetOTPVerify/ResetOTPVerify")
+const ResetOTPVerify = lazy(
+  () => import("./pages/user/resetOTPVerify/ResetOTPVerify"),
 );
-const ResetPassword = lazy(() =>
-  import("./pages/user/resetPassword/ResetPassword")
+const ResetPassword = lazy(
+  () => import("./pages/user/resetPassword/ResetPassword"),
 );
-const EditPassword = lazy(() =>
-  import("./pages/user/profile/editPassword/EditPassword")
+const EditPassword = lazy(
+  () => import("./pages/user/profile/editPassword/EditPassword"),
 );
-const BaltraLandingPage = lazy(() =>
-  import("./pages/landingPage/BaltraLandingPage")
+const BaltraLandingPage = lazy(
+  () => import("./pages/landingPage/BaltraLandingPage"),
 );
-const AddCatalog = lazy(() =>
-  import(
-    "./components/admin/adminComponents/adminCatalog/addCatalog/AddCatalog"
-  )
+const AddCatalog = lazy(
+  () =>
+    import("./components/admin/adminComponents/adminCatalog/addCatalog/AddCatalog"),
 );
-const AdminCatalogList = lazy(() =>
-  import("./components/admin/adminComponents/adminCatalog/AdminCatalogList")
+const AdminCatalogList = lazy(
+  () =>
+    import("./components/admin/adminComponents/adminCatalog/AdminCatalogList"),
 );
 
 const App = () => {
-  const { isAuthenticated, adminRoute, customer } = useSelector(
-    (state) => state.auth
-  );
+  const { isAuthenticated, customer } = useSelector((state) => state.auth);
+
+  const userRole = customer?.role;
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
@@ -207,7 +214,7 @@ const App = () => {
                 <>
                   <PrivateRoute
                     isAuthenticated={isAuthenticated}
-                    userRole={customer?.role}
+                    userRole={userRole}
                   >
                     <BaltraTracking />
                   </PrivateRoute>
@@ -231,7 +238,8 @@ const App = () => {
                 <>
                   <PrivateRoute
                     isAuthenticated={isAuthenticated}
-                    userRole={customer?.role}
+                    userRole={userRole}
+                    allowedRoles={["customer"]}
                   >
                     <BulkOrderHistory />
                   </PrivateRoute>
@@ -246,7 +254,8 @@ const App = () => {
                 <>
                   <PrivateRoute
                     isAuthenticated={isAuthenticated}
-                    userRole={customer?.role}
+                    userRole={userRole}
+                    allowedRoles={["customer"]}
                   >
                     <SingleOrderHistory />
                   </PrivateRoute>
@@ -269,7 +278,8 @@ const App = () => {
                 <>
                   <PrivateRoute
                     isAuthenticated={isAuthenticated}
-                    userRole={customer?.role}
+                    userRole={userRole}
+                    allowedRoles={["customer"]}
                   >
                     <Profile />
                   </PrivateRoute>
@@ -281,7 +291,11 @@ const App = () => {
               path="/baltra-change-password"
               element={
                 <>
-                  <PrivateRoute isAuthenticated={isAuthenticated}>
+                  <PrivateRoute
+                    isAuthenticated={isAuthenticated}
+                    userRole={userRole}
+                    allowedRoles={["customer"]}
+                  >
                     <EditPassword />
                   </PrivateRoute>
                   <Footer />
@@ -306,7 +320,9 @@ const App = () => {
               path="/baltra-account-signin"
               element={
                 isAuthenticated ? (
-                  customer?.role === "admin" ? (
+                  ["admin", "product_incharge", "service_incharge"].includes(
+                    customer?.role,
+                  ) ? (
                     <Navigate to="/baltra-admin-dashboard" replace />
                   ) : (
                     <Navigate to="/baltra-profileInformation" replace />
@@ -388,6 +404,7 @@ const App = () => {
                   <PrivateRoute
                     isAuthenticated={isAuthenticated}
                     userRole={customer?.role}
+                    allowedRoles={["customer"]}
                   >
                     <TrackingProductDetails />
                   </PrivateRoute>
@@ -401,7 +418,8 @@ const App = () => {
                 <>
                   <PrivateRoute
                     isAuthenticated={isAuthenticated}
-                    userRole={customer?.role}
+                    userRole={userRole}
+                    allowedRoles={["customer"]}
                   >
                     <UserProductPage />
                   </PrivateRoute>
@@ -415,7 +433,8 @@ const App = () => {
                 <>
                   <PrivateRoute
                     isAuthenticated={isAuthenticated}
-                    userRole={customer?.role}
+                    userRole={userRole}
+                    allowedRoles={["customer"]}
                   >
                     <UserRegisteredProductPage />
                   </PrivateRoute>
@@ -429,7 +448,8 @@ const App = () => {
                 <>
                   <PrivateRoute
                     isAuthenticated={isAuthenticated}
-                    userRole={customer?.role}
+                    userRole={userRole}
+                    allowedRoles={["customer"]}
                   >
                     <BaltraExtendWarranty />
                   </PrivateRoute>
@@ -470,9 +490,12 @@ const App = () => {
               element={
                 <PrivateRoute
                   isAuthenticated={isAuthenticated}
-                  adminRoute={adminRoute}
-                  userRole={customer?.role === "admin" ? "admin" : ""}
-                  requiredRole="admin"
+                  userRole={userRole}
+                  allowedRoles={[
+                    "admin",
+                    "product_incharge",
+                    "service_incharge",
+                  ]}
                 >
                   <MainLayout />
                 </PrivateRoute>
@@ -518,7 +541,18 @@ const App = () => {
                 path="edit-sub-category-product/:id"
                 element={<SingleSubCategory />}
               />
-              <Route path="all-products-list" element={<AllProductList />} />
+              <Route
+                path="all-products-list"
+                element={
+                  <PrivateRoute
+                    isAuthenticated={isAuthenticated}
+                    userRole={userRole}
+                    allowedRoles={ProductRoles}
+                  >
+                    <AllProductList />
+                  </PrivateRoute>
+                }
+              />
               <Route
                 path="all-customer-products-list"
                 element={<CustomerProductList />}
@@ -547,22 +581,18 @@ const App = () => {
                 path="edit/warranty-package/:id"
                 element={<EditWarrantyPackage />}
               />
-
               <Route
                 path="single-view-contact/:id"
                 element={<SingleViewContact />}
               />
-
               <Route
                 path="all/products-complaints-list"
                 element={<ProductComplaintList />}
               />
-
               <Route
                 path="all/warranty-status-list"
                 element={<TrackingComplaintStatusList />}
               />
-
               <Route path="all/e-catalog-list" element={<AdminCatalogList />} />
               <Route
                 path="all/customize-products"
@@ -572,23 +602,18 @@ const App = () => {
                 path="single/personalization-view/:id"
                 element={<SinglePersonalizationView />}
               />
-
               <Route path="add/product-catalog" element={<AddCatalog />} />
-
               <Route
                 path="single-product-complaint/:id"
                 element={<SingleProductComplaint />}
               />
-
               <Route
                 path="all/bulk-quote-products"
                 element={<AllBulkQuoteProducts />}
               />
 
-              <Route
-                path="single/bulk-quote-view/:quote_id"
-                element={<SingleBulkQuote />}
-              />
+              <Route path="all/manage-roles" element={<ManageRoleList />} />
+              <Route path="add-role" element={<AddRole />} />
             </Route>
             <Route
               path="*"

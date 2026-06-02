@@ -1,233 +1,231 @@
-import React from "react";
-import { Link } from "react-router-dom";
 import { AiOutlineMail, AiOutlinePhone } from "react-icons/ai";
-import { FaInstagram, FaFacebook, FaYoutube, FaLinkedin } from "react-icons/fa";
+import {
+  FaFacebook,
+  FaInstagram,
+  FaLinkedin,
+  FaTiktok,
+  FaYoutube,
+} from "react-icons/fa";
+import { Link } from "react-router-dom";
 import FooterImg from "../../assets/images/BALTRALOGO.png";
+
+const NAV_COLUMNS = [
+  {
+    title: "Who We Are",
+    links: [
+      { label: "About Us", to: "/baltra-readAboutUS" },
+      { label: "Contact Us", to: "/baltra-contact-us" },
+    ],
+  },
+  {
+    title: "Products",
+    links: [
+      { label: "Kitchen Essentials", to: "/baltra-allProducts" },
+      { label: "Winter Essentials", to: "/baltra-allProducts" },
+      { label: "Summer Essentials", to: "/baltra-allProducts" },
+      { label: "Pressure Cooker & Cookware", to: "/baltra-allProducts" },
+      { label: "Personal Care", to: "/baltra-allProducts" },
+      { label: "Bottles & Flasks", to: "/baltra-allProducts" },
+      { label: "Home Solutions", to: "/baltra-allProducts" },
+    ],
+  },
+  {
+    title: "Appliance Care",
+    links: [
+      { label: "Register a Complaint", to: "/baltra-user-ProductPage" },
+      { label: "Track Your Product", to: "/baltra-trackingProducts" },
+    ],
+  },
+  {
+    title: "Best Sellers",
+    links: [
+      { label: "Air Fryer", to: "/baltra-allProducts" },
+      { label: "Heater", to: "/baltra-allProducts" },
+      { label: "Air Cooler", to: "/baltra-allProducts" },
+      { label: "Bottle", to: "/baltra-allProducts" },
+      { label: "Pressure Cooker", to: "/baltra-allProducts" },
+      { label: "Water Dispenser", to: "/baltra-allProducts" },
+      { label: "Induction", to: "/baltra-allProducts" },
+      { label: "Kettle", to: "/baltra-allProducts" },
+    ],
+  },
+  {
+    title: "E-Catalog",
+    links: [{ label: "Download Catalogues", to: "/baltra-catalog" }],
+  },
+];
+
+const SOCIAL_LINKS = [
+  {
+    icon: FaInstagram,
+    href: "https://www.instagram.com/baltra.nepal/",
+    label: "Instagram",
+  },
+  {
+    icon: FaFacebook,
+    href: "https://www.facebook.com/BaltraHomeAppliancesNepal",
+    label: "Facebook",
+  },
+  {
+    icon: FaTiktok,
+    href: "https://www.tiktok.com/@baltra.nepal?lang=en",
+    label: "TikTok",
+  },
+  {
+    icon: FaYoutube,
+    href: "https://www.youtube.com/@BaltraHomeProducts",
+    label: "YouTube",
+  },
+  {
+    icon: FaLinkedin,
+    href: "https://www.linkedin.com/company/baltra-nepal/",
+    label: "LinkedIn",
+  },
+];
+
+/* Reusable animated underline link */
+const FooterLink = ({ to, children }) => (
+  <Link
+    to={to}
+    className="
+      relative inline-block text-gray-400 text-sm
+      font-gothamNarrow mb-2 w-fit
+      transition-colors duration-200 hover:text-white
+      after:absolute after:left-0 after:bottom-0
+      after:h-[1px] after:w-0 after:bg-white
+      after:transition-all after:duration-300
+      hover:after:w-full
+    "
+  >
+    {children}
+  </Link>
+);
 
 const Footer = () => {
   const currentYear = new Date().getFullYear();
 
   return (
-    <>
-      <div className="bg-[#000C13] relative w-full h-auto py-10 px-6 md:px-12 lg:px-24 xl:px-32 mt-0">
-        <div className="flex flex-wrap justify-between items-start gap-8">
-          {/* Column 1 */}
-          <div className="flex flex-col font-gothamNarrow w-full sm:w-1/2 md:w-1/3 lg:w-auto">
-            <h2 className="text-white text-lg font-medium mb-6">Who we are</h2>
-            <Link
-              to="/baltra-aboutUs-Page"
-              className="text-gray-400 text-sm hover:text-white mb-2"
+    <footer className="bg-[#000C13] w-full">
+      {/* ── Main grid ── */}
+      <div className="py-12 px-6 md:px-12 lg:px-24 xl:px-32">
+        <div className="flex flex-wrap justify-between gap-x-8 gap-y-10">
+          {NAV_COLUMNS.map((col) => (
+            <div
+              key={col.title}
+              className="flex flex-col font-gothamNarrow w-full sm:w-[calc(50%-1rem)] md:w-[calc(33%-1rem)] lg:w-auto"
             >
-              About Us
-            </Link>
-            <Link
-              to="/baltra-contact-us"
-              className="text-gray-400 text-sm hover:text-white mb-2"
-            >
-              Contact us
-            </Link>
-          </div>
+              <h2 className="text-white text-sm font-semibold uppercase tracking-widest mb-5">
+                {col.title}
+              </h2>
+              {col.links.map((link) => (
+                <FooterLink key={link.label} to={link.to}>
+                  {link.label}
+                </FooterLink>
+              ))}
+            </div>
+          ))}
 
-          {/* Column 2 */}
-          <div className="flex flex-col font-gothamNarrow w-full sm:w-1/2 md:w-1/3 lg:w-auto">
-            <h2 className="text-white text-lg font-medium mb-6">Products</h2>
-            <Link
-              to="/baltra-allProducts"
-              className="text-gray-400 text-sm hover:text-white mb-2"
-            >
-              Kitchen Essentials
-            </Link>
-            <Link
-              to="/baltra-allProducts"
-              className="text-gray-400 text-sm hover:text-white mb-2"
-            >
-              Winter Essentials
-            </Link>
-            <Link
-              to="/baltra-allProducts"
-              className="text-gray-400 text-sm hover:text-white mb-2"
-            >
-              Summer Essentials
-            </Link>
-            <Link
-              to="/baltra-allProducts"
-              className="text-gray-400 text-sm hover:text-white mb-2"
-            >
-              Pressure cooker and cookware
-            </Link>
-            <Link
-              to="/baltra-allProducts"
-              className="text-gray-400 text-sm hover:text-white mb-2"
-            >
-              Personal Care
-            </Link>
-            <Link
-              to="/baltra-allProducts"
-              className="text-gray-400 text-sm hover:text-white mb-2"
-            >
-              Bottle and flasks
-            </Link>
-            <Link
-              to="/baltra-allProducts"
-              className="text-gray-400 text-sm hover:text-white mb-2"
-            >
-              Home Solutions
-            </Link>
-            <Link to="" className="text-gray-400 text-sm hover:text-white mb-2">
-              3D Product Models
-            </Link>
-          </div>
-
-          {/* Column 3 */}
-          <div className="flex flex-col font-gothamNarrow w-full sm:w-1/2 md:w-1/3 lg:w-auto">
-            <h2 className="text-white text-lg font-medium mb-6">
-              Appliance Care
-            </h2>
-            <Link
-              to="/baltra-user-ProductPage"
-              className="text-gray-400 text-sm hover:text-white mb-2"
-            >
-              Register a Complaint
-            </Link>
-            <Link
-              to="/baltra-trackingProducts"
-              className="text-gray-400 text-sm hover:text-white mb-2"
-            >
-              Track your Products
-            </Link>
-          </div>
-
-          {/* Column 4 */}
-          <div className="flex flex-col font-gothamNarrow w-full sm:w-1/2 md:w-1/3 lg:w-auto">
-            <h2 className="text-white text-lg font-medium mb-6">Best Seller</h2>
-            <Link
-              to="/baltra-allProducts"
-              className="text-gray-400 text-sm hover:text-white mb-2"
-            >
-              Air Fryer
-            </Link>
-            <Link
-              to="/baltra-allProducts"
-              className="text-gray-400 text-sm hover:text-white mb-2"
-            >
-              Heater
-            </Link>
-            <Link
-              to="/baltra-allProducts"
-              className="text-gray-400 text-sm hover:text-white mb-2"
-            >
-              Air Cooler
-            </Link>
-            <Link
-              to="/baltra-allProducts"
-              className="text-gray-400 text-sm hover:text-white mb-2"
-            >
-              Bottle
-            </Link>
-            <Link
-              to="/baltra-allProducts"
-              className="text-gray-400 text-sm hover:text-white mb-2"
-            >
-              Pressure cooker
-            </Link>
-            <Link
-              to="/baltra-allProducts"
-              className="text-gray-400 text-sm hover:text-white mb-2"
-            >
-              Water Dispenser
-            </Link>
-            <Link
-              to="/baltra-allProducts"
-              className="text-gray-400 text-sm hover:text-white mb-2"
-            >
-              Induction
-            </Link>
-            <Link
-              to="/baltra-allProducts"
-              className="text-gray-400 text-sm hover:text-white mb-2"
-            >
-              Kettle
-            </Link>
-          </div>
-
-          {/* Column 5 */}
-          <div className="flex flex-col font-gothamNarrow w-full sm:w-1/2 md:w-1/3 lg:w-auto">
-            <h2 className="text-white text-lg font-medium mb-6">E-Catalog</h2>
-            <Link
-              to="/baltra-catalog"
-              className="text-gray-400 text-sm hover:text-white mb-2"
-            >
-              Download Catalogues
-            </Link>
-          </div>
-
-          {/* Contact Us */}
-          <div className="flex flex-col font-gothamNarrow w-full sm:w-1/2 md:w-1/3 lg:w-auto">
-            <h2 className="text-white text-lg font-medium mb-6">
-              {" "}
+          {/* Get in Touch */}
+          <div className="flex flex-col font-gothamNarrow w-full sm:w-[calc(50%-1rem)] md:w-[calc(33%-1rem)] lg:w-auto">
+            <h2 className="text-white text-sm font-semibold uppercase tracking-widest mb-5">
               Get in Touch
             </h2>
-            <div className="flex items-center text-gray-400 text-sm hover:text-white mb-2">
-              <AiOutlineMail className="mr-2" />
-              <Link to="/baltra-contact-us" className="hover:text-white">
-                info@balajeenp.com
-              </Link>
-            </div>
-            <div className="flex items-center text-gray-400 text-sm hover:text-white mb-2">
-              <AiOutlinePhone className="mr-2" />
-              <Link to="/baltra-contact-us" className="hover:text-white">
-                +977-15970088
-              </Link>
-            </div>
-          </div>
-        </div>
-
-        <hr className="my-6 border-gray-700" />
-
-        <div className="text-white">
-          <div className="container mx-auto flex flex-col lg:flex-row justify-between lg:items-center font-gothamNarrow space-y-4 lg:space-y-0">
-            {/* Left Section: Copyright */}
-            <div className="text-sm">&copy; {currentYear} Baltra&reg;</div>
-
-            <Link to="/">
-              <img
-                className="w-42 h-auto lg:w-full lg:h-auto sm:w-32 sm:h-16"
-                src={FooterImg}
-                alt="Footer Image"
-              />
-            </Link>
-
-            {/* Right Section: Social Icons */}
-            <div className="flex space-x-4">
-              <a href="https://www.instagram.com" target="__blank">
-                <FaInstagram
-                  className="text-white hover:text-gray-100"
-                  size={24}
-                />
-              </a>
-              <a href="https://www.facebook.com" target="__blank">
-                <FaFacebook
-                  className="text-white hover:text-gray-100"
-                  size={24}
-                />
-              </a>
-              <a href="https://www.youtube.com" target="__blank">
-                <FaYoutube
-                  className="text-white hover:text-gray-100"
-                  size={24}
-                />
-              </a>
-              <a href="https://www.linkedin.com" target="__blank">
-                <FaLinkedin
-                  className="text-white hover:text-gray-100"
-                  size={24}
-                />
-              </a>
-            </div>
+            <a
+              href="mailto:info@balajeenp.com"
+              className="
+                relative flex items-center gap-2 text-gray-400 text-sm mb-2 w-fit
+                font-gothamNarrow transition-colors duration-200 hover:text-white
+                after:absolute after:left-0 after:bottom-0
+                after:h-[1px] after:w-0 after:bg-white
+                after:transition-all after:duration-300
+                hover:after:w-full
+              "
+            >
+              <AiOutlineMail className="flex-shrink-0" />
+              info@balajeenp.com
+            </a>
+            <a
+              href="tel:+97715970088"
+              className="
+                relative flex items-center gap-2 text-gray-400 text-sm mb-2 w-fit
+                font-gothamNarrow transition-colors duration-200 hover:text-white
+                after:absolute after:left-0 after:bottom-0
+                after:h-[1px] after:w-0 after:bg-white
+                after:transition-all after:duration-300
+                hover:after:w-full
+              "
+            >
+              <AiOutlinePhone className="flex-shrink-0" />
+              +977-15970088
+            </a>
           </div>
         </div>
       </div>
-    </>
+
+      {/* ── Divider ── */}
+      <div className="px-6 md:px-12 lg:px-24 xl:px-32">
+        <hr className="border-gray-800" />
+      </div>
+
+      {/* ── Copyright bar ── */}
+      <div className="px-6 md:px-12 lg:px-24 xl:px-32 py-6 font-gothamNarrow">
+        <div className="flex flex-col lg:flex-row items-center justify-between gap-4">
+          {/* Left: copyright */}
+          <p className="text-gray-500 text-xs order-3 lg:order-1 text-center lg:text-left">
+            &copy; {currentYear}{" "}
+            <span className="text-gray-300 font-semibold">Baltra&reg;</span> —
+            All rights reserved.
+          </p>
+
+          {/* Center: logo */}
+          <Link to="/" className="order-1 lg:order-2 flex-shrink-0">
+            <img
+              src={FooterImg}
+              alt="Baltra Logo"
+              className="h-10 w-auto object-contain opacity-90 hover:opacity-100 transition-opacity duration-200"
+            />
+          </Link>
+
+          {/* Right: social icons */}
+          <div className="flex items-center gap-4 order-2 lg:order-3">
+            {SOCIAL_LINKS.map(({ icon: Icon, href, label }) => (
+              <a
+                key={label}
+                href={href}
+                target="_blank"
+                rel="noopener noreferrer"
+                aria-label={`Baltra on ${label}`}
+                className="
+                  text-gray-500 transition-all duration-200
+                  hover:text-white hover:scale-110
+                "
+              >
+                <Icon size={20} />
+              </a>
+            ))}
+          </div>
+        </div>
+
+        {/* Legal links row */}
+        <div className="flex flex-wrap justify-center lg:justify-start gap-x-5 gap-y-1 mt-4 pt-4 border-t border-gray-800">
+          {[
+            { label: "Privacy Policy", to: "/baltra/privacy-policy" },
+            { label: "Terms of Service", to: "/baltra-term-of-use" },
+          ].map(({ label, to }) => (
+            <Link
+              key={label}
+              to={to}
+              className="
+                text-gray-600 text-xs font-gothamNarrow
+                hover:text-gray-300 transition-colors duration-200
+              "
+            >
+              {label}
+            </Link>
+          ))}
+        </div>
+      </div>
+    </footer>
   );
 };
 

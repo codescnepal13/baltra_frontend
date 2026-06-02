@@ -1,148 +1,252 @@
 import React, { useEffect, useState } from "react";
-import { FaAngleDown, FaAngleRight } from "react-icons/fa";
-import { FiChevronsLeft, FiChevronsRight } from "react-icons/fi";
-import { Link, useNavigate } from "react-router-dom";
+import {
+  FiChevronRight,
+  FiChevronsLeft,
+  FiChevronsRight,
+} from "react-icons/fi";
+import { Link, useLocation, useNavigate } from "react-router-dom";
 import baltraAdminLogo from "../../../assets/images/baltraAdminLogo.png";
 import MetaData from "../../layout/metaData/MetaData";
 import AdminHeader from "../adminHeader/AdminHeader";
 import { items } from "../routes/MenuItems";
 
+const SECTION_LABELS = {
+  Dashboard: "Main",
+  "Product Inventory": "Main",
+  "Customer Products": "Main",
+  "User Profiles": "Main",
+  "Warranty Package": "Compliance",
+  "Warrranty Complaints": "Compliance",
+  Contacts: "Support",
+  "Personalize Setting": "Settings",
+  Settings: "Settings",
+};
+
 const MainLayout = () => {
   const [collapsed, setCollapsed] = useState(false);
-  const [selectedParent, setSelectedParent] = useState("");
-  const [selectedChild, setSelectedChild] = useState("");
+  const [openParent, setOpenParent] = useState(null);
   const navigate = useNavigate();
+  const location = useLocation();
 
-  const dashboardKey = items.find((item) => item.label === "Dashboard")?.key;
+  const currentPath = location.pathname;
+
+  const isDashboardActive = currentPath === "/baltra-admin-dashboard";
+
+  const getActiveChild = () => {
+    for (const item of items) {
+      if (item.children) {
+        for (const child of item.children) {
+          if (currentPath.includes(child.key.toLowerCase())) {
+            return child.key.toLowerCase();
+          }
+        }
+      }
+    }
+    return null;
+  };
+
+  const getActiveParent = () => {
+    if (isDashboardActive) return "/admin/dashboard";
+    for (const item of items) {
+      if (item.children) {
+        for (const child of item.children) {
+          if (currentPath.includes(child.key.toLowerCase())) {
+            return item.key;
+          }
+        }
+      }
+    }
+    return null;
+  };
+
+  const activeParentKey = getActiveParent();
+  const activeChildKey = getActiveChild();
 
   useEffect(() => {
-    const storedParent = localStorage.getItem("selectedParent");
-    const storedChild = localStorage.getItem("selectedChild");
-    if (storedParent) {
-      setSelectedParent(storedParent);
-    } else if (dashboardKey) {
-      setSelectedParent(dashboardKey);
+    if (activeParentKey) {
+      setOpenParent(activeParentKey);
     }
-    if (storedChild) {
-      setSelectedChild(storedChild);
-    }
-  }, [dashboardKey]);
+  }, [activeParentKey]);
 
-  const toggleCollapsed = () => {
-    setCollapsed(!collapsed);
-  };
+  const toggleCollapsed = () => setCollapsed((prev) => !prev);
 
   const handleParentClick = (parentKey, label) => {
     if (label === "Dashboard") {
       navigate("/baltra-admin-dashboard");
+      setOpenParent("/admin/dashboard");
     } else {
-      const newSelectedParent = selectedParent === parentKey ? null : parentKey;
-      setSelectedParent(newSelectedParent);
-      localStorage.setItem("selectedParent", newSelectedParent);
-      setSelectedChild("");
-      localStorage.removeItem("selectedChild");
+      setOpenParent((prev) => (prev === parentKey ? null : parentKey));
     }
-  };
-
-  const handleChildClick = (childKey) => {
-    setSelectedChild(childKey);
-    localStorage.setItem("selectedChild", childKey);
   };
 
   const latestFullYear = new Date().getFullYear();
 
+  // Build section-grouped list
+  const renderedSections = [];
+  let lastSection = null;
+  items.forEach((item, index) => {
+    const section = SECTION_LABELS[item.label] ?? null;
+    if (section && section !== lastSection) {
+      renderedSections.push({
+        type: "label",
+        label: section,
+        key: `label-${section}-${index}`,
+      });
+      lastSection = section;
+    }
+    renderedSections.push({ type: "item", item, index });
+  });
+
   return (
     <>
       <MetaData title="baltra-admin-dashboard" />
-      <div
-        className={`font-gothamNarrow flex h-screen bg-gray-100 ${
-          collapsed ? "lg:ml-80 2xl:ml-96" : "lg:ml-0 2xl:ml-0"
-        }`}
-      >
-        <div
-          className={`fixed inset-y-0 left-0 bg-[#363740] overflow-x-hidden transition-transform transform ease-in-out duration-300 flex flex-col ${
-            collapsed ? "-translate-x-full" : "translate-x-0"
-          } lg:translate-x-0 lg:static lg:inset-0 w-44 sm:w-48 md:w-52 lg:w-56 xl:w-64 2xl:w-72`}
+      <div className="font-inter flex h-screen bg-gray-100">
+        {/* Sidebar */}
+        <aside
+          className={`
+            fixed inset-y-0 left-0 z-40 flex flex-col
+            bg-[#1f2029] transition-transform duration-300 ease-in-out
+            w-56 xl:w-60 2xl:w-64
+            ${collapsed ? "-translate-x-full" : "translate-x-0"}
+            lg:static lg:translate-x-0 lg:inset-auto
+          `}
         >
-          <div className="flex flex-col items-center justify-center bg-gray-800 p-4">
-            <Link to={"#"}>
+          {/* Logo */}
+          <div className="flex flex-col bg-[#16171f] px-5 pt-5 pb-4 border-b border-white/5">
+            <Link to="/baltra-admin-dashboard">
               <img
                 src={baltraAdminLogo}
-                alt="Company Logo"
-                className="h-8 img-fluid"
+                alt="Baltra Logo"
+                className="h-7 w-auto"
               />
             </Link>
-            <p className="font-gothamNarrow text-center text-xs text-white mt-2 whitespace-nowrap">
-              V1.0.1
+            <p className="mt-2 text-[10px] font-medium tracking-[0.12em] uppercase text-white/25">
+              Admin Panel · v2.0.1
             </p>
           </div>
 
-          <nav className="mt-5 px-2 space-y-1 overflow-y-auto flex-1">
-            {items &&
-              items.map((item, index) => (
+          {/* Nav */}
+          <nav className="flex-1 overflow-y-auto px-2.5 py-3 space-y-0.5">
+            {renderedSections.map((entry) => {
+              // Section label
+              if (entry.type === "label") {
+                return (
+                  <p
+                    key={entry.key}
+                    className="px-2.5 pt-4 pb-1.5 text-[9.5px] font-semibold tracking-[0.14em] uppercase text-white/20"
+                  >
+                    {entry.label}
+                  </p>
+                );
+              }
+
+              const { item, index } = entry;
+              const isDashboard = item.label === "Dashboard";
+              const isThisParentActive = activeParentKey === item.key;
+              const isOpen = openParent === item.key;
+
+              return (
                 <React.Fragment key={index}>
+                  {/* Parent row */}
                   <div
                     onClick={() => handleParentClick(item.key, item.label)}
-                    className={`pl-3 cursor-pointer whitespace-nowrap overflow-hidden ${
-                      selectedParent === item.key
-                        ? "bg-[#484849] font-normal"
-                        : ""
-                    }`}
+                    className={`
+                      relative flex items-center gap-2.5 px-3 py-2 rounded-lg cursor-pointer
+                      text-[13px] font-normal tracking-[0.018em] leading-none
+                      transition-colors duration-150 select-none
+                      ${
+                        isThisParentActive
+                          ? "bg-red-500/10 text-[#ff7b7b]"
+                          : "text-[#DDE2FF]/60 hover:bg-white/5 hover:text-[#DDE2FF]/85"
+                      }
+                    `}
                   >
-                    <div className="font-gothamNarrow group flex items-center px-2 py-2 text-base font-medium text-[#DDE2FF] hover:text-[#ffffff] tracking-normal">
-                      {item.icon && <div className="mr-4">{item.icon}</div>}
+                    {/* Active indicator bar */}
+                    {isThisParentActive && (
+                      <span className="absolute left-0 top-1/2 -translate-y-1/2 w-[3px] h-5 bg-red-400 rounded-r-full" />
+                    )}
+
+                    {item.icon && (
+                      <span className="w-4 text-center flex-shrink-0 text-base">
+                        {item.icon}
+                      </span>
+                    )}
+                    <span className="flex-1 whitespace-nowrap">
                       {item.label}
-                      {item.label !== "Dashboard" && (
-                        <span className="ml-auto">
-                          {selectedParent === item.key ? (
-                            <FaAngleDown />
-                          ) : (
-                            <FaAngleRight />
-                          )}
-                        </span>
+                    </span>
+
+                    {!isDashboard && (
+                      <FiChevronRight
+                        className={`
+                          w-3 h-3 opacity-40 transition-transform duration-200
+                          ${isOpen ? "rotate-90 opacity-70" : ""}
+                        `}
+                      />
+                    )}
+                  </div>
+
+                  {/* Children */}
+                  {!isDashboard && (
+                    <div
+                      className="overflow-hidden transition-all duration-300 ease-in-out"
+                      style={{
+                        maxHeight: isOpen
+                          ? `${(item.children?.length ?? 0) * 48}px`
+                          : "0",
+                      }}
+                    >
+                      {item?.children && (
+                        <div className="ml-3 pl-3.5 border-l border-white/[0.06] mt-0.5 mb-1 flex flex-col gap-px">
+                          {item.children.map((child) => {
+                            const childKey = child.key.toLowerCase();
+                            const isChildActive = activeChildKey === childKey;
+
+                            return (
+                              <Link
+                                key={childKey}
+                                to={childKey}
+                                className={`
+                                  relative flex items-center gap-2 px-2.5 py-[7px] rounded-md
+                                  text-[12.5px] tracking-[0.016em] leading-none
+                                  transition-colors duration-150 whitespace-nowrap
+                                  ${
+                                    isChildActive
+                                      ? "bg-red-500/10 text-[#ff7b7b] font-medium"
+                                      : "text-[#DDE2FF]/40 hover:text-[#DDE2FF]/75 hover:bg-white/[0.04]"
+                                  }
+                                `}
+                              >
+                                {/* Child icon (replaces bullet dot) */}
+                                <span
+                                  className={`
+                                    flex-shrink-0 text-[13px] transition-all
+                                    ${isChildActive ? "text-red-400" : "opacity-30"}
+                                  `}
+                                >
+                                  {child.icon}
+                                </span>
+                                {child.label}
+                              </Link>
+                            );
+                          })}
+                        </div>
                       )}
                     </div>
-                  </div>
-                  <div
-                    className="ml-3 transition-all duration-300 ease-in-out"
-                    style={{
-                      maxHeight: selectedParent === item.key ? "500px" : "0",
-                      overflow: "hidden",
-                      marginTop: selectedParent === item.key ? "10px" : "0",
-                    }}
-                  >
-                    {selectedParent === item.key &&
-                      item?.children?.map((child) => (
-                        <Link
-                          key={child.key.toLowerCase()}
-                          to={child.key.toLowerCase()}
-                          className={`group flex items-center px-4 py-2 text-sm whitespace-nowrap ${
-                            selectedParent === item.key ? "bg-gray-700" : ""
-                          } ${
-                            selectedChild === child.key.toLowerCase()
-                              ? "bg-red-600"
-                              : ""
-                          } text-[#DDE2FF] hover:text-[#ffffff]`}
-                          onClick={() =>
-                            handleChildClick(child.key.toLowerCase())
-                          }
-                        >
-                          {child.icon && (
-                            <div className="mr-2">{child.icon}</div>
-                          )}
-                          {child.label}
-                        </Link>
-                      ))}
-                  </div>
+                  )}
                 </React.Fragment>
-              ))}
+              );
+            })}
           </nav>
 
-          <div className="mt-auto p-4 text-center text-sm text-[#DDE2FF] border-t border-gray-600 font-gothamNarrow">
-            <p>© {latestFullYear} All Rights Reserved Baltra</p>
+          {/* Footer */}
+          <div className="px-5 py-3.5 border-t border-white/[0.06] text-center">
+            <p className="text-[10.5px] tracking-[0.04em] text-white/20">
+              © {latestFullYear} All rights reserved · Baltra
+            </p>
           </div>
-        </div>
+        </aside>
 
+        {/* Main content */}
         <div className="flex-1 flex flex-col overflow-hidden">
           <AdminHeader
             collapsed={collapsed}
@@ -150,14 +254,17 @@ const MainLayout = () => {
           />
         </div>
       </div>
+
+      {/* Mobile toggle */}
       <button
         onClick={toggleCollapsed}
-        className="fixed left-0 top-0 z-50 p-4 cursor-pointer transition-transform transform ease-in-out duration-300 lg:hidden"
+        className="fixed left-0 top-0 z-50 p-4 cursor-pointer lg:hidden"
+        aria-label="Toggle sidebar"
       >
         {collapsed ? (
-          <FiChevronsRight className="h-6 w-6" />
+          <FiChevronsRight className="h-5 w-5 text-gray-700" />
         ) : (
-          <FiChevronsLeft className="h-6 w-6" />
+          <FiChevronsLeft className="h-5 w-5 text-gray-700" />
         )}
       </button>
     </>
@@ -165,158 +272,3 @@ const MainLayout = () => {
 };
 
 export default MainLayout;
-
-// import React, { useEffect, useState } from "react";
-// import { FaAngleDown, FaAngleRight } from "react-icons/fa";
-// import { FiChevronsLeft, FiChevronsRight } from "react-icons/fi";
-// import { Link, useNavigate } from "react-router-dom";
-// import baltraAdminLogo from "../../../assets/images/baltraAdminLogo.png";
-// import MetaData from "../../layout/metaData/MetaData";
-// import AdminHeader from "../adminHeader/AdminHeader";
-// import { items } from "../routes/MenuItems";
-
-// const MainLayout = () => {
-//   const [collapsed, setCollapsed] = useState(false);
-//   const [selectedParent, setSelectedParent] = useState("");
-//   const [selectedChild, setSelectedChild] = useState("");
-//   const navigate = useNavigate();
-
-//   const latestFullYear = new Date().getFullYear();
-
-//   const dashboardKey = items.find((item) => item.label === "Dashboard")?.key;
-
-//   useEffect(() => {
-//     const storedParent = localStorage.getItem("selectedParent");
-//     const storedChild = localStorage.getItem("selectedChild");
-//     if (storedParent) {
-//       setSelectedParent(storedParent);
-//     } else if (dashboardKey) {
-//       setSelectedParent(dashboardKey);
-//     }
-//     if (storedChild) {
-//       setSelectedChild(storedChild);
-//     }
-//   }, [dashboardKey]);
-
-//   const toggleCollapsed = () => {
-//     setCollapsed(!collapsed);
-//   };
-
-//   const handleParentClick = (parentKey, label) => {
-//     if (label === "Dashboard") {
-//       navigate("/baltra-admin-dashboard");
-//     } else {
-//       const newSelectedParent = selectedParent === parentKey ? "" : parentKey;
-//       setSelectedParent(newSelectedParent);
-//       localStorage.setItem("selectedParent", newSelectedParent);
-//       setSelectedChild("");
-//       localStorage.removeItem("selectedChild");
-//     }
-//   };
-
-//   const handleChildClick = (childKey) => {
-//     setSelectedChild(childKey);
-//     localStorage.setItem("selectedChild", childKey);
-//   };
-
-//   return (
-//     <>
-//       <MetaData title="baltra-admin-dashboard" />
-//       <div
-//         className={`font-gothamNarrow flex h-screen bg-gray-100 transition-all ${
-//           collapsed ? "lg:ml-20" : "lg:ml-72"
-//         }`}
-//       >
-//         <div
-//           className={`fixed inset-y-0 left-0 bg-[#363740] overflow-hidden transition-all duration-300 ${
-//             collapsed ? "w-20" : "w-72"
-//           }`}
-//         >
-//           <div className="flex flex-col items-center justify-center bg-gray-800 p-4">
-//             <Link to={"#"}>
-//               <img src={baltraAdminLogo} alt="Company Logo" className="h-8" />
-//             </Link>
-//             <p
-//               className={`font-gothamNarrow text-xs text-white mt-2 ${
-//                 collapsed ? "hidden" : "block"
-//               }`}
-//             >
-//               V1.0.1
-//             </p>
-//           </div>
-
-//           <nav className="mt-5 px-2 space-y-1 overflow-y-auto">
-//             {items.map((item, index) => (
-//               <React.Fragment key={index}>
-//                 <div
-//                   onClick={() => handleParentClick(item.key, item.label)}
-//                   className={`pl-3 cursor-pointer whitespace-nowrap overflow-hidden ${
-//                     selectedParent === item.key ? "bg-[#484849]" : ""
-//                   }`}
-//                 >
-//                   <div className="font-gothamNarrow flex items-center px-2 py-2 text-base text-[#DDE2FF] hover:text-white">
-//                     {item.icon && <div className="mr-4">{item.icon}</div>}
-//                     {!collapsed && item.label}
-//                     {item.label !== "Dashboard" && (
-//                       <span className="ml-auto">
-//                         {selectedParent === item.key ? (
-//                           <FaAngleDown />
-//                         ) : (
-//                           <FaAngleRight />
-//                         )}
-//                       </span>
-//                     )}
-//                   </div>
-//                 </div>
-//                 {!collapsed && selectedParent === item.key && (
-//                   <div className="ml-3 transition-all duration-300 ease-in-out">
-//                     {item.children?.map((child) => (
-//                       <Link
-//                         key={child.key.toLowerCase()}
-//                         to={child.key.toLowerCase()}
-//                         className={`group flex items-center px-4 py-2 text-sm text-[#DDE2FF] hover:text-white ${
-//                           selectedChild === child.key.toLowerCase()
-//                             ? "bg-red-600"
-//                             : ""
-//                         }`}
-//                         onClick={() =>
-//                           handleChildClick(child.key.toLowerCase())
-//                         }
-//                       >
-//                         {child.icon && <div className="mr-2">{child.icon}</div>}
-//                         {child.label}
-//                       </Link>
-//                     ))}
-//                   </div>
-//                 )}
-//               </React.Fragment>
-//             ))}
-//           </nav>
-//           <div className="mt-auto py-2 px-6 border-t text-white text-sm">
-//             © {latestFullYear} Baltra. All rights reserved.
-//           </div>
-//         </div>
-
-//         <div className="flex-1 flex flex-col overflow-hidden">
-//           <AdminHeader
-//             collapsed={collapsed}
-//             toggleCollapsed={toggleCollapsed}
-//           />
-//         </div>
-//       </div>
-
-//       <button
-//         onClick={toggleCollapsed}
-//         className="fixed left-2 top-2 z-50 p-2 bg-gray-800 text-white rounded-full transition-all lg:hidden"
-//       >
-//         {collapsed ? (
-//           <FiChevronsRight className="h-6 w-6" />
-//         ) : (
-//           <FiChevronsLeft className="h-6 w-6" />
-//         )}
-//       </button>
-//     </>
-//   );
-// };
-
-// export default MainLayout;

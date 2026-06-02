@@ -1,8 +1,10 @@
 import moment from "moment";
 import { enqueueSnackbar } from "notistack";
 import { useEffect, useState } from "react";
-import { FaInfoCircle, FaSyncAlt } from "react-icons/fa";
-import { FaEye, FaTrash } from "react-icons/fa6";
+import { FaSyncAlt, FaTrash } from "react-icons/fa";
+import { FaEye } from "react-icons/fa6";
+import { HiOutlineInformationCircle } from "react-icons/hi2";
+import { MdOutlineSearch } from "react-icons/md";
 import { useDispatch, useSelector } from "react-redux";
 import { Link } from "react-router-dom";
 import {
@@ -14,9 +16,76 @@ import MetaData from "../../../layout/metaData/MetaData";
 import DeletePersonalizationModal from "./DeletePersonalizationModal";
 import UpdateCustomizedModal from "./UpdateCustomizedModal";
 
+// ─── Avatar ───────────────────────────────────────────────────────────────────
+const Avatar = ({ name }) => {
+  const initials = name
+    ? name
+        .split(" ")
+        .map((n) => n[0])
+        .slice(0, 2)
+        .join("")
+        .toUpperCase()
+    : "?";
+  return (
+    <div className="w-7 h-7 rounded-full flex items-center justify-center text-[10px] font-semibold flex-shrink-0 bg-orange-100 text-orange-500">
+      {initials}
+    </div>
+  );
+};
+
+// ─── Status badge ─────────────────────────────────────────────────────────────
+const StatusBadge = ({ status, onClick }) => {
+  const map = {
+    pending: {
+      cls: "bg-amber-50 text-amber-600 border border-amber-100",
+      dot: "bg-amber-400",
+      label: "Pending",
+      clickable: true,
+    },
+    approved: {
+      cls: "bg-emerald-50 text-emerald-600 border border-emerald-100",
+      dot: "bg-emerald-400",
+      label: "Approved",
+      clickable: false,
+    },
+  };
+  const cfg = map[status] ?? {
+    cls: "bg-gray-100 text-gray-500 border border-gray-200",
+    dot: "bg-gray-400",
+    label: status,
+    clickable: false,
+  };
+
+  return (
+    <span
+      onClick={cfg.clickable ? onClick : undefined}
+      className={`inline-flex items-center gap-1.5 px-2 py-0.5 rounded-md text-[11px] font-semibold tracking-[0.04em] ${cfg.cls} ${
+        cfg.clickable
+          ? "cursor-pointer hover:opacity-80 transition-opacity"
+          : ""
+      }`}
+      title={cfg.clickable ? "Click to approve" : undefined}
+    >
+      <span className={`w-1.5 h-1.5 rounded-full ${cfg.dot}`} />
+      {cfg.label}
+    </span>
+  );
+};
+
+// ─── Placement badge ──────────────────────────────────────────────────────────
+const PlacementBadge = ({ value }) => {
+  if (!value) return <span className="text-gray-300">—</span>;
+  return (
+    <span className="inline-flex items-center px-2 py-0.5 rounded-md text-[11px] font-medium bg-gray-100 text-gray-500 border border-gray-200 tracking-[0.03em]">
+      {value}
+    </span>
+  );
+};
+
+// ─── Main component ───────────────────────────────────────────────────────────
 const AllPersonalizationProductsList = () => {
   const { loading, error, isError, allCustomizedProducts } = useSelector(
-    (state) => state.admin
+    (state) => state.admin,
   );
   const dispatch = useDispatch();
 
@@ -25,19 +94,13 @@ const AllPersonalizationProductsList = () => {
   const [openCustomizeModal, setOpenCustomizeModal] = useState(false);
   const [selectPlacement, setSelectPlacement] = useState("All");
 
-  const handleOpenModal = (id) => {
-    setSelectedCustomizedId(id);
-  };
-
-  const handleCloseModal = () => {
-    setSelectedCustomizedId(null);
-  };
+  const handleOpenModal = (id) => setSelectedCustomizedId(id);
+  const handleCloseModal = () => setSelectedCustomizedId(null);
 
   const handleOpenCustomizedModal = (item) => {
     setSelectedItem(item);
     setOpenCustomizeModal(true);
   };
-
   const handleCloseCustomizeModal = () => {
     setOpenCustomizeModal(false);
     setSelectedItem(null);
@@ -49,7 +112,7 @@ const AllPersonalizationProductsList = () => {
         deleteCustomizedProduct({
           personalization_id: selectedCustomizeId,
           enqueueSnackbar,
-        })
+        }),
       );
       setSelectedCustomizedId(null);
     }
@@ -59,24 +122,16 @@ const AllPersonalizationProductsList = () => {
     setSelectPlacement("All");
     setSelectedCustomizedId(null);
     setSelectedItem(null);
-
-    dispatch(
-      allCustomizedPersonalization({
-        placement: "",
-      })
-    );
+    dispatch(allCustomizedPersonalization({ placement: "" }));
   };
 
   useEffect(() => {
-    if (error) {
-      dispatch(clearAdminError());
-    }
+    if (error) dispatch(clearAdminError());
   }, [dispatch, error]);
+
   useEffect(() => {
     if (isError) {
-      enqueueSnackbar(isError, {
-        variant: "error",
-      });
+      enqueueSnackbar(isError, { variant: "error" });
       dispatch(clearAdminError());
     }
   }, [dispatch, isError]);
@@ -85,214 +140,285 @@ const AllPersonalizationProductsList = () => {
     dispatch(
       allCustomizedPersonalization({
         placement: selectPlacement === "All" ? "" : selectPlacement,
-      })
+      }),
     );
   }, [dispatch, selectPlacement]);
+
+  const COLUMNS = [
+    "S.N.",
+    "Customer",
+    "Product",
+    "Image",
+    "Text",
+    "Placement",
+    "Font",
+    "Color",
+    "Size",
+    "Status",
+    "Created At",
+    "Actions",
+  ];
+
   return (
     <>
       <MetaData title="Baltra-admin-dashboard-all-customized-products" />
-      <div className="flex items-center w-full my-2 px-8">
-        <FaInfoCircle className="text-black mr-2" size={20} />
-        <p className="text-xs md:text-sm text-black font-outfit flex-grow">
-          To approve a Customer Added Personalization from the Dashboard, click
-          the "status" button from the table list below. After clicking, a popup
-          will display with verification option. Once approved, select and
-          update.
-        </p>
-      </div>
-      <div className="font-gothamNarrow container mx-auto px-8 py-8">
-        <div className="flex justify-between mb-4">
-          <h2 className="text-lg font-semibold font-gothamNarrow">
-            All Customize Products
-          </h2>
+      <div className="font-inter px-4 py-4 max-w-screen-2xl mx-auto">
+        {/* Page header */}
+        <div className="flex items-center justify-between mb-5">
+          <div>
+            <h1 className="text-[15px] font-semibold tracking-[-0.01em] text-gray-900">
+              Personalization Requests
+            </h1>
+            <p className="text-[12px] text-gray-400 tracking-[0.01em] mt-0.5">
+              Review and approve customer customization orders
+            </p>
+          </div>
         </div>
-        <div className="bg-[#FFFFFF] px-2 py-4">
-          <div className="flex mb-2 text-xs">
-            <div className="relative mr-2 flex items-center">
-              <select
-                className="w-42 pl-4 pr-10 py-2 border border-gray-300 rounded-sm text-sm focus:outline-none focus:border-red-500 focus:ring-gray-300 font-gothamNarrow"
-                value={selectPlacement}
-                onChange={(e) => setSelectPlacement(e.target.value)}
-              >
-                <option value="All">All</option>
-                <option value="horizontal">Horizontal</option>
-                <option value="vertical">Vertical</option>
-              </select>
+
+        {/* Info banner */}
+        <div className="flex items-start gap-2.5 px-4 py-3 rounded-lg bg-blue-50 border border-blue-100 mb-5">
+          <HiOutlineInformationCircle
+            size={15}
+            className="text-blue-400 flex-shrink-0 mt-0.5"
+          />
+          <p className="text-[12px] text-blue-600 tracking-[0.01em] leading-relaxed">
+            To approve a personalization request, click the{" "}
+            <span className="font-semibold">Pending</span> badge in the Status
+            column. A popup will appear with the verification and approval
+            options.
+          </p>
+        </div>
+
+        {/* Table card */}
+        <div className="bg-white rounded-xl border border-gray-200 overflow-hidden">
+          {/* Toolbar */}
+          <div className="flex flex-wrap items-center gap-2 px-4 py-3 border-b border-gray-100">
+            {/* Placement filter pills */}
+            <div className="flex items-center gap-1">
+              {["All", "horizontal", "vertical"].map((p) => (
+                <button
+                  key={p}
+                  onClick={() => setSelectPlacement(p)}
+                  className={`px-2.5 py-1 text-[11px] font-medium tracking-[0.03em] rounded-lg transition-colors capitalize
+                    ${
+                      selectPlacement === p
+                        ? "bg-red-500 text-white"
+                        : "bg-gray-100 text-gray-500 hover:bg-gray-200"
+                    }`}
+                >
+                  {p}
+                </button>
+              ))}
             </div>
+
+            {/* Reset */}
             <button
-              className="flex cursor-pointer items-center gap-1 px-4 py-2 text-sm border border-gray-300 rounded-md hover:bg-gray-50 transition-colors"
               onClick={handleReset}
+              className="inline-flex items-center gap-1.5 px-3 py-1.5 text-[12px] font-medium tracking-[0.02em] text-gray-500 border border-gray-200 rounded-lg hover:bg-gray-50 transition-colors"
             >
-              <FaSyncAlt className="text-gray-500" /> Reset
+              <FaSyncAlt size={10} />
+              Reset
             </button>
+
+            {/* Result count */}
+            <span className="ml-auto text-[11px] text-gray-300 tracking-[0.03em]">
+              {allCustomizedProducts?.length ?? 0} request
+              {allCustomizedProducts?.length !== 1 ? "s" : ""}
+            </span>
           </div>
 
-          <div className="bg-white font-sans table-container hide-scrollbar overflow-x-auto">
-            <table className="min-w-full divide-y divide-gray-200 border border-gray-300">
-              <thead className="font-gothamNarrow">
-                <tr>
-                  <th className="px-4 py-1 text-left text-sm font-semibold text-black font-gothamNarrow">
-                    S.N.
-                  </th>
-                  <th className="px-4 py-2 text-left text-sm font-semibold text-black border-l border-r whitespace-nowrap border-gray-300 font-gothamNarrow">
-                    Customer Name
-                  </th>
-
-                  <th className="px-4 py-2  text-left text-sm font-semibold text-black border-l border-r whitespace-nowrap border-gray-300 font-gothamNarrow">
-                    Product Name
-                  </th>
-                  <th className="px-4 py-2 text-left text-sm font-semibold text-black border-l border-r whitespace-nowrap border-gray-300 font-gothamNarrow">
-                    Product Image
-                  </th>
-                  <th className="px-4 py-2  text-left text-sm font-semibold text-black border-l border-r whitespace-nowrap border-gray-300 font-gothamNarrow">
-                    Text
-                  </th>
-                  <th className="px-4 py-2  text-left text-sm font-semibold text-black border-l border-r whitespace-nowrap border-gray-300 font-gothamNarrow">
-                    Placement
-                  </th>
-                  <th className="px-4 py-2  text-left text-sm font-semibold text-black border-l border-r whitespace-nowrap border-gray-300 font-gothamNarrow">
-                    Font Style
-                  </th>
-                  <th className="px-4 py-2  text-left text-sm font-semibold text-black border-l border-r whitespace-nowrap border-gray-300 font-gothamNarrow">
-                    color
-                  </th>
-                  <th className="px-4 py-2  text-left text-sm font-semibold text-black border-l border-r whitespace-nowrap border-gray-300 font-gothamNarrow">
-                    Size
-                  </th>
-                  <th className="px-4 py-2  text-left text-sm font-semibold text-black border-l border-r whitespace-nowrap border-gray-300 font-gothamNarrow">
-                    Status
-                  </th>
-
-                  <th className="px-4 py-2 text-left text-sm font-semibold text-black border-l border-r whitespace-nowrap border-gray-300 font-gothamNarrow">
-                    CreatedAt
-                  </th>
-                  <th className="px-4 py-2 text-left text-sm font-semibold text-black border-l border-r whitespace-nowrap border-gray-300 font-gothamNarrow">
-                    Actions
-                  </th>
+          {/* Table */}
+          <div className="overflow-x-auto hide-scrollbar">
+            <table className="min-w-full text-[12.5px]">
+              <thead>
+                <tr className="bg-gray-50 border-b border-gray-200">
+                  {COLUMNS.map((col) => (
+                    <th
+                      key={col}
+                      className="px-4 py-3 text-left text-[11px] font-semibold tracking-[0.08em] uppercase text-gray-400 whitespace-nowrap"
+                    >
+                      {col}
+                    </th>
+                  ))}
                 </tr>
               </thead>
-              <tbody className="bg-white divide-y divide-gray-200 font-gothamNarrow">
+
+              <tbody className="divide-y divide-gray-100">
                 {loading ? (
                   <tr>
-                    <td colSpan={12} className="text-center">
-                      <div className="inline-block animate-spin rounded-full h-4 w-4 border-t-2  whitespace-nowrap border-gray-800 border-t-gray-800"></div>
+                    <td colSpan={12} className="text-center py-10">
+                      <div className="inline-block animate-spin rounded-full h-5 w-5 border-t-2 border-red-500" />
                     </td>
                   </tr>
                 ) : allCustomizedProducts &&
                   allCustomizedProducts.length > 0 ? (
-                  allCustomizedProducts.map((customizeProduct, index) => (
+                  allCustomizedProducts.map((item, index) => (
                     <tr
-                      key={customizeProduct.id}
-                      className="hover:bg-[#FFF0E5] hover:shadow-sm whitespace-nowrap border-t border-b border-r border-l border-gray-300 cursor-pointer"
+                      key={item.id}
+                      className="hover:bg-[#FFF0E5]/60 transition-colors cursor-pointer"
                     >
-                      <td className="px-4 py-1 text-left text-sm text-black font-gothamNarrow border-l whitespace-nowrap">
+                      {/* S.N. */}
+                      <td className="px-4 py-2.5 text-gray-400 tabular-nums w-10">
                         {index + 1}
                       </td>
-                      <td className="px-4 py-1 text-sm text-black whitespace-nowrap">
-                        {customizeProduct.customer_name}
+
+                      {/* Customer */}
+                      <td className="px-4 py-2.5">
+                        <div className="flex items-center gap-2.5">
+                          <Avatar name={item.customer_name} />
+                          <span className="font-medium text-gray-800 whitespace-nowrap tracking-[0.01em]">
+                            {item.customer_name}
+                          </span>
+                        </div>
                       </td>
-                      <td className="px-4 py-1 text-sm text-black whitespace-nowrap">
-                        {customizeProduct.product_name}
+
+                      {/* Product */}
+                      <td className="px-4 py-2.5 text-gray-600 whitespace-nowrap tracking-[0.01em] max-w-[140px] truncate">
+                        {item.product_name}
                       </td>
-                      <td className="px-4 py-1 whitespace-nowrap text-xs text-gray-500">
-                        <img
-                          src={customizeProduct?.main_image}
-                          alt={`Personalize Photo ${customizeProduct?.product_name}`}
-                          className="h-8 w-8 object-contain"
-                        />
+
+                      {/* Image */}
+                      <td className="px-4 py-2.5">
+                        <div className="w-9 h-9 rounded-lg overflow-hidden border border-gray-100 bg-gray-50 flex items-center justify-center flex-shrink-0">
+                          {item.main_image ? (
+                            <img
+                              src={item.main_image}
+                              alt={item.product_name}
+                              className="w-full h-full object-contain"
+                            />
+                          ) : (
+                            <span className="text-[10px] text-gray-300">—</span>
+                          )}
+                        </div>
                       </td>
-                      <td className="px-4 py-1 text-sm text-black whitespace-nowrap">
-                        {customizeProduct.text}
+
+                      {/* Text */}
+                      <td className="px-4 py-2.5 text-gray-600 max-w-[100px] truncate tracking-[0.01em]">
+                        {item.text || <span className="text-gray-300">—</span>}
                       </td>
-                      <td className="px-4 py-1 text-sm text-black whitespace-nowrap">
-                        {customizeProduct.placement}
+
+                      {/* Placement */}
+                      <td className="px-4 py-2.5">
+                        <PlacementBadge value={item.placement} />
                       </td>
-                      <td className="px-4 py-1 text-sm text-black  whitespace-nowrap">
-                        {customizeProduct.font_style}
-                      </td>
-                      <td className="px-4 py-1 text-sm text-black whitespace-nowrap">
-                        {customizeProduct.color ? (
-                          <div
-                            className="w-6 h-6 rounded-full"
-                            style={{ backgroundColor: customizeProduct.color }}
-                          ></div>
-                        ) : (
-                          "-"
+
+                      {/* Font style */}
+                      <td
+                        className="px-4 py-2.5 text-gray-500 whitespace-nowrap tracking-[0.01em]"
+                        style={{ fontFamily: item.font_style ?? "inherit" }}
+                      >
+                        {item.font_style || (
+                          <span className="text-gray-300">—</span>
                         )}
                       </td>
 
-                      <td className="px-4 py-1 text-sm text-black whitespace-nowrap">
-                        {customizeProduct.size ? customizeProduct.size : "-"}
-                      </td>
-                      <td className="px-4 py-1 whitespace-nowrap text-sm font-gothamNarrow">
-                        {customizeProduct?.status === "pending" ? (
-                          <span
-                            className="bg-red-600 text-white px-3 py-1 rounded-full cursor-pointer"
-                            onClick={() =>
-                              handleOpenCustomizedModal(customizeProduct)
-                            }
-                          >
-                            Pending
-                          </span>
-                        ) : customizeProduct?.status === "approved" ? (
-                          <span className="bg-green-600 text-white px-3 py-1 rounded-full cursor-pointer">
-                            Approved
-                          </span>
-                        ) : (
-                          <span className="bg-gray-600 text-white px-3 py-1 rounded-full cursor-pointer">
-                            {customizeProduct?.status}
-                          </span>
-                        )}
-                      </td>
-                      <td className="px-4 py-1 text-sm text-black whitespace-nowrap">
-                        {moment(customizeProduct.created_at).format(
-                          "dddd, D MMM YYYY"
-                        )}
-                      </td>
-                      <td className="px-4 py-1 text-sm text-black">
-                        <div className="flex">
-                          <Link
-                            to={`/baltra-admin-dashboard/single/personalization-view/${customizeProduct.id}`}
-                          >
-                            <FaEye className="text-blue-600 hover:text-black" />
-                          </Link>
-                          <button>
-                            <FaTrash
-                              className="text-red-600 hover:text-red-700 mx-2"
-                              onClick={() =>
-                                handleOpenModal(customizeProduct.id)
-                              }
+                      {/* Color swatch */}
+                      <td className="px-4 py-2.5">
+                        {item.color ? (
+                          <div className="flex items-center gap-2">
+                            <div
+                              className="w-5 h-5 rounded-md border border-gray-200 flex-shrink-0"
+                              style={{ backgroundColor: item.color }}
+                              title={item.color}
                             />
-                            {selectedCustomizeId !== null && (
-                              <DeletePersonalizationModal
-                                onClose={handleCloseModal}
-                                onConfirm={handleDeleteConfirm}
-                              />
-                            )}
+                            <span className="text-[11px] text-gray-400 font-mono tracking-wider hidden lg:block">
+                              {item.color}
+                            </span>
+                          </div>
+                        ) : (
+                          <span className="text-gray-300">—</span>
+                        )}
+                      </td>
+
+                      {/* Size */}
+                      <td className="px-4 py-2.5 text-gray-600 whitespace-nowrap tracking-[0.01em]">
+                        {item.size || <span className="text-gray-300">—</span>}
+                      </td>
+
+                      {/* Status */}
+                      <td className="px-4 py-2.5">
+                        <StatusBadge
+                          status={item.status}
+                          onClick={() => handleOpenCustomizedModal(item)}
+                        />
+                      </td>
+
+                      {/* Created At */}
+                      <td className="px-4 py-2.5 text-gray-500 whitespace-nowrap tabular-nums tracking-[0.01em]">
+                        {moment(item.created_at).format("D MMM YYYY")}
+                      </td>
+
+                      {/* Actions */}
+                      <td className="px-4 py-2.5">
+                        <div className="flex items-center gap-1">
+                          <Link
+                            to={`/baltra-admin-dashboard/single/personalization-view/${item.id}`}
+                            className="p-1.5 rounded-lg text-blue-500 hover:text-blue-700 hover:bg-blue-50 transition-colors"
+                            title="View details"
+                          >
+                            <FaEye size={12} />
+                          </Link>
+                          <button
+                            onClick={() => handleOpenModal(item.id)}
+                            className="p-1.5 rounded-lg text-red-400 hover:text-red-600 hover:bg-red-50 transition-colors"
+                            title="Delete"
+                          >
+                            <FaTrash size={12} />
                           </button>
                         </div>
+                        {selectedCustomizeId === item.id && (
+                          <DeletePersonalizationModal
+                            onClose={handleCloseModal}
+                            onConfirm={handleDeleteConfirm}
+                          />
+                        )}
                       </td>
                     </tr>
                   ))
                 ) : (
                   <tr>
-                    <td colSpan={12} className="text-center text-sm">
-                      No Data found.
+                    <td colSpan={12} className="text-center py-14">
+                      <div className="flex flex-col items-center gap-2">
+                        <div className="w-8 h-8 rounded-full bg-gray-100 flex items-center justify-center">
+                          <MdOutlineSearch
+                            className="text-gray-300"
+                            size={16}
+                          />
+                        </div>
+                        <p className="text-[12.5px] text-gray-400 tracking-[0.02em]">
+                          No personalization requests found
+                        </p>
+                        <button
+                          onClick={handleReset}
+                          className="text-[11.5px] text-red-400 hover:text-red-600 tracking-[0.02em] transition-colors"
+                        >
+                          Clear filters
+                        </button>
+                      </div>
                     </td>
                   </tr>
-                )}
-
-                {openCustomizeModal && (
-                  <UpdateCustomizedModal
-                    item={selectedItem}
-                    onClose={handleCloseCustomizeModal}
-                  />
                 )}
               </tbody>
             </table>
           </div>
+
+          {/* Footer */}
+          <div className="px-4 py-3 border-t border-gray-100">
+            <span className="text-[11px] text-gray-300 tracking-[0.03em]">
+              Showing {allCustomizedProducts?.length ?? 0} result
+              {allCustomizedProducts?.length !== 1 ? "s" : ""}
+            </span>
+          </div>
         </div>
       </div>
+
+      {/* Update modal — rendered outside table */}
+      {openCustomizeModal && (
+        <UpdateCustomizedModal
+          item={selectedItem}
+          onClose={handleCloseCustomizeModal}
+        />
+      )}
     </>
   );
 };

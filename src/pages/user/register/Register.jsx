@@ -279,32 +279,7 @@ const Register = () => {
                 )}
               </div>
             </div>
-            {/* <div className="mb-4 font-gothamNarrow w-full px-3">
-              <label
-                className="block text-sm font-semibold font-gothamNarrow text-neutral-600 mb-2"
-                htmlFor="email"
-              >
-                Email
-              </label>
-              <input
-                className="appearance-none text-sm font-gothamNarrow block w-full bg-neutral-50 text-neutral-600 border border-stone-300 rounded-sm py-4 px-4 leading-tight focus:outline-none focus:border-red-600 tracking-normal"
-                id="email"
-                name="email"
-                type="email"
-                placeholder="abc123@gmail.com"
-                {...register("email", {
-                  required: true,
-                  pattern: /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,4}$/,
-                })}
-              />
-              {errors.email && (
-                <p className="text-red-600 text-xs font-gothamNarrow">
-                  {errors.email.type === "pattern"
-                    ? "Invalid email format"
-                    : "Email is required"}
-                </p>
-              )}
-            </div> */}
+
             <div className="flex flex-wrap mb-4 font-gothamNarrow w-full">
               <div className="w-full md:w-1/2 px-3 mb-4 md:mb-0">
                 <label

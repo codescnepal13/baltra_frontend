@@ -27,132 +27,131 @@ const AdminHeader = ({ collapsed, toggleCollapsed }) => {
   };
 
   const handleMouseLeave = () => {
-    const newTimer = setTimeout(() => {
-      setDropdownOpen(false);
-    }, 200);
+    const newTimer = setTimeout(() => setDropdownOpen(false), 200);
     setTimer(newTimer);
   };
 
   const handleLogout = () => {
     dispatch(setLogout());
     localStorage.clear();
-    enqueueSnackbar("Logout SuccessFully", {
-      variant: "success",
-    });
+    enqueueSnackbar("Logout Successfully", { variant: "success" });
     navigate("/baltra-aboutUs-Page");
   };
+
+  const fullName = [customer?.firstname, customer?.lastname]
+    .filter(Boolean)
+    .join(" ");
 
   return (
     <>
       <header
         id="header"
-        className="sticky top-0 w-full bg-white p-4 border-b-4 border-gray-100"
+        className="sticky top-0 z-40 w-full bg-white border-b border-gray-200 shadow-sm"
       >
-        <div className="flex items-center justify-between font-gothamNarrow">
-          {/* Left Section: Visit Site and Links */}
-          <div className="flex items-center space-x-4 px-4">
+        <div className="flex items-center justify-between px-4 sm:px-6 h-14 font-gothamNarrow">
+          {/* ── Left ── */}
+          <div className="flex items-center gap-3">
             <Link
-              to="https://baltra.in/"
+              to="https://np.baltra.in/"
               target="_blank"
               rel="noopener noreferrer"
-              className="bg-red-600 hover:bg-red-700 text-white text-sm px-3 py-2 rounded-md flex items-center font-gothamNarrow"
+              className="flex items-center gap-1.5 bg-blue-600 hover:bg-blue-700 active:bg-blue-800 text-white text-xs font-medium px-3 py-1.5 rounded-md transition-colors duration-150"
             >
-              Visit Site <FaExternalLinkAlt className="ml-1" />
+              Visit Site
+              <FaExternalLinkAlt className="text-[10px]" />
             </Link>
 
-            <Link
-              to={"#"}
-              className="text-gray-900 hover:text-blue-600 font-gothamNarrow tracking-tight text-sm"
+            <a
+              href="/baltra-catalog"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="text-gray-500 hover:text-blue-600 text-sm transition-colors duration-150"
             >
               Docs
-            </Link>
-            <Link
-              to={"#"}
-              className="text-gray-900 hover:text-blue-600 font-gothamNarrow tracking-tight text-sm"
-            >
-              Blog
-            </Link>
-            <Link
-              to={"#"}
-              className="text-gray-900 hover:text-blue-600 font-gothamNarrow tracking-tight text-sm"
-            >
-              Forum
-            </Link>
+            </a>
           </div>
 
-          {/* Right Section: Notifications and User Dropdown */}
+          {/* ── Right: user dropdown ── */}
           <div
-            className="relative group flex items-center"
+            className="relative flex items-center"
             onMouseEnter={handleMouseEnter}
             onMouseLeave={handleMouseLeave}
           >
-            {/* <div className="relative mr-4">
-              <IoNotificationsOutline className="text-gray-500" size={24} />
-              <span
-                className="absolute top-[-4px] right-0 inline-flex items-center justify-center bg-red-500 text-white text-xs font-bold rounded-full"
-                style={{ width: "15px", height: "15px" }}
-              >
-                2
-              </span>
-            </div> */}
-            <div className="user cursor-pointer flex items-center">
-              <div className="w-8 h-8 rounded-full overflow-hidden mr-2">
+            <button
+              className="flex items-center gap-2 px-2 py-1 rounded-md hover:bg-gray-50 transition-colors duration-150 cursor-pointer"
+              aria-haspopup="true"
+              aria-expanded={dropdownOpen}
+            >
+              {/* Avatar */}
+              <div className="w-8 h-8 rounded-full border border-gray-200 overflow-hidden bg-gray-100 flex-shrink-0 flex items-center justify-center">
                 {customer?.image_url ? (
                   <img
-                    src={customer?.image_url}
-                    alt="avatar Img"
-                    className="w-8 h-8 rounded-full"
+                    src={customer.image_url}
+                    alt={fullName || "Admin avatar"}
+                    className="w-full h-full object-contain"
                   />
                 ) : (
-                  <HiOutlineUserCircle className="text-gray-500" size={30} />
+                  <HiOutlineUserCircle className="text-gray-400 w-6 h-6" />
                 )}
               </div>
-              <div className="flex flex-col">
-                <span className="text-[#000000] font-gothamNarrow">
-                  {customer?.firstname} {customer?.lastname}
-                </span>
-                <p className="text-xs font-gothamNarrow">{customer?.email}</p>
-              </div>
-              <FaAngleDown className="text-gray-500 ml-2" />
-            </div>
 
+              {/* Name + email — hidden on xs */}
+              <div className="hidden sm:flex flex-col text-left leading-tight">
+                <span className="text-gray-800 text-sm font-medium truncate max-w-[140px]">
+                  {fullName || "Admin"}
+                </span>
+                <span className="text-gray-400 text-xs truncate max-w-[140px]">
+                  {customer?.email}
+                </span>
+              </div>
+
+              <FaAngleDown
+                className={`text-gray-400 text-xs transition-transform duration-200 ${dropdownOpen ? "rotate-180" : ""}`}
+              />
+            </button>
+
+            {/* Dropdown */}
             {dropdownOpen && (
               <div
-                className="absolute right-0 top-full mt-2 w-48 bg-white border border-gray-200 rounded-md shadow-md z-50"
+                className="absolute right-0 top-full mt-1.5 w-44 bg-white border border-gray-200 rounded-lg shadow-lg z-50 overflow-hidden"
                 role="menu"
                 aria-orientation="vertical"
                 onMouseEnter={handleMouseEnter}
                 onMouseLeave={handleMouseLeave}
               >
-                <ul className="py-2" role="none">
-                  <li
-                    className="cursor-pointer px-4 py-2 flex items-center"
-                    role="menuitem"
-                    tabIndex={0}
-                  >
+                {/* User info pill — visible on xs only */}
+                <div className="sm:hidden px-4 py-2.5 border-b border-gray-100">
+                  <p className="text-gray-800 text-sm font-medium truncate">
+                    {fullName || "Admin"}
+                  </p>
+                  <p className="text-gray-400 text-xs truncate">
+                    {customer?.email}
+                  </p>
+                </div>
+
+                <ul className="py-1" role="none">
+                  <li role="menuitem">
                     <Link
                       to="/baltra-admin-dashboard/admin-profile-information"
-                      className="flex items-center"
+                      className="flex items-center gap-2.5 px-4 py-2 text-sm text-gray-600 hover:bg-gray-50 hover:text-blue-600 transition-colors duration-150"
                     >
-                      <FaUser className="mr-2" aria-hidden="true" />
-                      <span className="text-gray-500 hover:text-red-700 font-gothamNarrow">
-                        Profile
-                      </span>
+                      <FaUser
+                        className="text-xs flex-shrink-0"
+                        aria-hidden="true"
+                      />
+                      Profile
                     </Link>
                   </li>
-                  <li
-                    className="cursor-pointer px-4 py-2 flex items-center"
-                    role="menuitem"
-                    tabIndex={0}
-                  >
+                  <li role="menuitem">
                     <button
                       onClick={handleLogout}
-                      className="flex items-center"
+                      className="w-full flex items-center gap-2.5 px-4 py-2 text-sm text-gray-600 hover:bg-red-50 hover:text-red-600 transition-colors duration-150"
                     >
-                      <FaSignOutAlt className="mr-2" aria-hidden="true" />
-                      <span className="text-gray-500 hover:text-red-700 font-gothamNarrow">
-                        Logout
-                      </span>
+                      <FaSignOutAlt
+                        className="text-xs flex-shrink-0"
+                        aria-hidden="true"
+                      />
+                      Logout
                     </button>
                   </li>
                 </ul>

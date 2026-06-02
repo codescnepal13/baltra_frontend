@@ -3,6 +3,7 @@ import moment from "moment";
 import { enqueueSnackbar } from "notistack";
 import React, { useCallback, useEffect, useState } from "react";
 import {
+  FaDownload,
   FaEye,
   FaSearch,
   FaSyncAlt,
@@ -10,7 +11,7 @@ import {
   FaTrashAlt,
 } from "react-icons/fa";
 import { useDispatch, useSelector } from "react-redux";
-import { Link } from "react-router-dom";
+import * as XLSX from "xlsx";
 import {
   clearContactError,
   deleteContactData,
@@ -20,32 +21,71 @@ import {
 import MetaData from "../../../layout/metaData/MetaData";
 import ContactPagination from "../adminPagination/contactPagination/ContactPagination";
 import ContactDeletePopUp from "./contactDeletePopUp/ContactDeletePopUp";
+import SingleViewContact from "./singleViewContact/SingleViewContact";
 
+// ─── Avatar initials ──────────────────────────────────────────────────────────
+const Avatar = ({ name }) => {
+  const initials = name
+    ? name
+        .split(" ")
+        .map((n) => n[0])
+        .slice(0, 2)
+        .join("")
+        .toUpperCase()
+    : "?";
+  return (
+    <div className="w-7 h-7 rounded-full flex items-center justify-center text-[10px] font-semibold flex-shrink-0 bg-blue-100 text-blue-500">
+      {initials}
+    </div>
+  );
+};
+
+// ─── Main component ───────────────────────────────────────────────────────────
 const AllContactList = () => {
   const { loading, error, allContacts } = useSelector((state) => state.contact);
   const dispatch = useDispatch();
   const contactPagination =
     useSelector((state) => state.contact.contactPagination) || {};
   const { page, total_pages, results_per_page } = contactPagination;
+
   const [selectedContactId, setSelectedContactId] = useState(null);
   const [selectedContactsId, setSelectedContactsId] = useState([]);
   const [searchByCustomerName, setSearchByCustomerName] = useState("");
   const [searchByCustomerNumber, setSearchByCustomerNumber] = useState("");
 
-  const handleSelectAll = (event) => {
-    if (event.target.checked) {
-      const allContactsId = allContacts.map((contact) => contact.id);
-      setSelectedContactsId(allContactsId);
-    } else {
-      setSelectedContactsId([]);
-    }
+  // Add state (alongside selectedContactId)
+  const [viewContact, setViewContact] = useState(null);
+
+  // Add handlers
+  const handleOpenView = (contact) => setViewContact(contact);
+  const handleCloseView = () => setViewContact(null);
+
+  // ── Select ────────────────────────────────────────────────────────────────
+  const allSelected =
+    allContacts?.length > 0 && selectedContactsId.length === allContacts.length;
+
+  const handleSelectAll = (e) => {
+    setSelectedContactsId(e.target.checked ? allContacts.map((c) => c.id) : []);
   };
 
-  const handleSelectContact = (event, contactId) => {
-    if (event.target.checked) {
-      setSelectedContactsId((prev) => [...prev, contactId]);
-    } else {
-      setSelectedContactsId((prev) => prev.filter((id) => id !== contactId));
+  const handleSelectContact = (e, contactId) => {
+    setSelectedContactsId((prev) =>
+      e.target.checked
+        ? [...prev, contactId]
+        : prev.filter((id) => id !== contactId),
+    );
+  };
+
+  // ── Delete ────────────────────────────────────────────────────────────────
+  const handleOpenModal = (id) => setSelectedContactId(id);
+  const handleCloseModal = () => setSelectedContactId(null);
+
+  const handleDeleteConfirm = () => {
+    if (selectedContactId !== null) {
+      dispatch(
+        deleteContactData({ contact_id: selectedContactId, enqueueSnackbar }),
+      );
+      setSelectedContactId(null);
     }
   };
 
@@ -55,49 +95,29 @@ const AllContactList = () => {
         deleteMultipleContacts({
           contact_ids: selectedContactsId,
           enqueueSnackbar,
-        })
-      ).then(() => {
+        }),
+      ).then(() =>
         dispatch(
           getAllContactList({
             page,
             name: searchByCustomerName,
             phone: searchByCustomerNumber,
-          })
-        );
-      });
-
+          }),
+        ),
+      );
       setSelectedContactsId([]);
     }
   };
 
-  const handleOpenModal = (contactId) => {
-    setSelectedContactId(contactId);
-  };
-
-  const handleCloseModal = () => {
-    setSelectedContactId(null);
-  };
-
-  const handleDeleteConfirm = () => {
-    if (selectedContactId !== null) {
-      dispatch(
-        deleteContactData({ contact_id: selectedContactId, enqueueSnackbar })
-      );
-
-      setSelectedContactId(null);
-    }
-  };
-
-  // Generic debounced search function
+  // ── Search ────────────────────────────────────────────────────────────────
   const debouncedSearch = useCallback(
     debounce((query, type) => {
       const searchQuery = { page: 1 };
       if (type === "name") searchQuery.name = query;
       if (type === "phone") searchQuery.phone = query;
-
       dispatch(getAllContactList(searchQuery));
     }, 300),
-    [dispatch]
+    [dispatch],
   );
 
   const handleInputChange = (e) => {
@@ -117,16 +137,10 @@ const AllContactList = () => {
     setSearchByCustomerNumber("");
     setSelectedContactsId([]);
     setSelectedContactId(null);
-
-    dispatch(
-      getAllContactList({
-        page: 1,
-        name: "",
-        phone: "",
-      })
-    );
+    dispatch(getAllContactList({ page: 1, name: "", phone: "" }));
   };
 
+  // ── Pagination ────────────────────────────────────────────────────────────
   const handlePageChange = useCallback(
     (newPage) => {
       dispatch(
@@ -134,16 +148,49 @@ const AllContactList = () => {
           page: newPage,
           name: searchByCustomerName,
           phone: searchByCustomerNumber,
-        })
+        }),
       );
     },
-    [dispatch, searchByCustomerName, searchByCustomerNumber]
+    [dispatch, searchByCustomerName, searchByCustomerNumber],
   );
 
-  useEffect(() => {
-    if (error) {
-      dispatch(clearContactError());
+  // ── Excel Export ──────────────────────────────────────────────────────────
+  const handleExportExcel = () => {
+    if (!allContacts || allContacts.length === 0) {
+      enqueueSnackbar("No data to export", { variant: "warning" });
+      return;
     }
+
+    const exportData = allContacts.map((contact, index) => ({
+      "S.N.":
+        page != null && results_per_page != null
+          ? (page - 1) * results_per_page + index + 1
+          : index + 1,
+      "Customer Name": contact.name,
+      Email: contact.email,
+      "Contact No": contact.phone,
+      "Created At": moment(contact.created_at).format("MMM Do YYYY, h:mm:ss A"),
+    }));
+
+    const worksheet = XLSX.utils.json_to_sheet(exportData);
+    const workbook = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(workbook, worksheet, "Contacts");
+
+    worksheet["!cols"] = [
+      { wch: 5 },
+      { wch: 20 },
+      { wch: 28 },
+      { wch: 15 },
+      { wch: 24 },
+    ];
+
+    XLSX.writeFile(workbook, `contacts-${Date.now()}.xlsx`);
+    enqueueSnackbar("Exported successfully", { variant: "success" });
+  };
+
+  // ── Effects ───────────────────────────────────────────────────────────────
+  useEffect(() => {
+    if (error) dispatch(clearContactError());
   }, [dispatch, error]);
 
   useEffect(() => {
@@ -152,165 +199,215 @@ const AllContactList = () => {
         page,
         name: searchByCustomerName,
         phone: searchByCustomerNumber,
-      })
+      }),
     );
-  }, [dispatch, page, searchByCustomerName, searchByCustomerNumber]);
+  }, [dispatch]);
 
   return (
     <>
       <MetaData title="Baltra-admin-dashboard-all-contact-list" />
-      <div className="font-gothamNarrow container mx-auto px-4 py-8">
-        <div className="flex justify-between mb-4">
-          <h2 className="text-lg font-semibold font-gothamNarrow">
-            All Contact List
-          </h2>
+      <div className="font-inter px-4 py-4 max-w-screen-2xl mx-auto">
+        {/* Page header */}
+        <div className="flex items-center justify-between mb-6">
+          <div>
+            <h1 className="text-[15px] font-semibold tracking-[-0.01em] text-gray-900">
+              All Contact List
+            </h1>
+            <p className="text-[12px] text-gray-400 tracking-[0.01em] mt-0.5">
+              View and manage customer contact enquiries
+            </p>
+          </div>
         </div>
-        <div className="bg-[#FFFFFF] px-2 py-4">
-          <div className="flex mb-2 text-xs">
-            <div className="relative mr-2 flex items-center">
+
+        {/* Table card */}
+        <div className="bg-white rounded-xl border border-gray-200 overflow-hidden">
+          {/* Toolbar */}
+          <div className="flex flex-wrap items-center gap-2 px-4 py-3 border-b border-gray-100">
+            {/* Search by name */}
+            <div className="relative">
+              <FaSearch
+                className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-300"
+                size={11}
+              />
               <input
                 type="text"
-                placeholder="Search by contact name"
-                className="w-42 pl-4 pr-10 py-2 border text-sm border-gray-300 rounded-sm focus:outline-none focus:border-red-500 focus:ring-gray-300 font-gothamNarrow"
                 value={searchByCustomerName}
                 onChange={handleInputChange}
+                placeholder="Search by contact name..."
+                className="pl-8 pr-3 py-1.5 text-[12.5px] tracking-[0.01em] text-gray-700 border border-gray-200 rounded-lg outline-none focus:border-red-400 focus:ring-2 focus:ring-red-500/10 w-48 placeholder:text-gray-300 transition-all"
               />
-              <button className="bg-red-600 hover:bg-red-700 text-white py-3 px-4 ml-1 inline-flex items-center rounded-sm">
-                <FaSearch />
-              </button>
             </div>
 
-            <div className="relative mr-2 flex items-center">
+            {/* Search by number */}
+            <div className="relative">
+              <FaSearch
+                className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-300"
+                size={11}
+              />
               <input
                 type="text"
-                placeholder="Search by contact number"
-                className="w-42 pl-4 pr-10 py-2 border text-sm border-gray-300 rounded-sm focus:outline-none focus:border-red-500 focus:ring-gray-300 font-gothamNarrow"
                 value={searchByCustomerNumber}
                 onChange={handleNumberInputChange}
+                placeholder="Search by contact number..."
+                className="pl-8 pr-3 py-1.5 text-[12.5px] tracking-[0.01em] text-gray-700 border border-gray-200 rounded-lg outline-none focus:border-red-400 focus:ring-2 focus:ring-red-500/10 w-48 placeholder:text-gray-300 transition-all"
               />
-              <button className="bg-red-600 hover:bg-red-700 text-white py-3 px-4 ml-1 inline-flex items-center rounded-sm">
-                <FaSearch />
-              </button>
             </div>
 
+            {/* Reset */}
             <button
-              className="flex cursor-pointer items-center gap-1 px-4 py-2 text-sm border border-gray-300 rounded-md hover:bg-gray-50 transition-colors"
               onClick={handleReset}
+              className="inline-flex items-center gap-1.5 px-3 py-1.5 text-[12px] font-medium tracking-[0.02em] text-gray-500 border border-gray-200 rounded-lg hover:bg-gray-50 transition-colors"
             >
-              <FaSyncAlt className="text-gray-500" /> Reset
+              <FaSyncAlt size={10} />
+              Reset
+            </button>
+
+            {/* Bulk delete */}
+            {selectedContactsId.length > 0 && (
+              <button
+                onClick={handleMultipleDelete}
+                className="inline-flex items-center gap-1.5 px-3 py-1.5 text-[12px] font-medium tracking-[0.02em] text-white bg-red-500 hover:bg-red-600 rounded-lg transition-colors"
+              >
+                <FaTrashAlt size={11} />
+                Delete ({selectedContactsId.length})
+              </button>
+            )}
+
+            {/* Excel export */}
+            <button
+              onClick={handleExportExcel}
+              className="inline-flex items-center gap-1.5 px-3 py-1.5 text-[12px] font-medium tracking-[0.02em] text-emerald-600 border border-emerald-200 bg-emerald-50 hover:bg-emerald-100 rounded-lg transition-colors ml-auto"
+            >
+              <FaDownload size={10} />
+              Export Excel
             </button>
           </div>
 
+          {/* Selected banner */}
           {selectedContactsId.length > 0 && (
-            <div className="flex flex-wrap gap-2 mb-4 p-3 bg-blue-50 rounded-lg border border-blue-200">
-              <span className="text-sm text-blue-700 font-medium mr-2">
-                {selectedContactsId.length} item(s) selected
+            <div className="px-4 py-2 bg-blue-50 border-b border-blue-100">
+              <span className="text-[11.5px] font-medium tracking-[0.02em] text-blue-600">
+                {selectedContactsId.length} contact
+                {selectedContactsId.length > 1 ? "s" : ""} selected
               </span>
             </div>
           )}
 
-          <div className="bg-white font-sans table-container hide-scrollbar overflow-x-auto">
-            {selectedContactsId?.length > 0 && (
-              <div className="mb-3 flex justify-start">
-                <button
-                  className="flex items-center gap-2 px-3 py-1.5 rounded-lg 
-                   bg-red-500 text-white text-sm font-medium
-                   hover:bg-red-600 transition"
-                  onClick={handleMultipleDelete}
-                >
-                  <FaTrashAlt className="text-white" />
-                  Delete Selected
-                </button>
-              </div>
-            )}
-            <table className="min-w-full divide-y divide-gray-200 border border-gray-300">
-              <thead className="font-gothamNarrow">
-                <tr>
-                  <th className="px-4 py-3 text-left text-sm font-semibold text-black border-l border-r whitespace-nowrap accent-red-500">
+          {/* Table */}
+          <div className="overflow-x-auto hide-scrollbar">
+            <table className="min-w-full text-[12.5px]">
+              <thead>
+                <tr className="bg-gray-50 border-b border-gray-200">
+                  <th className="px-4 py-3 w-10">
                     <input
                       type="checkbox"
                       onChange={handleSelectAll}
-                      checked={
-                        allContacts.length > 0 &&
-                        selectedContactsId.length === allContacts.length
-                      }
+                      checked={allSelected}
+                      className="accent-red-500 w-3.5 h-3.5 cursor-pointer"
                     />
                   </th>
-                  <th className="px-4 py-1 text-left text-sm font-semibold text-black font-gothamNarrow">
-                    S.N.
-                  </th>
-                  <th className="px-4 py-2 text-left text-sm font-semibold text-black border-l border-r whitespace-nowrap border-gray-300 font-gothamNarrow">
-                    Customer Name
-                  </th>
-
-                  <th className="px-4 py-2  text-left text-sm font-semibold text-black border-l border-r whitespace-nowrap border-gray-300 font-gothamNarrow">
-                    Email
-                  </th>
-                  <th className="px-4 py-2 text-left text-sm font-semibold text-black border-l border-r whitespace-nowrap border-gray-300 font-gothamNarrow">
-                    ContactNo
-                  </th>
-
-                  <th className="px-4 py-2 text-left text-sm font-semibold text-black border-l border-r whitespace-nowrap border-gray-300 font-gothamNarrow">
-                    CreatedAt
-                  </th>
-                  <th className="px-4 py-2 text-left text-sm font-semibold text-black border-l border-r whitespace-nowrap border-gray-300 font-gothamNarrow">
-                    Actions
-                  </th>
+                  {[
+                    "S.N.",
+                    "Customer Name",
+                    "Email",
+                    "Contact No",
+                    "Created At",
+                    "Actions",
+                  ].map((col) => (
+                    <th
+                      key={col}
+                      className="px-4 py-3 text-left text-[11px] font-semibold tracking-[0.08em] uppercase text-gray-400 whitespace-nowrap"
+                    >
+                      {col}
+                    </th>
+                  ))}
                 </tr>
               </thead>
-              <tbody className="bg-white divide-y divide-gray-200 font-gothamNarrow">
+
+              <tbody className="divide-y divide-gray-100">
                 {loading ? (
                   <tr>
-                    <td colSpan={12} className="text-center">
-                      <div className="inline-block animate-spin rounded-full h-4 w-4 border-t-2 border-gray-800 border-t-gray-800"></div>
+                    <td colSpan={7} className="text-center py-10">
+                      <div className="inline-block animate-spin rounded-full h-5 w-5 border-t-2 border-red-500" />
                     </td>
                   </tr>
                 ) : allContacts && allContacts.length > 0 ? (
-                  allContacts.map((adminContact, index) => (
-                    <tr
-                      key={adminContact.id}
-                      className="hover:bg-[#FFF0E5] hover:shadow-sm border-t border-b border-r border-l border-gray-300 cursor-pointer"
-                    >
-                      <td className="px-4 py-2 font-gothamNarrow text-sm font-semibold text-black whitespace-nowrap border-gray-300 border-l border-r accent-red-500">
-                        <input
-                          type="checkbox"
-                          checked={selectedContactsId.includes(adminContact.id)}
-                          onChange={(e) =>
-                            handleSelectContact(e, adminContact.id)
-                          }
-                        />
-                      </td>
-                      <td className="px-4 py-1 text-left text-sm text-black font-gothamNarrow border-l whitespace-nowrap">
-                        {page != null && results_per_page != null
-                          ? (page - 1) * results_per_page + index + 1
-                          : ""}
-                      </td>
-                      <td className="px-4 py-1 text-sm text-black">
-                        {adminContact.name}
-                      </td>
-                      <td className="px-4 py-1 text-sm text-black">
-                        {adminContact.email}
-                      </td>
-                      <td className="px-4 py-1 text-sm text-black">
-                        {adminContact.phone}
-                      </td>
-                      <td className="px-4 py-1 text-sm text-black">
-                        {moment(adminContact.created_at).format(
-                          "MMM Do YYYY, h:mm:ss A"
-                        )}
-                      </td>
-                      <td className="px-4 py-1 text-sm text-black">
-                        <div className="flex">
-                          <Link
-                            to={`/baltra-admin-dashboard/single-view-contact/${adminContact.id}`}
-                          >
-                            <FaEye className="text-blue-600 hover:text-black mx-1" />
-                          </Link>
-                          <button
-                            onClick={() => handleOpenModal(adminContact.id)}
-                          >
-                            <FaTrash className="text-red-600 hover:text-red-700 mx-1" />
-                          </button>
+                  allContacts.map((adminContact, index) => {
+                    const isChecked = selectedContactsId.includes(
+                      adminContact.id,
+                    );
+                    return (
+                      <tr
+                        key={adminContact.id}
+                        className={`transition-colors cursor-pointer ${
+                          isChecked ? "bg-red-50/40" : "hover:bg-[#FFF0E5]/60"
+                        }`}
+                      >
+                        {/* Checkbox */}
+                        <td className="px-4 py-2 text-center">
+                          <input
+                            type="checkbox"
+                            checked={isChecked}
+                            onChange={(e) =>
+                              handleSelectContact(e, adminContact.id)
+                            }
+                            className="accent-red-500 w-3.5 h-3.5 cursor-pointer"
+                          />
+                        </td>
+
+                        {/* S.N. */}
+                        <td className="px-4 py-2 text-gray-400 tabular-nums w-10">
+                          {page != null && results_per_page != null
+                            ? (page - 1) * results_per_page + index + 1
+                            : index + 1}
+                        </td>
+
+                        {/* Customer Name */}
+                        <td className="px-4 py-2">
+                          <div className="flex items-center gap-2.5">
+                            <Avatar name={adminContact.name} />
+                            <span className="font-medium text-gray-800 whitespace-nowrap tracking-[0.01em]">
+                              {adminContact.name}
+                            </span>
+                          </div>
+                        </td>
+
+                        {/* Email */}
+                        <td className="px-4 py-2 text-gray-500 whitespace-nowrap tracking-[0.01em]">
+                          {adminContact.email}
+                        </td>
+
+                        {/* Phone */}
+                        <td className="px-4 py-2 text-gray-600 font-mono tracking-[0.03em] whitespace-nowrap">
+                          {adminContact.phone}
+                        </td>
+
+                        {/* Created At */}
+                        <td className="px-4 py-2 text-gray-500 whitespace-nowrap tabular-nums tracking-[0.01em]">
+                          {moment(adminContact.created_at).format(
+                            "MMM Do YYYY, h:mm A",
+                          )}
+                        </td>
+
+                        {/* Actions */}
+                        <td className="px-4 py-2">
+                          <div className="flex items-center gap-1">
+                            {/* Replace the FaEye Link with: */}
+                            <button
+                              onClick={() => handleOpenView(adminContact)}
+                              className="p-1.5 rounded-lg text-blue-500 hover:text-blue-700 hover:bg-blue-50 transition-colors"
+                              title="View contact"
+                            >
+                              <FaEye size={12} />
+                            </button>
+                            <button
+                              onClick={() => handleOpenModal(adminContact.id)}
+                              className="p-1.5 rounded-lg text-red-400 hover:text-red-600 hover:bg-red-50 transition-colors"
+                              title="Delete contact"
+                            >
+                              <FaTrash size={12} />
+                            </button>
+                          </div>
                           {selectedContactId === adminContact.id && (
                             <ContactDeletePopUp
                               isOpen={true}
@@ -318,31 +415,54 @@ const AllContactList = () => {
                               onConfirm={handleDeleteConfirm}
                             />
                           )}
-                        </div>
-                      </td>
-                    </tr>
-                  ))
+                        </td>
+                      </tr>
+                    );
+                  })
                 ) : (
                   <tr>
-                    <td colSpan={12} className="text-center text-sm">
-                      No contacts found.
+                    <td colSpan={7} className="text-center py-14">
+                      <div className="flex flex-col items-center gap-2">
+                        <div className="w-8 h-8 rounded-full bg-gray-100 flex items-center justify-center">
+                          <FaSearch className="text-gray-300" size={14} />
+                        </div>
+                        <p className="text-[12.5px] text-gray-400 tracking-[0.02em]">
+                          No contacts found
+                        </p>
+                        <button
+                          onClick={handleReset}
+                          className="text-[11.5px] text-red-400 hover:text-red-600 tracking-[0.02em] transition-colors"
+                        >
+                          Clear filters
+                        </button>
+                      </div>
                     </td>
                   </tr>
                 )}
               </tbody>
             </table>
           </div>
-          {total_pages !== null && total_pages > 1 ? (
-            <div className="flex justify-end mt-0">
+
+          <SingleViewContact
+            contact={viewContact}
+            isOpen={!!viewContact}
+            onClose={handleCloseView}
+          />
+
+          {/* Footer */}
+          <div className="flex items-center justify-between px-4 py-3 border-t border-gray-100">
+            <span className="text-[11px] text-gray-300 tracking-[0.03em]">
+              {allContacts?.length ?? 0} result
+              {allContacts?.length !== 1 ? "s" : ""}
+            </span>
+            {total_pages != null && total_pages > 1 && (
               <ContactPagination
                 currentPage={page}
                 totalPages={total_pages}
                 onPageChange={handlePageChange}
               />
-            </div>
-          ) : (
-            ""
-          )}
+            )}
+          </div>
         </div>
       </div>
     </>

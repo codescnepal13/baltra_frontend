@@ -1,7 +1,12 @@
 import { enqueueSnackbar } from "notistack";
 import { useEffect, useState } from "react";
-import { FaInfoCircle } from "react-icons/fa";
-import { HiOutlineArrowLeftCircle } from "react-icons/hi2";
+import { FaFilePdf } from "react-icons/fa";
+import {
+  HiOutlineArrowLeftCircle,
+  HiOutlineDocumentText,
+  HiOutlineInformationCircle,
+  HiOutlinePhoto,
+} from "react-icons/hi2";
 import { IoCloudUploadOutline } from "react-icons/io5";
 import { useDispatch, useSelector } from "react-redux";
 import { Link, useNavigate } from "react-router-dom";
@@ -14,7 +19,9 @@ const AddCatalog = () => {
   const { loading, error } = useSelector((state) => state.admin);
   const dispatch = useDispatch();
   const navigate = useNavigate();
+
   const [productCatalogPreview, setProductCatalogPreview] = useState(null);
+  const [pdfFileName, setPdfFileName] = useState("");
   const [catalogue_type, setCatalogType] = useState("");
   const [catalogTypeError, setCatalogTypeError] = useState("");
   const [fileError, setFileError] = useState("");
@@ -24,50 +31,35 @@ const AddCatalog = () => {
 
   const handleCatalogCoverFileInputChange = (e) => {
     const file = e.target.files[0];
-    if (file) {
-      const reader = new FileReader();
-      reader.readAsDataURL(file);
-
-      reader.onloadend = () => {
-        setCatalogProductCoverPreview(reader.result);
-        setCatalogImage(file);
-      };
-
-      reader.onerror = () => {
-        console.error("There was an error reading the file!");
-      };
-    }
+    if (!file) return;
+    const reader = new FileReader();
+    reader.readAsDataURL(file);
+    reader.onloadend = () => {
+      setCatalogProductCoverPreview(reader.result);
+      setCatalogImage(file);
+    };
   };
 
   const handleProductFileCatalog = (e) => {
     const file = e.target.files[0];
-
-    // Validate file type (must be PDF)
-    if (file && file.type !== "application/pdf") {
+    if (!file) return;
+    if (file.type !== "application/pdf") {
       setFileError("Only PDF files are supported.");
       setProductCatalogPreview(null);
+      setPdfFileName("");
       return;
-    } else {
-      setFileError("");
     }
-
+    setFileError("");
+    setPdfFileName(file.name);
     const reader = new FileReader();
     reader.readAsDataURL(file);
-
-    reader.onloadend = () => {
-      setProductCatalogPreview(reader.result);
-    };
-
-    reader.onerror = () => {
-      console.error("There was an error reading the file!");
-    };
+    reader.onloadend = () => setProductCatalogPreview(reader.result);
   };
 
   const handleSubmit = (e) => {
     e.preventDefault();
     let valid = true;
 
-    // Validate Catalog Type
     if (!catalogue_type.trim()) {
       setCatalogTypeError("Catalog type is required.");
       valid = false;
@@ -75,7 +67,6 @@ const AddCatalog = () => {
       setCatalogTypeError("");
     }
 
-    // Validate file input
     const fileInput = document.getElementById("productCatalog").files[0];
     if (!fileInput || fileInput.type !== "application/pdf") {
       setFileError("Please upload a valid PDF file.");
@@ -86,168 +77,237 @@ const AddCatalog = () => {
 
     if (!valid) return;
 
-    // Create FormData object and append file
     const formData = new FormData();
     formData.append("file", fileInput);
     formData.append("catalogue_type", catalogue_type);
     formData.append("catalogue_image", catalogue_image);
-
     dispatch(addProductCatalog({ formData, enqueueSnackbar, navigate }));
   };
 
   useEffect(() => {
     if (error) {
-      enqueueSnackbar(error, {
-        variant: "error",
-      });
+      enqueueSnackbar(error, { variant: "error" });
       dispatch(clearAdminError());
     }
   }, [dispatch, error]);
 
   return (
-    <>
-      <div className="flex items-center w-full my-2 px-8">
-        <FaInfoCircle className="text-black mr-2" size={20} />
-        <p className="text-xs text-black font-outfit flex-grow md:text-sm">
-          To add a product catalog, please upload the file in PDF format. Only
-          PDF files are supported.
+    <div className="font-inter px-4 py-4 max-w-screen-2xl mx-auto">
+      {/* Back link */}
+      <Link
+        to="/baltra-admin-dashboard/all/e-catalog-list"
+        className="inline-flex items-center gap-2 text-[12.5px] font-medium text-gray-400 hover:text-gray-700 tracking-[0.01em] transition-colors mb-6"
+      >
+        <HiOutlineArrowLeftCircle size={16} />
+        Back to catalog list
+      </Link>
+
+      {/* Page header */}
+      <div className="mb-6">
+        <h1 className="text-[15px] font-semibold tracking-[-0.01em] text-gray-900">
+          Add Product Catalog
+        </h1>
+        <p className="text-[12px] text-gray-400 tracking-[0.01em] mt-0.5">
+          Upload a catalog cover image and a PDF file
         </p>
       </div>
 
-      <div className="font-gothamNarrow px-8 mt-8 md:mt-4 flex items-center">
-        <Link
-          to="/baltra-admin-dashboard/all/e-catalog-list"
-          className="flex items-center font-gothamNarrow"
-        >
-          <HiOutlineArrowLeftCircle size={24} className="mr-2" />
-          Add Product Catalog
-        </Link>
+      {/* Info banner */}
+      <div className="flex items-start gap-2.5 px-4 py-3 rounded-lg bg-blue-50 border border-blue-100 mb-6 max-w-2xl">
+        <HiOutlineInformationCircle
+          size={15}
+          className="text-blue-400 flex-shrink-0 mt-0.5"
+        />
+        <p className="text-[12px] text-blue-600 tracking-[0.01em] leading-relaxed">
+          Only <span className="font-semibold">PDF</span> files are supported
+          for the catalog file upload. Ensure your cover image is clear and
+          high-resolution.
+        </p>
       </div>
 
-      <div className="container mx-auto px-8 my-5 font-sans">
-        <form className="bg-[#FFFFFF] px-3 py-3" onSubmit={handleSubmit}>
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+      {/* Form card */}
+      <form onSubmit={handleSubmit} className="max-w-2xl">
+        <div className="bg-white rounded-md border border-gray-200 overflow-hidden">
+          {/* Card header */}
+          <div className="flex items-center gap-3 px-5 py-4 border-b border-gray-100">
+            <div className="w-8 h-8 rounded-lg bg-red-50 flex items-center justify-center">
+              <HiOutlineDocumentText size={15} className="text-red-500" />
+            </div>
             <div>
-              <label
-                htmlFor="catalogue_type"
-                className="text-black font-normal mb-2 font-gothamNarrow"
-              >
-                Catalog Type
+              <p className="text-[13px] font-semibold text-gray-800 tracking-[-0.01em]">
+                Catalog Details
+              </p>
+              <p className="text-[11px] text-gray-400 mt-0.5 tracking-[0.01em]">
+                Fill in the name and upload the required files
+              </p>
+            </div>
+          </div>
+
+          <div className="px-5 py-5 space-y-5">
+            {/* Catalog type input */}
+            <div>
+              <label className="block text-[11px] font-semibold tracking-[0.07em] uppercase text-gray-400 mb-1.5">
+                Catalog Name
               </label>
               <input
                 type="text"
                 id="catalogue_type"
                 name="catalogue_type"
-                className={`w-full font-gothamNarrow my-1 px-4 py-2 border ${
-                  catalogTypeError
-                    ? "border-red-500"
-                    : "border-gray-400 focus:border-red-500"
-                } rounded-md focus:outline-none`}
-                placeholder="Enter catalog type"
                 value={catalogue_type}
-                onChange={(e) => setCatalogType(e.target.value)}
+                onChange={(e) => {
+                  setCatalogType(e.target.value);
+                  if (e.target.value.trim()) setCatalogTypeError("");
+                }}
+                placeholder="e.g. Kitchen Appliances 2025"
+                className={`w-full px-3 py-3 text-[12.5px] tracking-[0.01em] text-gray-700 border rounded-lg outline-none transition-all placeholder:text-gray-300
+                  ${
+                    catalogTypeError
+                      ? "border-red-300 focus:border-red-400 focus:ring-2 focus:ring-red-500/10"
+                      : "border-gray-200 focus:border-red-400 focus:ring-2 focus:ring-red-500/10"
+                  }`}
               />
               {catalogTypeError && (
-                <p className="text-red-600 text-sm mt-1 font-gothamNarrow">
+                <p className="text-[11.5px] text-red-500 mt-1.5 tracking-[0.01em]">
                   {catalogTypeError}
+                </p>
+              )}
+            </div>
+
+            <hr className="border-gray-100" />
+
+            {/* Cover image upload */}
+            <div>
+              <label className="flex items-center gap-1.5 text-[11px] font-semibold tracking-[0.07em] uppercase text-gray-400 mb-1.5">
+                <HiOutlinePhoto size={13} />
+                Catalog Cover Image
+              </label>
+              <label
+                htmlFor="catalogue_image"
+                className={`flex flex-col items-center justify-center w-full h-44 rounded-xl border-2 border-dashed cursor-pointer transition-colors
+                  ${
+                    catalogProductCoverPreview
+                      ? "border-gray-200 bg-gray-50"
+                      : "border-gray-200 hover:border-red-300 hover:bg-red-50/30"
+                  }`}
+              >
+                {catalogProductCoverPreview ? (
+                  <div className="relative w-full h-full p-2">
+                    <img
+                      src={catalogProductCoverPreview}
+                      alt="Cover preview"
+                      className="w-full h-full object-contain rounded-lg"
+                    />
+                    <span className="absolute bottom-3 right-3 text-[10.5px] text-gray-400 bg-white border border-gray-200 px-2 py-0.5 rounded-md">
+                      Click to change
+                    </span>
+                  </div>
+                ) : (
+                  <div className="flex flex-col items-center gap-2 text-gray-300">
+                    <IoCloudUploadOutline size={28} />
+                    <p className="text-[12px] text-gray-400 tracking-[0.01em]">
+                      Click to upload cover image
+                    </p>
+                    <p className="text-[11px] text-gray-300">
+                      PNG, JPG, WEBP supported
+                    </p>
+                  </div>
+                )}
+                <input
+                  id="catalogue_image"
+                  type="file"
+                  accept="image/*"
+                  className="hidden"
+                  onChange={handleCatalogCoverFileInputChange}
+                />
+              </label>
+            </div>
+
+            <hr className="border-gray-100" />
+
+            {/* PDF upload */}
+            <div>
+              <label className="flex items-center gap-1.5 text-[11px] font-semibold tracking-[0.07em] uppercase text-gray-400 mb-1.5">
+                <FaFilePdf size={11} />
+                Catalog PDF File
+              </label>
+              <label
+                htmlFor="productCatalog"
+                className={`flex flex-col items-center justify-center w-full h-36 rounded-xl border-2 border-dashed cursor-pointer transition-colors
+                  ${
+                    fileError
+                      ? "border-red-300 bg-red-50/20"
+                      : productCatalogPreview
+                        ? "border-gray-200 bg-gray-50"
+                        : "border-gray-200 hover:border-red-300 hover:bg-red-50/30"
+                  }`}
+              >
+                {productCatalogPreview ? (
+                  <div className="flex flex-col items-center gap-2">
+                    <div className="w-10 h-10 rounded-xl bg-red-50 border border-red-100 flex items-center justify-center">
+                      <FaFilePdf size={18} className="text-red-500" />
+                    </div>
+                    <p className="text-[12px] font-medium text-gray-700 tracking-[0.01em] max-w-[240px] truncate">
+                      {pdfFileName}
+                    </p>
+                    <span className="text-[10.5px] text-gray-400 bg-white border border-gray-200 px-2 py-0.5 rounded-md">
+                      Click to change
+                    </span>
+                  </div>
+                ) : (
+                  <div className="flex flex-col items-center gap-2 text-gray-300">
+                    <IoCloudUploadOutline size={28} />
+                    <p className="text-[12px] text-gray-400 tracking-[0.01em]">
+                      Click to upload PDF
+                    </p>
+                    <p className="text-[11px] text-gray-300">PDF format only</p>
+                  </div>
+                )}
+                <input
+                  id="productCatalog"
+                  type="file"
+                  name="file"
+                  accept="application/pdf"
+                  className="hidden"
+                  onChange={handleProductFileCatalog}
+                />
+              </label>
+              {fileError && (
+                <p className="text-[11.5px] text-red-500 mt-1.5 tracking-[0.01em]">
+                  {fileError}
                 </p>
               )}
             </div>
           </div>
 
-          <div className="lg:w-1/2 my-5">
-            <span className="font-gothamNarrow font-normal">
-              Add Catalog Cover Image
-            </span>
-            <div className="w-full font-gothamNarrow h-56 border border-gray-400 relative mx-auto my-1">
-              <label
-                htmlFor="catalogue_image"
-                className="w-full font-gothamNarrow h-full flex items-center justify-center cursor-pointer"
-              >
-                {catalogProductCoverPreview ? (
-                  <img
-                    src={catalogProductCoverPreview}
-                    alt="Catalog Cover"
-                    className="object-contain w-full font-gothamNarrow h-full cursor-pointer"
-                  />
-                ) : (
-                  <span className="font-gothamNarrow">
-                    <IoCloudUploadOutline size={24} />
-                  </span>
-                )}
-              </label>
-              <input
-                id="catalogue_image"
-                type="file"
-                name="catalogue_image"
-                accept="image/*"
-                className="hidden"
-                onChange={handleCatalogCoverFileInputChange}
-              />
-            </div>
-          </div>
-
-          <div className="lg:w-1/2 my-5">
-            <span className="font-gothamNarrow font-normal">
-              Add Product Catalog (File Format must be in PDF)
-            </span>
-            <div className="w-full font-gothamNarrow h-56 border border-gray-400 relative mx-auto my-1">
-              <label
-                htmlFor="productCatalog"
-                className="w-full font-gothamNarrow h-full flex items-center justify-center cursor-pointer"
-              >
-                {productCatalogPreview ? (
-                  <div className="text-center">
-                    <p>{`Uploaded File: ${
-                      document.getElementById("productCatalog").files[0].name
-                    }`}</p>
-                    <a
-                      href={productCatalogPreview}
-                      download
-                      className="text-blue-600"
-                    >
-                      Download PDF
-                    </a>
-                  </div>
-                ) : (
-                  <span className="font-gothamNarrow">
-                    <IoCloudUploadOutline size={24} />
-                  </span>
-                )}
-              </label>
-              <input
-                id="productCatalog"
-                type="file"
-                name="file"
-                accept="application/pdf"
-                className="hidden"
-                onChange={handleProductFileCatalog}
-              />
-            </div>
-            {fileError && (
-              <p className="text-red-600 text-sm mt-2 font-gothamNarrow">
-                {fileError}
-              </p>
-            )}
-          </div>
-
-          <div className="flex justify-center md:justify-start mt-2 py-2">
+          {/* Footer actions */}
+          <div className="flex items-center justify-end gap-2 px-5 py-4 bg-gray-50 border-t border-gray-100">
+            <Link
+              to="/baltra-admin-dashboard/all/e-catalog-list"
+              className="inline-flex items-center gap-1.5 px-3 py-1.5 text-[12px] font-medium text-gray-500 border border-gray-200 rounded-lg hover:bg-white transition-colors"
+            >
+              Cancel
+            </Link>
             <button
-              className="relative bg-red-600 hover:bg-red-700 text-sm text-white py-3 px-8 rounded font-gothamNarrow"
               type="submit"
               disabled={loading}
+              className="relative inline-flex items-center gap-1.5 px-4 py-1.5 text-[12.5px] font-medium text-white bg-red-600 hover:bg-red-700 rounded-lg transition-colors disabled:opacity-60"
             >
-              {loading && (
-                <span className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2">
-                  <div className="animate-spin rounded-full h-4 w-4 border-t-2 border-b-2 border-white"></div>
-                </span>
+              {loading ? (
+                <>
+                  <div className="w-3.5 h-3.5 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+                  Saving...
+                </>
+              ) : (
+                <>
+                  <HiOutlineDocumentText size={13} />
+                  Save Catalog
+                </>
               )}
-              Save Catalog
             </button>
           </div>
-        </form>
-      </div>
-    </>
+        </div>
+      </form>
+    </div>
   );
 };
 

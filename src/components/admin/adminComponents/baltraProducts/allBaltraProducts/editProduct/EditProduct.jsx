@@ -1,7 +1,7 @@
 import { enqueueSnackbar } from "notistack";
 import { useEffect, useState } from "react";
 import { BlockPicker } from "react-color";
-import { FaTimes, FaTrash } from "react-icons/fa";
+import { FaTimes } from "react-icons/fa";
 import { HiOutlineArrowLeftCircle } from "react-icons/hi2";
 import { IoCloudUploadOutline } from "react-icons/io5";
 import ReactQuill from "react-quill";
@@ -96,15 +96,134 @@ const quillFormats = [
   "blockquote",
   "code-block",
 ];
+
+/* ── Shared micro-components ── */
+const Label = ({ children, disabled }) => (
+  <label className="block text-xs font-semibold text-gray-500 uppercase tracking-wider mb-1.5">
+    {children}
+    {disabled && (
+      <span className="ml-2 text-[10px] font-normal normal-case text-gray-400 bg-gray-100 border border-gray-200 px-1.5 py-0.5 rounded-full">
+        locked
+      </span>
+    )}
+  </label>
+);
+
+const inputCls =
+  "w-full px-3.5 py-2.5 text-sm bg-gray-50 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-red-500/30 focus:border-red-400 transition placeholder:text-gray-400";
+
+const disabledInputCls =
+  "w-full px-3.5 py-2.5 text-sm bg-gray-100 border border-gray-200 rounded-xl text-gray-500 cursor-not-allowed";
+
+const SectionCard = ({ title, subtitle, children }) => (
+  <div className="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden">
+    <div className="px-6 py-4 border-b border-gray-100 bg-gray-50/60">
+      <h3 className="text-sm font-bold text-gray-800">{title}</h3>
+      {subtitle && <p className="text-xs text-gray-400 mt-0.5">{subtitle}</p>}
+    </div>
+    <div className="px-6 py-5">{children}</div>
+  </div>
+);
+
+const UploadZone = ({
+  id,
+  name,
+  accept,
+  preview,
+  onChange,
+  label,
+  isVideo,
+}) => (
+  <div>
+    <Label>{label}</Label>
+    <label
+      htmlFor={id}
+      className="group flex flex-col items-center justify-center w-full h-44 rounded-xl border-2 border-dashed border-gray-200 hover:border-red-400 bg-gray-50 hover:bg-red-50/30 cursor-pointer transition-all duration-200 overflow-hidden relative"
+    >
+      {preview ? (
+        isVideo ? (
+          <video
+            src={preview}
+            controls
+            className="w-full h-full object-contain"
+          />
+        ) : (
+          <img
+            src={preview}
+            alt={label}
+            className="w-full h-full object-contain p-2"
+          />
+        )
+      ) : (
+        <div className="flex flex-col items-center gap-2 text-gray-400 group-hover:text-red-400 transition-colors">
+          <IoCloudUploadOutline size={28} />
+          <span className="text-xs font-medium">Click to upload</span>
+          <span className="text-[11px] text-gray-300">
+            {isVideo ? "MP4, MOV, AVI" : "PNG, JPG, WEBP"}
+          </span>
+        </div>
+      )}
+      <input
+        id={id}
+        type="file"
+        name={name}
+        accept={accept}
+        className="hidden"
+        onChange={onChange}
+      />
+    </label>
+  </div>
+);
+
+const MultiUploadZone = ({ id, name, previews, onChange, onRemove, label }) => (
+  <div>
+    <Label>{label}</Label>
+    <label
+      htmlFor={id}
+      className="group flex items-center justify-center gap-2 w-full py-3 rounded-xl border-2 border-dashed border-gray-200 hover:border-red-400 bg-gray-50 hover:bg-red-50/30 cursor-pointer transition-all duration-200 text-gray-400 group-hover:text-red-400"
+    >
+      <IoCloudUploadOutline size={18} />
+      <span className="text-xs font-medium">Upload multiple images</span>
+      <input
+        id={id}
+        type="file"
+        name={name}
+        multiple
+        accept="image/*"
+        className="hidden"
+        onChange={onChange}
+      />
+    </label>
+    {previews.length > 0 && (
+      <div className="flex flex-wrap gap-2 mt-3">
+        {previews.map((src, i) => (
+          <div
+            key={i}
+            className="relative w-20 h-20 rounded-lg border border-gray-200 overflow-hidden bg-gray-50"
+          >
+            <img
+              src={src}
+              alt={`preview-${i}`}
+              className="w-full h-full object-contain p-1"
+            />
+            <button
+              type="button"
+              onClick={() => onRemove(i)}
+              className="absolute top-0.5 right-0.5 w-5 h-5 bg-red-500 hover:bg-red-600 text-white rounded-full flex items-center justify-center"
+            >
+              <FaTimes size={8} />
+            </button>
+          </div>
+        ))}
+      </div>
+    )}
+  </div>
+);
+
 const EditProduct = () => {
-  const {
-    error,
-    isLoading,
-    loading,
-
-    addProduct,
-  } = useSelector((state) => state.admin);
-
+  const { error, isLoading, loading, addProduct } = useSelector(
+    (state) => state.admin,
+  );
   const dispatch = useDispatch();
   const { id } = useParams();
 
@@ -143,142 +262,29 @@ const EditProduct = () => {
 
   const [variantImgPreview, setVariantImgPreview] = useState([]);
   const [product_images, setProduct_Images] = useState([]);
-
   const [specificationImgPreview, setSpecificationImgPreview] = useState([]);
   const [specification_images, setSpecification_Images] = useState([]);
-
   const [usageImgPreview, setUsageImgPreview] = useState([]);
   const [usage_images, setUsage_Images] = useState([]);
-
   const [sizingImgPreview, setSizingImgPreview] = useState([]);
   const [sizing_images, setSizing_Images] = useState([]);
-
   const [warranty_icon, setWarranty_icon] = useState(null);
   const [warrantyImgPreview, setWarrantyImgPreview] = useState(null);
-
   const [product_video, setProductVideo] = useState(null);
   const [productVideoPreview, setProductVideoPreview] = useState(null);
-
   const [galleryimageone, setGalleryImageOne] = useState(null);
   const [galleryImageOnePreview, setGalleryImageOnePreview] = useState(null);
-
   const [galleryimagetwo, setGalleryImageTwo] = useState(null);
   const [galleryImageTwoPreview, setGalleryImageTwoPreview] = useState(null);
-
   const [main_image, setMainImage] = useState(null);
   const [mainImagePreview, setMainImagePreview] = useState(null);
-
   const [sizes, setSizes] = useState([]);
   const [inputValue, setInputValue] = useState("");
-
   const [productSpecification, setProductSpecification] = useState("");
   const [productSizing, setProductSizing] = useState("");
   const [productUsage, setProductUsage] = useState("");
 
-  const handleSpecificationChange = (value) => {
-    setProductSpecification(value);
-  };
-
-  const handleSizingChange = (value) => {
-    setProductSizing(value);
-  };
-
-  const handleUsageChange = (value) => {
-    setProductUsage(value);
-  };
-
-  const handleMainFileChange = (e) => {
-    const file = e.target.files[0];
-    if (file) {
-      const reader = new FileReader();
-      reader.readAsDataURL(file);
-
-      reader.onloadend = () => {
-        setMainImagePreview(reader.result);
-        setMainImage(file);
-      };
-
-      reader.onerror = () => {
-        console.error("There was an error reading the file!");
-      };
-    }
-  };
-
-  const handleChange = (e) => {
-    let { name, value } = e.target;
-    setEditProductValue((prevValue) => ({
-      ...prevValue,
-      [name]: value,
-    }));
-  };
-
-  const handleGalleryTwoFileInputChange = (e) => {
-    const file = e.target.files[0];
-    if (file) {
-      const reader = new FileReader();
-      reader.readAsDataURL(file);
-
-      reader.onloadend = () => {
-        setGalleryImageTwoPreview(reader.result);
-        setGalleryImageTwo(file);
-      };
-
-      reader.onerror = () => {
-        console.error("There was an error reading the file!");
-      };
-    }
-  };
-  const handleGalleryOneFileInputChange = (e) => {
-    const file = e.target.files[0];
-    if (file) {
-      const reader = new FileReader();
-      reader.readAsDataURL(file);
-
-      reader.onloadend = () => {
-        setGalleryImageOnePreview(reader.result);
-        setGalleryImageOne(file);
-      };
-
-      reader.onerror = () => {
-        console.error("There was an error reading the file!");
-      };
-    }
-  };
-
-  const handleProductVideoInputChange = (e) => {
-    const file = e.target.files[0];
-    if (file) {
-      const reader = new FileReader();
-      reader.readAsDataURL(file);
-
-      reader.onloadend = () => {
-        setProductVideoPreview(reader.result);
-        setProductVideo(file);
-      };
-
-      reader.onerror = () => {
-        console.error("There was an error reading the file!");
-      };
-    }
-  };
-
-  const handleWarrantyFileInputChange = (e) => {
-    const file = e.target.files[0];
-    if (file) {
-      const reader = new FileReader();
-      reader.readAsDataURL(file);
-
-      reader.onloadend = () => {
-        setWarrantyImgPreview(reader.result);
-        setWarranty_icon(file);
-      };
-
-      reader.onerror = () => {
-        console.error("There was an error reading the file!");
-      };
-    }
-  };
-
+  /* ── Populate from fetched product ── */
   useEffect(() => {
     if (addProduct) {
       setEditProductValue({
@@ -295,7 +301,6 @@ const EditProduct = () => {
         packaging: addProduct.packaging || "",
         category_id: addProduct.category?.category_name || "",
         sub_category_id: addProduct?.sub_category?.sub_category_name || "",
-
         price:
           typeof addProduct.price === "number"
             ? addProduct.price
@@ -304,7 +309,6 @@ const EditProduct = () => {
           typeof addProduct.stocks === "number"
             ? addProduct.stocks
             : parseInt(addProduct.stocks) || "",
-
         color_styles: addProduct.color_styles
           ? addProduct.color_styles.map((item) => item)
           : [],
@@ -312,220 +316,101 @@ const EditProduct = () => {
       setProductSpecification(addProduct?.specification || "");
       setProductSizing(addProduct?.sizing || "");
       setProductUsage(addProduct?.usage || "");
-
       setSizes(addProduct.sizes ? addProduct.sizes.map((item) => item) : []);
-
       setWarrantyImgPreview(addProduct.warranty_icon);
       setProductVideoPreview(addProduct.product_video);
-
       setGalleryImageOnePreview(addProduct.galleryimageone);
       setGalleryImageTwoPreview(addProduct.galleryimagetwo);
       setMainImagePreview(addProduct?.main_image);
-
       setVariantImgPreview(
-        addProduct.images
-          ? addProduct.images.map((photo) => photo.image_url)
-          : []
+        addProduct.images ? addProduct.images.map((p) => p.image_url) : [],
       );
-
       setSpecificationImgPreview(
         addProduct.specification_images
-          ? addProduct.specification_images.map((photo) => photo.image_url)
-          : []
+          ? addProduct.specification_images.map((p) => p.image_url)
+          : [],
       );
-
       setUsageImgPreview(
         addProduct.usage_images
-          ? addProduct.usage_images.map((photo) => photo.image_url)
-          : []
+          ? addProduct.usage_images.map((p) => p.image_url)
+          : [],
       );
-
       setSizingImgPreview(
         addProduct.sizing_images
-          ? addProduct.sizing_images.map((photo) => photo.image_url)
-          : []
+          ? addProduct.sizing_images.map((p) => p.image_url)
+          : [],
       );
     }
   }, [addProduct]);
 
-  const handleImageChange = async (e) => {
+  const handleChange = (e) => {
+    const { name, value } = e.target;
+    setEditProductValue((prev) => ({ ...prev, [name]: value }));
+  };
+
+  const makeSingleFileHandler = (setPreview, setFile) => (e) => {
+    const file = e.target.files[0];
+    if (!file) return;
+    const reader = new FileReader();
+    reader.readAsDataURL(file);
+    reader.onloadend = () => {
+      setPreview(reader.result);
+      setFile(file);
+    };
+  };
+
+  const makeMultiFileHandler = (setPreview, setFiles) => async (e) => {
     const files = e.target.files;
-
-    if (files && files.length > 0) {
-      const previewArray = [];
-      const promises = Array.from(files).map((file) => {
-        return new Promise((resolve) => {
-          const reader = new FileReader();
-          reader.readAsDataURL(file);
-          reader.onloadend = () => {
-            previewArray.push(reader.result);
-            resolve();
-          };
-        });
-      });
-
-      await Promise.all(promises);
-
-      setVariantImgPreview(previewArray);
-      setProduct_Images(Array.from(files));
-    } else {
-      setVariantImgPreview([]);
-      setProduct_Images([]);
+    if (!files?.length) {
+      setPreview([]);
+      setFiles([]);
+      return;
     }
+    const previews = await Promise.all(
+      Array.from(files).map(
+        (f) =>
+          new Promise((res) => {
+            const r = new FileReader();
+            r.readAsDataURL(f);
+            r.onloadend = () => res(r.result);
+          }),
+      ),
+    );
+    setPreview(previews);
+    setFiles(Array.from(files));
   };
 
-  const handleSpecificationImageChange = async (e) => {
-    const files = e.target.files;
-
-    if (files && files.length > 0) {
-      const previewArray = [];
-      const promises = Array.from(files).map((file) => {
-        return new Promise((resolve) => {
-          const reader = new FileReader();
-          reader.readAsDataURL(file);
-          reader.onloadend = () => {
-            previewArray.push(reader.result);
-            resolve();
-          };
-        });
-      });
-
-      await Promise.all(promises);
-
-      setSpecificationImgPreview(previewArray);
-      setSpecification_Images(Array.from(files));
-    } else {
-      setSpecificationImgPreview([]);
-      setSpecification_Images([]);
-    }
-  };
-
-  const handleUsageImageChange = async (e) => {
-    const files = e.target.files;
-
-    if (files && files.length > 0) {
-      const previewArray = [];
-      const promises = Array.from(files).map((file) => {
-        return new Promise((resolve) => {
-          const reader = new FileReader();
-          reader.readAsDataURL(file);
-          reader.onloadend = () => {
-            previewArray.push(reader.result);
-            resolve();
-          };
-        });
-      });
-
-      await Promise.all(promises);
-
-      setUsageImgPreview(previewArray);
-      setUsage_Images(Array.from(files));
-    } else {
-      setUsageImgPreview([]);
-      setUsage_Images([]);
-    }
-  };
-
-  const handleSizingImageChange = async (e) => {
-    const files = e.target.files;
-
-    if (files && files.length > 0) {
-      const previewArray = [];
-      const promises = Array.from(files).map((file) => {
-        return new Promise((resolve) => {
-          const reader = new FileReader();
-          reader.readAsDataURL(file);
-          reader.onloadend = () => {
-            previewArray.push(reader.result);
-            resolve();
-          };
-        });
-      });
-
-      await Promise.all(promises);
-
-      setSizingImgPreview(previewArray);
-      setSizing_Images(Array.from(files));
-    } else {
-      setSizingImgPreview([]);
-      setSizing_Images([]);
-    }
-  };
-
-  const handleSizingRemoveImage = (index) => {
-    const updatedPreview = [...usageImgPreview];
-    updatedPreview.splice(index, 1);
-    setSizingImgPreview(updatedPreview);
-
-    const updatedImages = [...sizing_images];
-    updatedImages.splice(index, 1);
-    setSizing_Images(updatedImages);
-  };
-
-  const handleUsageRemoveImage = (index) => {
-    const updatedPreview = [...usageImgPreview];
-    updatedPreview.splice(index, 1);
-    setUsageImgPreview(updatedPreview);
-
-    const updatedImages = [...usage_images];
-    updatedImages.splice(index, 1);
-    setUsage_Images(updatedImages);
-  };
-
-  const handleSpecificationRemoveImage = (index) => {
-    const updatedPreview = [...specificationImgPreview];
-    updatedPreview.splice(index, 1);
-    setSpecificationImgPreview(updatedPreview);
-
-    const updatedImages = [...specification_images];
-    updatedImages.splice(index, 1);
-    setSpecification_Images(updatedImages);
-  };
-
-  const handleRemoveImage = (index) => {
-    const updatedPreview = [...variantImgPreview];
-    updatedPreview.splice(index, 1);
-    setVariantImgPreview(updatedPreview);
-
-    const updatedImages = [...product_images];
-    updatedImages.splice(index, 1);
-    setProduct_Images(updatedImages);
-  };
+  const makeRemoveHandler =
+    (previews, setPreviews, files, setFiles) => (index) => {
+      setPreviews(previews.filter((_, i) => i !== index));
+      setFiles(files.filter((_, i) => i !== index));
+    };
 
   const handleColorChange = (color) => {
     if (!color_styles.includes(color.hex)) {
-      setEditProductValue((prevValue) => ({
-        ...prevValue,
-        color_styles: [...prevValue.color_styles, color.hex],
+      setEditProductValue((prev) => ({
+        ...prev,
+        color_styles: [...prev.color_styles, color.hex],
       }));
     }
   };
-
-  const handleRemoveColor = (colorToRemove) => {
-    setEditProductValue((prevValue) => ({
-      ...prevValue,
-      color_styles: prevValue.color_styles.filter(
-        (color) => color !== colorToRemove
-      ),
+  const handleRemoveColor = (c) =>
+    setEditProductValue((prev) => ({
+      ...prev,
+      color_styles: prev.color_styles.filter((x) => x !== c),
     }));
-  };
 
   const handleAddSize = (e) => {
     e.preventDefault();
-    if (inputValue.trim() !== "") {
+    if (inputValue.trim()) {
       setSizes([...sizes, inputValue.trim()]);
       setInputValue("");
     }
   };
-
-  // Function to remove a size
-  const removeSize = (sizeToRemove) => {
-    setSizes(sizes.filter((size) => size !== sizeToRemove));
-  };
+  const removeSize = (s) => setSizes(sizes.filter((x) => x !== s));
 
   const handleSubmit = (e) => {
     e.preventDefault();
-
     const formData = new FormData();
     formData.append("name", name);
     formData.append("price", parseInt(price));
@@ -539,770 +424,545 @@ const EditProduct = () => {
     formData.append("model_name", model_name);
     formData.append(
       "reward_points",
-      reward_points ? parseInt(reward_points) : 0
+      reward_points ? parseInt(reward_points) : 0,
     );
     formData.append("specification", productSpecification);
     formData.append("sizing", productSizing);
     formData.append("usage", productUsage);
-    if (warranty_icon) {
-      formData.append("warranty_icon", warranty_icon);
-    }
-    if (product_video) {
-      formData.append("product_video", product_video);
-    }
-
-    if (galleryimageone) {
-      formData.append("galleryimageone", galleryimageone);
-    }
-
-    if (galleryimagetwo) {
-      formData.append("galleryimagetwo", galleryimagetwo);
-    }
-
-    if (main_image) {
-      formData.append("main_image", main_image);
-    }
-
-    // Convert arrays to JSON strings
+    if (warranty_icon) formData.append("warranty_icon", warranty_icon);
+    if (product_video) formData.append("product_video", product_video);
+    if (galleryimageone) formData.append("galleryimageone", galleryimageone);
+    if (galleryimagetwo) formData.append("galleryimagetwo", galleryimagetwo);
+    if (main_image) formData.append("main_image", main_image);
     formData.append("color_styles", JSON.stringify(color_styles));
     formData.append("sizes", JSON.stringify(sizes));
-
-    // Append product images
-    if (product_images.length > 0) {
-      product_images.forEach((photo) => {
-        formData.append("product_images", photo);
-      });
-    }
-
-    if (sizing_images.length > 0) {
-      sizing_images.forEach((photo) => {
-        formData.append("sizing_images", photo);
-      });
-    }
-
-    if (usage_images.length > 0) {
-      usage_images.forEach((photo) => {
-        formData.append("usage_images", photo);
-      });
-    }
-
-    if (specification_images.length > 0) {
-      specification_images.forEach((photo) => {
-        formData.append("specification_images", photo);
-      });
-    }
-
+    product_images.forEach((p) => formData.append("product_images", p));
+    sizing_images.forEach((p) => formData.append("sizing_images", p));
+    usage_images.forEach((p) => formData.append("usage_images", p));
+    specification_images.forEach((p) =>
+      formData.append("specification_images", p),
+    );
     dispatch(editProduct({ product_id: id, formData, enqueueSnackbar }));
   };
 
   useEffect(() => {
     if (error) {
-      enqueueSnackbar(error, {
-        variant: "error",
-      });
+      enqueueSnackbar(error, { variant: "error" });
       dispatch(clearAdminError());
     }
   }, [dispatch, error]);
 
   useEffect(() => {
-    if (id) {
-      dispatch(singleProductView(id));
-    }
+    if (id) dispatch(singleProductView(id));
   }, [id]);
 
+  if (loading) return <FormSkeleton />;
+
   return (
-    <>
-      <div className="font-gothamNarrow px-8 mt-8 md:mt-4 flex justify-between items-center">
-        <Link
-          to="/baltra-admin-dashboard/all-products-list"
-          className="flex items-center font-gothamNarrow"
-        >
-          <HiOutlineArrowLeftCircle size={24} className="mr-2" />
-          Edit Product
-        </Link>
+    <div className="min-h-screen bg-[#f5f6fa]">
+      {/* ── Top bar ── */}
+      <div className="bg-white border-b border-gray-100 px-4 py-4">
+        <div className="max-w-screen-2xl mx-auto flex items-center justify-between">
+          <Link
+            to="/baltra-admin-dashboard/all-products-list"
+            className="inline-flex items-center gap-2 text-sm font-medium text-gray-500 hover:text-gray-800 transition"
+          >
+            <HiOutlineArrowLeftCircle size={20} />
+            Back to Products
+          </Link>
+          <div>
+            <h1 className="text-lg font-bold text-gray-900 text-right">
+              Edit Product
+            </h1>
+            <p className="text-xs text-gray-400 text-right">
+              Update the fields you want to change
+            </p>
+          </div>
+        </div>
       </div>
-      {loading ? (
-        <FormSkeleton />
-      ) : (
-        <div className="container mx-auto px-8 my-5 font-sans">
-          <form className="bg-[#FFFFFF] px-3 py-3" onSubmit={handleSubmit}>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4  focus:ring-1 focus:ring-sky-200">
-              <div>
-                <label
-                  htmlFor="category_id"
-                  className="text-black font-normal mb-2 font-gothamNarrow"
-                >
-                  Select Category
-                </label>
-                <select
-                  id="category_id"
-                  name="category_id"
-                  className="w-full font-gothamNarrow my-1 px-4 py-3 border border-gray-400 rounded-md focus:outline-none focus:border-red-500 focus:ring-gray-300"
-                  value={category_id}
-                  onChange={handleChange}
-                  disabled
-                >
-                  <option value={category_id}>{category_id}</option>
-                </select>
-              </div>
 
-              <div>
-                <label
-                  htmlFor="sub_category_id"
-                  className="text-black font-normal mb-2 font-gothamNarrow"
-                >
-                  Select Sub Category
-                </label>
-                <select
-                  id="sub_category_id"
-                  name="sub_category_id"
-                  className="w-full font-gothamNarrow my-1 px-4 py-3 border border-gray-400 rounded-md focus:outline-none focus:border-red-500 focus:ring-gray-300"
-                  value={sub_category_id}
-                  onChange={handleChange}
-                  disabled
-                >
-                  <option value={sub_category_id}>{sub_category_id}</option>
-                </select>
-              </div>
+      {/* ── Change indicator banner ── */}
+      <div className="max-w-screen-2xl mx-auto px-4 pt-5">
+        <div className="flex gap-3 bg-amber-50 border border-amber-100 rounded-xl px-4 py-3">
+          <span className="text-amber-400 mt-0.5 flex-shrink-0 text-sm">✎</span>
+          <p className="text-xs text-amber-700 leading-relaxed">
+            You are editing an existing product. Category and sub-category are{" "}
+            <strong>locked</strong> and cannot be changed. Only upload new media
+            files if you want to replace the existing ones — leave upload zones
+            empty to keep current media.
+          </p>
+        </div>
+      </div>
 
-              <div>
-                <label
-                  htmlFor="stock"
-                  className="text-black font-normal mb-2 font-gothamNarrow"
-                >
-                  Product Name
-                </label>
-                <input
-                  type="text"
-                  id="name"
-                  name="name"
-                  className="w-full font-gothamNarrow my-1 px-4 py-2 border border-gray-400 rounded-md focus:outline-none focus:border-red-500  focus:ring-gray-300"
-                  placeholder="Enter Product Name"
-                  value={name}
-                  onChange={handleChange}
-                />
-              </div>
-              <div>
-                <label
-                  htmlFor="stock"
-                  className="text-black font-normal mb-2 font-gothamNarrow"
-                >
-                  Product Sub Heading
-                </label>
-                <input
-                  type="text"
-                  id="sub_heading"
-                  name="sub_heading"
-                  className="w-full font-gothamNarrow my-1 px-4 py-2 border border-gray-400 rounded-md focus:outline-none focus:border-red-500  focus:ring-gray-300"
-                  placeholder="Enter Product Sub Heading"
-                  value={sub_heading}
-                  onChange={handleChange}
-                />
-              </div>
-              <div className="font-gothamNarrow">
-                <label htmlFor="price" className="text-black font-normal">
-                  Price:
-                </label>
-                <div className="flex items-center font-gothamNarrow text-black font-normal">
-                  <input
-                    type="number"
-                    id="price"
-                    name="price"
-                    className="w-full font-gothamNarrow px-4 my-1 py-2 border border-gray-400 rounded-md focus:outline-none focus:border-red-500  focus:ring-gray-300"
-                    placeholder="Enter your price"
-                    value={price}
-                    onChange={handleChange}
-                  />
-                </div>
-              </div>
-              <div>
-                <label
-                  htmlFor="stock"
-                  className="text-black font-normal mb-2 font-gothamNarrow"
-                >
-                  Stock
-                </label>
-                <input
-                  type="number"
-                  id="stocks"
-                  name="stocks"
-                  className="w-full font-gothamNarrow my-1 px-4 py-2 border border-gray-400 rounded-md focus:outline-none focus:border-red-500  focus:ring-gray-300"
-                  placeholder="Enter product stock"
-                  value={stocks}
-                  onChange={handleChange}
-                />
-              </div>
-              <div>
-                <label
-                  htmlFor="Model Name"
-                  className="text-black font-normal mb-2 font-gothamNarrow"
-                >
-                  Model Name
-                </label>
-                <input
-                  type="text"
-                  id="model_name"
-                  name="model_name"
-                  className="w-full font-gothamNarrow my-1 px-4 py-2 border border-gray-400 rounded-md focus:outline-none focus:border-red-500  focus:ring-gray-300"
-                  placeholder="Enter Model Name"
-                  value={model_name}
-                  onChange={handleChange}
-                />
-              </div>
-              <div>
-                <label
-                  htmlFor="model_num"
-                  className="text-black font-normal mb-2 font-gothamNarrow"
-                >
-                  Model Number
-                </label>
-                <input
-                  type="text"
-                  id="model_num"
-                  name="model_num"
-                  className="w-full font-gothamNarrow my-1 px-4 py-2 border border-gray-400 rounded-md focus:outline-none focus:border-red-500  focus:ring-gray-300"
-                  placeholder="Enter Model Number"
-                  value={model_num}
-                  onChange={handleChange}
-                />
-              </div>
-              <div>
-                <label
-                  htmlFor="serial_number"
-                  className="text-black font-normal mb-2 font-gothamNarrow"
-                >
-                  Serial Number
-                </label>
-                <input
-                  type="text"
-                  id="serial_number"
-                  name="serial_number"
-                  className="w-full font-gothamNarrow my-1 px-4 py-2 border border-gray-400 rounded-md focus:outline-none focus:border-red-500  focus:ring-gray-300"
-                  placeholder="Enter Serial Number"
-                  value={serial_number}
-                  onChange={handleChange}
-                />
-              </div>
+      <form
+        onSubmit={handleSubmit}
+        className="max-w-screen-2xl mx-auto px-4 py-4 space-y-6"
+      >
+        {/* ── 1. Classification (read-only) ── */}
+        <SectionCard
+          title="Classification"
+          subtitle="Category cannot be changed after creation"
+        >
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
+            <div>
+              <Label disabled>Category</Label>
+              <select
+                name="category_id"
+                value={category_id}
+                disabled
+                className={disabledInputCls}
+              >
+                <option value={category_id}>{category_id}</option>
+              </select>
+            </div>
+            <div>
+              <Label disabled>Sub Category</Label>
+              <select
+                name="sub_category_id"
+                value={sub_category_id}
+                disabled
+                className={disabledInputCls}
+              >
+                <option value={sub_category_id}>{sub_category_id}</option>
+              </select>
+            </div>
+          </div>
+        </SectionCard>
 
-              <div className="font-gothamNarrow">
-                <label htmlFor="price" className="text-black font-normal">
-                  Power:
-                </label>
-                <div className="flex items-center font-gothamNarrow text-black font-normal">
-                  <input
-                    type="text"
-                    id="power"
-                    name="power"
-                    className="w-full font-gothamNarrow px-4 my-1 py-2 border border-gray-400 rounded-md focus:outline-none focus:border-red-500  focus:ring-gray-300"
-                    placeholder="Enter your power"
-                    value={power}
-                    onChange={handleChange}
-                  />
-                </div>
-              </div>
-              <div className="font-gothamNarrow">
-                <label htmlFor="price" className="text-black font-normal">
-                  Warranty:
-                </label>
-                <div className="flex items-center font-gothamNarrow text-black font-normal">
-                  <input
-                    type="text"
-                    id="warranty"
-                    name="warranty"
-                    className="w-full font-gothamNarrow px-4 my-1 py-2 border border-gray-400 rounded-md focus:outline-none focus:border-red-500  focus:ring-gray-300"
-                    placeholder="Enter your warranty"
-                    value={warranty}
-                    onChange={handleChange}
-                  />
-                </div>
-              </div>
-              <div>
-                <label
-                  htmlFor="packaging"
-                  className="text-black font-normal mb-2 font-gothamNarrow"
-                >
-                  Packaging
-                </label>
-                <input
-                  type="text"
-                  id="packaging"
-                  name="packaging"
-                  className="w-full font-gothamNarrow px-4 my-1 py-2 border border-gray-400 rounded-md focus:outline-none focus:border-red-500  focus:ring-gray-300"
-                  placeholder="Enter product packaging"
-                  value={packaging}
-                  onChange={handleChange}
-                />
-              </div>
+        {/* ── 2. Basic Info ── */}
+        <SectionCard
+          title="Basic Information"
+          subtitle="Core product identity and pricing"
+        >
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
+            <div>
+              <Label>Product Name</Label>
+              <input
+                type="text"
+                name="name"
+                value={name}
+                onChange={handleChange}
+                placeholder="Product name"
+                className={inputCls}
+              />
+            </div>
+            <div>
+              <Label>Sub Heading</Label>
+              <input
+                type="text"
+                name="sub_heading"
+                value={sub_heading}
+                onChange={handleChange}
+                placeholder="Short tagline"
+                className={inputCls}
+              />
+            </div>
+            <div>
+              <Label>Price (NPR)</Label>
+              <input
+                type="number"
+                name="price"
+                value={price}
+                onChange={handleChange}
+                placeholder="0.00"
+                className={inputCls}
+              />
+            </div>
+            <div>
+              <Label>Stock</Label>
+              <input
+                type="number"
+                name="stocks"
+                value={stocks}
+                onChange={handleChange}
+                placeholder="Available quantity"
+                className={inputCls}
+              />
+            </div>
+            <div>
+              <Label>Reward Points</Label>
+              <input
+                type="number"
+                name="reward_points"
+                value={reward_points}
+                onChange={handleChange}
+                placeholder="Points earned on purchase"
+                className={inputCls}
+              />
+            </div>
+          </div>
+        </SectionCard>
 
-              <div>
-                <label
-                  htmlFor="color"
-                  className="text-black font-normal font-outfit"
-                >
-                  Select Product Colors (please select multiple colors)
-                </label>
-                <div className="flex flex-wrap my-1">
-                  {color_styles.map((color, index) => (
-                    <div key={index} className="relative mr-2 mb-2">
+        {/* ── 3. Product Details ── */}
+        <SectionCard
+          title="Product Details"
+          subtitle="Technical specifications and identifiers"
+        >
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
+            <div>
+              <Label>Model Name</Label>
+              <input
+                type="text"
+                name="model_name"
+                value={model_name}
+                onChange={handleChange}
+                placeholder="e.g. AP-2000X"
+                className={inputCls}
+              />
+            </div>
+            <div>
+              <Label>Model Number</Label>
+              <input
+                type="text"
+                name="model_num"
+                value={model_num}
+                onChange={handleChange}
+                placeholder="e.g. BAL-2024-001"
+                className={inputCls}
+              />
+            </div>
+            <div>
+              <Label>Serial Number</Label>
+              <input
+                type="text"
+                name="serial_number"
+                value={serial_number}
+                onChange={handleChange}
+                placeholder="Product serial number"
+                className={inputCls}
+              />
+            </div>
+            <div>
+              <Label>Power</Label>
+              <input
+                type="text"
+                name="power"
+                value={power}
+                onChange={handleChange}
+                placeholder="e.g. 220V / 50Hz / 45W"
+                className={inputCls}
+              />
+            </div>
+            <div>
+              <Label>Warranty</Label>
+              <input
+                type="text"
+                name="warranty"
+                value={warranty}
+                onChange={handleChange}
+                placeholder="e.g. 2 Years"
+                className={inputCls}
+              />
+            </div>
+            <div>
+              <Label>Packaging</Label>
+              <input
+                type="text"
+                name="packaging"
+                value={packaging}
+                onChange={handleChange}
+                placeholder="e.g. Box with foam lining"
+                className={inputCls}
+              />
+            </div>
+          </div>
+        </SectionCard>
+
+        {/* ── 4. Colors & Sizes ── */}
+        <SectionCard
+          title="Colors & Sizes"
+          subtitle="Update available variants"
+        >
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            {/* Colors */}
+            <div>
+              <Label>Product Colors</Label>
+              {color_styles.length > 0 && (
+                <div className="flex flex-wrap gap-2 mb-3">
+                  {color_styles.map((c, i) => (
+                    <div key={i} className="relative group">
                       <div
-                        className="w-6 h-6 rounded-full"
-                        style={{ backgroundColor: color }}
-                      ></div>
-                      <button
-                        className="absolute -top-2 -right-2 bg-red-500 text-white rounded-full w-4 h-4 text-xs"
-                        onClick={() => handleRemoveColor(color)}
-                      >
-                        &times;
-                      </button>
-                    </div>
-                  ))}
-                </div>
-                <div className="border border-gray-200 rounded-lg p-4">
-                  <BlockPicker
-                    colors={presetColors}
-                    width="100%"
-                    onChangeComplete={handleColorChange}
-                  />
-                </div>
-              </div>
-              <div>
-                <label
-                  htmlFor="sizes"
-                  className="text-black font-normal mb-2 font-gothamNarrow"
-                >
-                  Please Enter multiple Product Sizes
-                </label>
-                <input
-                  type="text"
-                  id="input-size"
-                  className="w-full font-gothamNarrow px-4 my-1 py-2 border border-gray-400 rounded-md focus:outline-none focus:border-red-500 focus:ring-gray-300"
-                  placeholder="Enter product sizes"
-                  value={inputValue}
-                  onChange={(e) => setInputValue(e.target.value)}
-                />
-                <button
-                  onClick={handleAddSize}
-                  className="mt-2 text-sm bg-red-500 hover:bg-red-600 text-white px-4 py-2 rounded font-gothamNarrow"
-                >
-                  Add Size
-                </button>
-
-                {/* Display the list of sizes */}
-                <ul className="mt-2">
-                  {sizes.map((size, index) => (
-                    <li
-                      key={index}
-                      className="flex justify-between items-center"
-                    >
-                      {size}{" "}
+                        className="w-8 h-8 rounded-full border-2 border-white shadow-md"
+                        style={{ backgroundColor: c }}
+                      />
                       <button
                         type="button"
-                        onClick={() => removeSize(size)}
-                        className="text-red-500 hover:text-red-700"
+                        onClick={() => handleRemoveColor(c)}
+                        className="absolute -top-1.5 -right-1.5 w-4 h-4 bg-red-500 text-white rounded-full flex items-center justify-center opacity-0 group-hover:opacity-100 transition"
                       >
-                        <FaTrash size={14} />
-                      </button>
-                    </li>
-                  ))}
-                </ul>
-              </div>
-
-              <div>
-                <label
-                  htmlFor="specification"
-                  className="text-black font-normal mb-2 font-outfit"
-                >
-                  Product Specification
-                </label>
-                <div className="my-1">
-                  <ReactQuill
-                    theme="snow"
-                    value={productSpecification}
-                    onChange={handleSpecificationChange}
-                    modules={quillModules}
-                    formats={quillFormats}
-                    className="bg-white"
-                    placeholder="Enter detailed product description..."
-                  />
-                </div>
-              </div>
-
-              <div>
-                <label
-                  htmlFor="sizing"
-                  className="text-black font-normal mb-2 font-outfit"
-                >
-                  Product Sizing
-                </label>
-                <div className="my-1">
-                  <ReactQuill
-                    theme="snow"
-                    value={productSizing}
-                    onChange={handleSizingChange}
-                    modules={quillModules}
-                    formats={quillFormats}
-                    className="bg-white"
-                    placeholder="Enter detailed product Sizing..."
-                  />
-                </div>
-              </div>
-              <div>
-                <label
-                  htmlFor="usage"
-                  className="text-black font-normal mb-2 font-outfit"
-                >
-                  Product Usage
-                </label>
-                <div className="my-1">
-                  <ReactQuill
-                    theme="snow"
-                    value={productUsage}
-                    onChange={handleUsageChange}
-                    modules={quillModules}
-                    formats={quillFormats}
-                    className="bg-white"
-                    placeholder="Enter detailed product Usage..."
-                  />
-                </div>
-              </div>
-
-              <div>
-                <label
-                  htmlFor="reward_points"
-                  className="text-black font-normal mb-2 font-gothamNarrow"
-                >
-                  Reward Points
-                </label>
-                <input
-                  type="number"
-                  id="reward_points"
-                  name="reward_points"
-                  className="w-full font-gothamNarrow my-1 px-4 py-2 border border-gray-400 rounded-md focus:outline-none focus:border-red-500  focus:ring-gray-300"
-                  placeholder="Enter Reward Point"
-                  value={reward_points}
-                  onChange={handleChange}
-                />
-              </div>
-              <div className="lg:w-full my-5">
-                <span className="font-gothamNarrow font-normal">
-                  Add Warranty Image
-                </span>
-                <div className="w-full font-gothamNarrow h-64 border border-red-400 relative mx-auto my-1">
-                  <label
-                    htmlFor="warrantyFile"
-                    className="w-full font-gothamNarrow h-full flex items-center justify-center cursor-pointer"
-                  >
-                    {warrantyImgPreview ? (
-                      <img
-                        src={warrantyImgPreview}
-                        alt="warranty"
-                        className="object-contain w-full font-gothamNarrow h-full cursor-pointer"
-                      />
-                    ) : (
-                      <span className="font-gothamNarrow">
-                        <IoCloudUploadOutline size={24} />
-                      </span>
-                    )}
-                  </label>
-                  <input
-                    id="warrantyFile"
-                    type="file"
-                    name="warranty_icon"
-                    accept="image/*"
-                    className="hidden"
-                    onChange={handleWarrantyFileInputChange}
-                  />
-                </div>
-              </div>
-
-              <div className="lg:w-full my-5">
-                <span className="font-gothamNarrow font-normal">
-                  Upload Product Video
-                </span>
-                <div className="w-full font-gothamNarrow h-64 border border-red-400 relative mx-auto my-1">
-                  <label
-                    htmlFor="productVideo"
-                    className="w-full font-gothamNarrow h-full flex items-center justify-center cursor-pointer"
-                  >
-                    {productVideoPreview ? (
-                      <video
-                        src={productVideoPreview}
-                        alt="product video"
-                        className="object-contain w-full font-gothamNarrow h-full cursor-pointer"
-                        controls
-                      />
-                    ) : (
-                      <span className="font-gothamNarrow">
-                        <IoCloudUploadOutline size={24} />
-                      </span>
-                    )}
-                  </label>
-                  <input
-                    id="productVideo"
-                    type="file"
-                    name="product_video"
-                    accept="video/*"
-                    className="hidden"
-                    onChange={handleProductVideoInputChange}
-                  />
-                </div>
-              </div>
-
-              <div className="lg:w-full">
-                <span className="font-gothamNarrow font-normal">
-                  Add Gallery Image(One)
-                </span>
-                <div className="w-full font-gothamNarrow h-64 border border-red-400 relative mx-auto my-1">
-                  <label
-                    htmlFor="galleryimageone"
-                    className="w-full font-gothamNarrow h-full flex items-center justify-center cursor-pointer"
-                  >
-                    {galleryImageOnePreview ? (
-                      <img
-                        src={galleryImageOnePreview}
-                        alt="galleryImg1"
-                        className="object-contain w-full font-gothamNarrow h-full cursor-pointer"
-                      />
-                    ) : (
-                      <span className="font-gothamNarrow">
-                        <IoCloudUploadOutline size={24} />
-                      </span>
-                    )}
-                  </label>
-                  <input
-                    id="galleryimageone"
-                    type="file"
-                    name="galleryimageone"
-                    accept="image/*"
-                    className="hidden"
-                    onChange={handleGalleryOneFileInputChange}
-                  />
-                </div>
-              </div>
-              <div className="lg:w-full">
-                <span className="font-gothamNarrow font-normal">
-                  Add Gallery Image(Two)
-                </span>
-                <div className="w-full font-gothamNarrow h-64 border border-red-400 relative mx-auto my-1">
-                  <label
-                    htmlFor="galleryimagetwo"
-                    className="w-full font-gothamNarrow h-full flex items-center justify-center cursor-pointer"
-                  >
-                    {galleryImageTwoPreview ? (
-                      <img
-                        src={galleryImageTwoPreview}
-                        alt="galleryImg2"
-                        className="object-contain w-full font-gothamNarrow h-full cursor-pointer"
-                      />
-                    ) : (
-                      <span className="font-gothamNarrow">
-                        <IoCloudUploadOutline size={24} />
-                      </span>
-                    )}
-                  </label>
-                  <input
-                    id="galleryimagetwo"
-                    type="file"
-                    name="galleryimagetwo"
-                    accept="image/*"
-                    className="hidden"
-                    onChange={handleGalleryTwoFileInputChange}
-                  />
-                </div>
-              </div>
-              <div className="lg:w-full">
-                <span className="font-gothamNarrow font-normal">
-                  Product Main Image
-                </span>
-                <div className="w-full font-gothamNarrow h-64 border border-red-400 relative mx-auto my-1">
-                  <label
-                    htmlFor="main_image"
-                    className="w-full font-gothamNarrow h-full flex items-center justify-center cursor-pointer"
-                  >
-                    {mainImagePreview ? (
-                      <img
-                        src={mainImagePreview}
-                        alt="main_image"
-                        className="object-contain w-full font-gothamNarrow h-full cursor-pointer"
-                      />
-                    ) : (
-                      <span className="font-gothamNarrow">
-                        <IoCloudUploadOutline size={24} />
-                      </span>
-                    )}
-                  </label>
-                  <input
-                    id="main_image"
-                    type="file"
-                    name="main_image"
-                    accept="image/*"
-                    className="hidden"
-                    onChange={handleMainFileChange}
-                  />
-                </div>
-              </div>
-            </div>
-
-            <div className="lg:w-1/2 my-5">
-              <span className="font-gothamNarrow font-normal">
-                Add ProductImages (please upload multiple images)
-              </span>
-              <div className="mt-4 border border-gray-200 p-4 rounded">
-                <input
-                  type="file"
-                  name="product_images"
-                  multiple
-                  accept="image/*"
-                  className="file:mr-3 file:py-2 file:px-4 file:border-0 hover:file:bg-gray-200"
-                  onChange={handleImageChange}
-                />
-                <div className="flex">
-                  {variantImgPreview.map((variantImg, index) => (
-                    <div
-                      key={index}
-                      className="w-56 h-auto border border-gray-300 relative overflow-hidden rounded-sm m-1"
-                    >
-                      <img
-                        src={variantImg}
-                        alt={`variantImages-${index}`}
-                        className="object-contain w-full h-full"
-                      />
-                      <button
-                        onClick={() => handleRemoveImage(index)}
-                        className="absolute top-0 right-0 p-1 text-white bg-red-500 rounded-full hover:bg-red-700"
-                      >
-                        <FaTimes />
+                        <FaTimes size={7} />
                       </button>
                     </div>
                   ))}
                 </div>
-              </div>
-            </div>
-            <div className="lg:w-1/2 my-5">
-              <span className="font-gothamNarrow font-normal">
-                Add SpecificationImages (please upload multiple images)
-              </span>
-              <div className="mt-4 border border-gray-200 p-4 rounded">
-                <input
-                  type="file"
-                  name="specification_images"
-                  multiple
-                  accept="image/*"
-                  className="file:mr-3 file:py-2 file:px-4 file:border-0 hover:file:bg-gray-200"
-                  onChange={handleSpecificationImageChange}
+              )}
+              <div className="border border-gray-200 rounded-xl overflow-hidden p-3 bg-gray-50">
+                <BlockPicker
+                  colors={presetColors}
+                  width="100%"
+                  onChangeComplete={handleColorChange}
                 />
-                <div className="flex">
-                  {specificationImgPreview.map((specificationImg, index) => (
-                    <div
-                      key={index}
-                      className="w-56 h-auto border border-gray-300 relative overflow-hidden rounded-sm m-1"
-                    >
-                      <img
-                        src={specificationImg}
-                        alt={`variantImages-${index}`}
-                        className="object-contain w-full h-full"
-                      />
-                      <button
-                        onClick={() => handleSpecificationRemoveImage(index)}
-                        className="absolute top-0 right-0 p-1 text-white bg-red-500 rounded-full hover:bg-red-700"
-                      >
-                        <FaTimes />
-                      </button>
-                    </div>
-                  ))}
-                </div>
-              </div>
-            </div>
-            <div className="lg:w-1/2 my-5">
-              <span className="font-gothamNarrow font-normal">
-                Add UsageImages (please upload multiple images)
-              </span>
-              <div className="mt-4 border border-gray-200 p-4 rounded">
-                <input
-                  type="file"
-                  name="usage_images"
-                  multiple
-                  accept="image/*"
-                  className="file:mr-3 file:py-2 file:px-4 file:border-0 hover:file:bg-gray-200"
-                  onChange={handleUsageImageChange}
-                />
-                <div className="flex">
-                  {usageImgPreview.map((usageImage, index) => (
-                    <div
-                      key={index}
-                      className="w-56 h-auto border border-gray-300 relative overflow-hidden rounded-sm m-1"
-                    >
-                      <img
-                        src={usageImage}
-                        alt={`variantImages-${index}`}
-                        className="object-contain w-full h-full"
-                      />
-                      <button
-                        onClick={() => handleUsageRemoveImage(index)}
-                        className="absolute top-0 right-0 p-1 text-white bg-red-500 rounded-full hover:bg-red-700"
-                      >
-                        <FaTimes />
-                      </button>
-                    </div>
-                  ))}
-                </div>
               </div>
             </div>
 
-            <div className="lg:w-1/2 my-5">
-              <span className="font-gothamNarrow font-normal">
-                Add SizingImages (please upload multiple images)
-              </span>
-              <div className="mt-4 border border-gray-200 p-4 rounded">
+            {/* Sizes */}
+            <div>
+              <Label>Product Sizes</Label>
+              <div className="flex gap-2 mb-3">
                 <input
-                  type="file"
-                  name="sizing_images"
-                  multiple
-                  accept="image/*"
-                  className="file:mr-3 file:py-2 file:px-4 file:border-0 hover:file:bg-gray-200"
-                  onChange={handleSizingImageChange}
+                  type="text"
+                  value={inputValue}
+                  onChange={(e) => setInputValue(e.target.value)}
+                  placeholder="e.g. S, M, L, XL or 32, 34…"
+                  className={inputCls}
+                  onKeyDown={(e) => e.key === "Enter" && handleAddSize(e)}
                 />
-                <div className="flex">
-                  {sizingImgPreview.map((sizingImage, index) => (
-                    <div
-                      key={index}
-                      className="w-56 h-auto border border-gray-300 relative overflow-hidden rounded-sm m-1"
+                <button
+                  type="button"
+                  onClick={handleAddSize}
+                  className="px-4 py-2.5 bg-red-600 hover:bg-red-700 text-white text-sm font-semibold rounded-xl transition active:scale-95 whitespace-nowrap"
+                >
+                  Add
+                </button>
+              </div>
+              {sizes.length > 0 ? (
+                <div className="flex flex-wrap gap-2">
+                  {sizes.map((s, i) => (
+                    <span
+                      key={i}
+                      className="inline-flex items-center gap-1.5 bg-gray-100 border border-gray-200 text-gray-700 text-xs font-medium px-3 py-1.5 rounded-full"
                     >
-                      <img
-                        src={sizingImage}
-                        alt={`variantImages-${index}`}
-                        className="object-contain w-full h-full"
-                      />
+                      {s}
                       <button
-                        onClick={() => handleSizingRemoveImage(index)}
-                        className="absolute top-0 right-0 p-1 text-white bg-red-500 rounded-full hover:bg-red-700"
+                        type="button"
+                        onClick={() => removeSize(s)}
+                        className="text-gray-400 hover:text-red-500 transition"
                       >
-                        <FaTimes />
+                        <FaTimes size={9} />
                       </button>
-                    </div>
+                    </span>
                   ))}
                 </div>
+              ) : (
+                <p className="text-xs text-gray-400 italic">
+                  No sizes added yet
+                </p>
+              )}
+            </div>
+          </div>
+        </SectionCard>
+
+        {/* ── 5. Rich Text Content ── */}
+        <SectionCard
+          title="Product Content"
+          subtitle="Update specification, sizing, and usage descriptions"
+        >
+          <div className="space-y-6">
+            <div>
+              <Label>Product Specification</Label>
+              <div className="rounded-xl overflow-hidden border border-gray-200">
+                <ReactQuill
+                  theme="snow"
+                  value={productSpecification}
+                  onChange={setProductSpecification}
+                  modules={quillModules}
+                  formats={quillFormats}
+                  placeholder="Enter detailed product specification…"
+                  className="bg-white"
+                />
               </div>
             </div>
-
-            <div className="flex justify-center md:justify-start mt-2 py-2">
-              <button
-                className="relative bg-red-600 hover:bg-red-700 text-white py-2 px-8 rounded font-gothamNarrow"
-                type="submit"
-                disabled={isLoading}
-              >
-                {isLoading && (
-                  <span className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2">
-                    <div className="animate-spin rounded-full h-4 w-4 border-t-2 border-b-2 border-white"></div>
-                  </span>
-                )}
-                Edit Product
-              </button>
+            <div>
+              <Label>Product Sizing</Label>
+              <div className="rounded-xl overflow-hidden border border-gray-200">
+                <ReactQuill
+                  theme="snow"
+                  value={productSizing}
+                  onChange={setProductSizing}
+                  modules={quillModules}
+                  formats={quillFormats}
+                  placeholder="Enter sizing details and guide…"
+                  className="bg-white"
+                />
+              </div>
             </div>
-          </form>
+            <div>
+              <Label>Product Usage</Label>
+              <div className="rounded-xl overflow-hidden border border-gray-200">
+                <ReactQuill
+                  theme="snow"
+                  value={productUsage}
+                  onChange={setProductUsage}
+                  modules={quillModules}
+                  formats={quillFormats}
+                  placeholder="Describe how to use this product…"
+                  className="bg-white"
+                />
+              </div>
+            </div>
+          </div>
+        </SectionCard>
+
+        {/* ── 6. Media — Single uploads ── */}
+        <SectionCard
+          title="Media — Single Uploads"
+          subtitle="Leave a zone empty to keep the existing file. Upload a new file to replace it."
+        >
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5">
+            <UploadZone
+              id="main_image"
+              name="main_image"
+              accept="image/*"
+              preview={mainImagePreview}
+              label="Main Product Image"
+              onChange={makeSingleFileHandler(
+                setMainImagePreview,
+                setMainImage,
+              )}
+            />
+            <UploadZone
+              id="galleryimageone"
+              name="galleryimageone"
+              accept="image/*"
+              preview={galleryImageOnePreview}
+              label="Gallery Image 1"
+              onChange={makeSingleFileHandler(
+                setGalleryImageOnePreview,
+                setGalleryImageOne,
+              )}
+            />
+            <UploadZone
+              id="galleryimagetwo"
+              name="galleryimagetwo"
+              accept="image/*"
+              preview={galleryImageTwoPreview}
+              label="Gallery Image 2"
+              onChange={makeSingleFileHandler(
+                setGalleryImageTwoPreview,
+                setGalleryImageTwo,
+              )}
+            />
+            <UploadZone
+              id="warrantyFile"
+              name="warranty_icon"
+              accept="image/*"
+              preview={warrantyImgPreview}
+              label="Warranty Icon"
+              onChange={makeSingleFileHandler(
+                setWarrantyImgPreview,
+                setWarranty_icon,
+              )}
+            />
+            <UploadZone
+              id="productVideo"
+              name="product_video"
+              accept="video/*"
+              preview={productVideoPreview}
+              label="Product Video"
+              isVideo
+              onChange={makeSingleFileHandler(
+                setProductVideoPreview,
+                setProductVideo,
+              )}
+            />
+          </div>
+        </SectionCard>
+
+        {/* ── 7. Media — Multi uploads ── */}
+        <SectionCard
+          title="Media — Multiple Uploads"
+          subtitle="Existing images shown below. Upload new files to replace the entire set."
+        >
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <MultiUploadZone
+              id="product_images"
+              name="product_images"
+              previews={variantImgPreview}
+              label="Variant Images"
+              onChange={makeMultiFileHandler(
+                setVariantImgPreview,
+                setProduct_Images,
+              )}
+              onRemove={makeRemoveHandler(
+                variantImgPreview,
+                setVariantImgPreview,
+                product_images,
+                setProduct_Images,
+              )}
+            />
+            <MultiUploadZone
+              id="specification_images"
+              name="specification_images"
+              previews={specificationImgPreview}
+              label="Specification Images"
+              onChange={makeMultiFileHandler(
+                setSpecificationImgPreview,
+                setSpecification_Images,
+              )}
+              onRemove={makeRemoveHandler(
+                specificationImgPreview,
+                setSpecificationImgPreview,
+                specification_images,
+                setSpecification_Images,
+              )}
+            />
+            <MultiUploadZone
+              id="usage_images"
+              name="usage_images"
+              previews={usageImgPreview}
+              label="Usage Images"
+              onChange={makeMultiFileHandler(
+                setUsageImgPreview,
+                setUsage_Images,
+              )}
+              onRemove={makeRemoveHandler(
+                usageImgPreview,
+                setUsageImgPreview,
+                usage_images,
+                setUsage_Images,
+              )}
+            />
+            <MultiUploadZone
+              id="sizing_images"
+              name="sizing_images"
+              previews={sizingImgPreview}
+              label="Sizing Images"
+              onChange={makeMultiFileHandler(
+                setSizingImgPreview,
+                setSizing_Images,
+              )}
+              onRemove={makeRemoveHandler(
+                sizingImgPreview,
+                setSizingImgPreview,
+                sizing_images,
+                setSizing_Images,
+              )}
+            />
+          </div>
+        </SectionCard>
+
+        {/* ── Submit ── */}
+        <div className="flex items-center justify-between bg-white rounded-2xl border border-gray-100 shadow-sm px-6 py-4">
+          <p className="text-xs text-gray-400">
+            Only changed fields will be updated on the server
+          </p>
+          <button
+            type="submit"
+            disabled={isLoading}
+            className="relative inline-flex items-center gap-2 bg-red-600 hover:bg-red-700 disabled:opacity-60 text-white font-semibold text-sm px-8 py-3 rounded-xl shadow-md shadow-red-200 transition active:scale-95"
+          >
+            {isLoading ? (
+              <>
+                <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                Saving…
+              </>
+            ) : (
+              "Save Changes"
+            )}
+          </button>
         </div>
-      )}
-    </>
+      </form>
+    </div>
   );
 };
 

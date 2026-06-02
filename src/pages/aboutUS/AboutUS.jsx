@@ -1,4 +1,3 @@
-import React from "react";
 import { Link } from "react-router-dom";
 import BaltraImg from "../../assets/images/BaltraBanner.png";
 import MetaData from "../../components/layout/metaData/MetaData";

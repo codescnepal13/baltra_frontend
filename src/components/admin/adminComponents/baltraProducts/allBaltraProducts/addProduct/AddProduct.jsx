@@ -1,7 +1,7 @@
 import { enqueueSnackbar } from "notistack";
 import { useEffect, useState } from "react";
 import { BlockPicker } from "react-color";
-import { FaInfoCircle, FaTimes, FaTrash } from "react-icons/fa";
+import { FaInfoCircle, FaTimes } from "react-icons/fa";
 import { HiOutlineArrowLeftCircle } from "react-icons/hi2";
 import { IoCloudUploadOutline } from "react-icons/io5";
 import ReactQuill from "react-quill";
@@ -96,6 +96,128 @@ const quillFormats = [
   "blockquote",
   "code-block",
 ];
+
+/* ── Reusable field components ── */
+const Label = ({ children, required }) => (
+  <label className="block text-xs font-semibold text-gray-500 uppercase tracking-wider mb-1.5">
+    {children}
+    {required && <span className="text-red-500 ml-1">*</span>}
+  </label>
+);
+
+const FieldError = ({ msg }) =>
+  msg ? <p className="mt-1 text-xs text-red-500">{msg}</p> : null;
+
+const inputCls =
+  "w-full px-3.5 py-2.5 text-sm bg-gray-50 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-red-500/30 focus:border-red-400 transition placeholder:text-gray-400";
+
+const SectionCard = ({ title, subtitle, children }) => (
+  <div className="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden">
+    <div className="px-6 py-4 border-b border-gray-100 bg-gray-50/60">
+      <h3 className="text-sm font-bold text-gray-800">{title}</h3>
+      {subtitle && <p className="text-xs text-gray-400 mt-0.5">{subtitle}</p>}
+    </div>
+    <div className="px-6 py-5">{children}</div>
+  </div>
+);
+
+/* ── Upload zone ── */
+const UploadZone = ({
+  id,
+  name,
+  accept,
+  preview,
+  onChange,
+  label,
+  isVideo,
+}) => (
+  <div>
+    <Label>{label}</Label>
+    <label
+      htmlFor={id}
+      className="group flex flex-col items-center justify-center w-full h-44 rounded-xl border-2 border-dashed border-gray-200 hover:border-red-400 bg-gray-50 hover:bg-red-50/30 cursor-pointer transition-all duration-200 overflow-hidden relative"
+    >
+      {preview ? (
+        isVideo ? (
+          <video
+            src={preview}
+            controls
+            className="w-full h-full object-contain"
+          />
+        ) : (
+          <img
+            src={preview}
+            alt={label}
+            className="w-full h-full object-contain p-2"
+          />
+        )
+      ) : (
+        <div className="flex flex-col items-center gap-2 text-gray-400 group-hover:text-red-400 transition-colors">
+          <IoCloudUploadOutline size={28} />
+          <span className="text-xs font-medium">Click to upload</span>
+          <span className="text-[11px] text-gray-300">
+            {isVideo ? "MP4, MOV, AVI" : "PNG, JPG, WEBP"}
+          </span>
+        </div>
+      )}
+      <input
+        id={id}
+        type="file"
+        name={name}
+        accept={accept}
+        className="hidden"
+        onChange={onChange}
+      />
+    </label>
+  </div>
+);
+
+/* ── Multi-image upload zone ── */
+const MultiUploadZone = ({ id, name, previews, onChange, onRemove, label }) => (
+  <div>
+    <Label>{label}</Label>
+    <label
+      htmlFor={id}
+      className="group flex items-center justify-center gap-2 w-full py-3 rounded-xl border-2 border-dashed border-gray-200 hover:border-red-400 bg-gray-50 hover:bg-red-50/30 cursor-pointer transition-all duration-200 text-gray-400 group-hover:text-red-400"
+    >
+      <IoCloudUploadOutline size={18} />
+      <span className="text-xs font-medium">Upload multiple images</span>
+      <input
+        id={id}
+        type="file"
+        name={name}
+        multiple
+        accept="image/*"
+        className="hidden"
+        onChange={onChange}
+      />
+    </label>
+    {previews.length > 0 && (
+      <div className="flex flex-wrap gap-2 mt-3">
+        {previews.map((src, i) => (
+          <div
+            key={i}
+            className="relative w-20 h-20 rounded-lg border border-gray-200 overflow-hidden bg-gray-50"
+          >
+            <img
+              src={src}
+              alt={`preview-${i}`}
+              className="w-full h-full object-contain p-1"
+            />
+            <button
+              type="button"
+              onClick={() => onRemove(i)}
+              className="absolute top-0.5 right-0.5 w-5 h-5 bg-red-500 hover:bg-red-600 text-white rounded-full flex items-center justify-center"
+            >
+              <FaTimes size={8} />
+            </button>
+          </div>
+        ))}
+      </div>
+    )}
+  </div>
+);
+
 const AddProduct = () => {
   const { dropdownCategories, error, isLoading, dropdownSubCategories } =
     useSelector((state) => state.admin);
@@ -137,440 +259,160 @@ const AddProduct = () => {
 
   const [variantImgPreview, setVariantImgPreview] = useState([]);
   const [product_images, setProduct_Images] = useState([]);
-
   const [productErr, setProductErr] = useState({});
-
   const [specificationImgPreview, setSpecificationImgPreview] = useState([]);
   const [specification_images, setSpecification_Images] = useState([]);
-
   const [usageImgPreview, setUsageImgPreview] = useState([]);
   const [usage_images, setUsage_Images] = useState([]);
-
   const [sizingImgPreview, setSizingImgPreview] = useState([]);
   const [sizing_images, setSizing_Images] = useState([]);
-
   const [warranty_icon, setWarranty_icon] = useState(null);
   const [warrantyImgPreview, setWarrantyImgPreview] = useState(null);
-
   const [product_video, setProductVideo] = useState(null);
   const [productVideoPreview, setProductVideoPreview] = useState(null);
-
   const [galleryimageone, setGalleryImageOne] = useState(null);
   const [galleryImageOnePreview, setGalleryImageOnePreview] = useState(null);
-
   const [galleryimagetwo, setGalleryImageTwo] = useState(null);
   const [galleryImageTwoPreview, setGalleryImageTwoPreview] = useState(null);
-
   const [main_image, setMainImage] = useState(null);
   const [mainImagePreview, setMainImagePreview] = useState(null);
-
   const [sizes, setSizes] = useState([]);
   const [inputValue, setInputValue] = useState("");
-
   const [productSpecification, setProductSpecification] = useState("");
   const [productSizing, setProductSizing] = useState("");
   const [productUsage, setProductUsage] = useState("");
 
-  const handleSpecificationChange = (value) => {
-    setProductSpecification(value);
-  };
-
-  const handleSizingChange = (value) => {
-    setProductSizing(value);
-  };
-
-  const handleUsageChange = (value) => {
-    setProductUsage(value);
-  };
-
-  const handleMainFileChange = (e) => {
-    const file = e.target.files[0];
-    if (file) {
-      const reader = new FileReader();
-      reader.readAsDataURL(file);
-
-      reader.onloadend = () => {
-        setMainImagePreview(reader.result);
-        setMainImage(file);
-      };
-
-      reader.onerror = () => {
-        console.error("There was an error reading the file!");
-      };
-    }
-  };
-
   const handleChange = (e) => {
-    let { name, value } = e.target;
-
-    setAddProductValue((prevValue) => ({
-      ...prevValue,
-      [name]: value,
-    }));
+    const { name, value } = e.target;
+    setAddProductValue((prev) => ({ ...prev, [name]: value }));
   };
 
-  const handleGalleryTwoFileInputChange = (e) => {
+  const makeSingleFileHandler = (setPreview, setFile) => (e) => {
     const file = e.target.files[0];
-    if (file) {
-      const reader = new FileReader();
-      reader.readAsDataURL(file);
-
-      reader.onloadend = () => {
-        setGalleryImageTwoPreview(reader.result);
-        setGalleryImageTwo(file);
-      };
-
-      reader.onerror = () => {
-        console.error("There was an error reading the file!");
-      };
-    }
-  };
-  const handleGalleryOneFileInputChange = (e) => {
-    const file = e.target.files[0];
-    if (file) {
-      const reader = new FileReader();
-      reader.readAsDataURL(file);
-
-      reader.onloadend = () => {
-        setGalleryImageOnePreview(reader.result);
-        setGalleryImageOne(file);
-      };
-
-      reader.onerror = () => {
-        console.error("There was an error reading the file!");
-      };
-    }
+    if (!file) return;
+    const reader = new FileReader();
+    reader.readAsDataURL(file);
+    reader.onloadend = () => {
+      setPreview(reader.result);
+      setFile(file);
+    };
   };
 
-  const handleProductVideoInputChange = (e) => {
-    const file = e.target.files[0];
-    if (file) {
-      const reader = new FileReader();
-      reader.readAsDataURL(file);
-
-      reader.onloadend = () => {
-        setProductVideoPreview(reader.result);
-        setProductVideo(file);
-      };
-
-      reader.onerror = () => {
-        console.error("There was an error reading the file!");
-      };
-    }
-  };
-
-  const handleWarrantyFileInputChange = (e) => {
-    const file = e.target.files[0];
-    if (file) {
-      const reader = new FileReader();
-      reader.readAsDataURL(file);
-
-      reader.onloadend = () => {
-        setWarrantyImgPreview(reader.result);
-        setWarranty_icon(file);
-      };
-
-      reader.onerror = () => {
-        console.error("There was an error reading the file!");
-      };
-    }
-  };
-
-  const validatedForm = () => {
-    let newErrors = {};
-    if (!name) {
-      newErrors.name = "productName is required";
-    }
-    if (!category_id) {
-      newErrors.category_id = "Category is required";
-    }
-    if (!sub_category_id) {
-      newErrors.sub_category_id = "SubCategory is required";
-    }
-    if (!sub_heading) {
-      newErrors.sub_heading = "SubHeading is required";
-    }
-
-    if (!packaging) {
-      newErrors.packaging = "packaging is required";
-    }
-
-    if (!warranty) {
-      newErrors.warranty = "Warranty is required";
-    }
-    if (!model_num) {
-      newErrors.model_num = "Model Number is required";
-    }
-    if (!model_name) {
-      newErrors.model_name = "Model Name is required";
-    }
-    if (!price) {
-      newErrors.price = "price is required";
-    }
-
-    if (color_styles.length === 0) {
-      newErrors.color_styles = "color is required";
-    }
-
-    if (!productSpecification) {
-      newErrors.productSpecification = "ProductSpecification is required";
-    }
-    if (!productSizing) {
-      newErrors.productSizing = "ProductSizing is required";
-    }
-    if (!productUsage) {
-      newErrors.productUsage = "ProductUsage is required";
-    }
-    if (product_images.length === 0) {
-      newErrors.product_images = "product_images is required";
-    }
-
-    setProductErr(newErrors);
-    return Object.keys(newErrors).length === 0;
-  };
-
-  const handleImageChange = async (e) => {
+  const makeMultiFileHandler = (setPreview, setFiles) => async (e) => {
     const files = e.target.files;
-
-    if (files && files.length > 0) {
-      const previewArray = [];
-      const promises = Array.from(files).map((file) => {
-        return new Promise((resolve) => {
-          const reader = new FileReader();
-          reader.readAsDataURL(file);
-          reader.onloadend = () => {
-            previewArray.push(reader.result);
-            resolve();
-          };
-        });
-      });
-
-      await Promise.all(promises);
-
-      setVariantImgPreview(previewArray);
-      setProduct_Images(Array.from(files));
-    } else {
-      setVariantImgPreview([]);
-      setProduct_Images([]);
+    if (!files?.length) {
+      setPreview([]);
+      setFiles([]);
+      return;
     }
+    const previews = await Promise.all(
+      Array.from(files).map(
+        (f) =>
+          new Promise((res) => {
+            const r = new FileReader();
+            r.readAsDataURL(f);
+            r.onloadend = () => res(r.result);
+          }),
+      ),
+    );
+    setPreview(previews);
+    setFiles(Array.from(files));
   };
 
-  const handleSpecificationImageChange = async (e) => {
-    const files = e.target.files;
-
-    if (files && files.length > 0) {
-      const previewArray = [];
-      const promises = Array.from(files).map((file) => {
-        return new Promise((resolve) => {
-          const reader = new FileReader();
-          reader.readAsDataURL(file);
-          reader.onloadend = () => {
-            previewArray.push(reader.result);
-            resolve();
-          };
-        });
-      });
-
-      await Promise.all(promises);
-
-      setSpecificationImgPreview(previewArray);
-      setSpecification_Images(Array.from(files));
-    } else {
-      setSpecificationImgPreview([]);
-      setSpecification_Images([]);
-    }
-  };
-
-  const handleUsageImageChange = async (e) => {
-    const files = e.target.files;
-
-    if (files && files.length > 0) {
-      const previewArray = [];
-      const promises = Array.from(files).map((file) => {
-        return new Promise((resolve) => {
-          const reader = new FileReader();
-          reader.readAsDataURL(file);
-          reader.onloadend = () => {
-            previewArray.push(reader.result);
-            resolve();
-          };
-        });
-      });
-
-      await Promise.all(promises);
-
-      setUsageImgPreview(previewArray);
-      setUsage_Images(Array.from(files));
-    } else {
-      setUsageImgPreview([]);
-      setUsage_Images([]);
-    }
-  };
-
-  const handleSizingImageChange = async (e) => {
-    const files = e.target.files;
-
-    if (files && files.length > 0) {
-      const previewArray = [];
-      const promises = Array.from(files).map((file) => {
-        return new Promise((resolve) => {
-          const reader = new FileReader();
-          reader.readAsDataURL(file);
-          reader.onloadend = () => {
-            previewArray.push(reader.result);
-            resolve();
-          };
-        });
-      });
-
-      await Promise.all(promises);
-
-      setSizingImgPreview(previewArray);
-      setSizing_Images(Array.from(files));
-    } else {
-      setSizingImgPreview([]);
-      setSizing_Images([]);
-    }
-  };
-
-  const handleSizingRemoveImage = (index) => {
-    const updatedPreview = [...usageImgPreview];
-    updatedPreview.splice(index, 1);
-    setSizingImgPreview(updatedPreview);
-
-    const updatedImages = [...sizing_images];
-    updatedImages.splice(index, 1);
-    setSizing_Images(updatedImages);
-  };
-
-  const handleUsageRemoveImage = (index) => {
-    const updatedPreview = [...usageImgPreview];
-    updatedPreview.splice(index, 1);
-    setUsageImgPreview(updatedPreview);
-
-    const updatedImages = [...usage_images];
-    updatedImages.splice(index, 1);
-    setUsage_Images(updatedImages);
-  };
-
-  const handleSpecificationRemoveImage = (index) => {
-    const updatedPreview = [...specificationImgPreview];
-    updatedPreview.splice(index, 1);
-    setSpecificationImgPreview(updatedPreview);
-
-    const updatedImages = [...specification_images];
-    updatedImages.splice(index, 1);
-    setSpecification_Images(updatedImages);
-  };
-
-  const handleRemoveImage = (index) => {
-    const updatedPreview = [...variantImgPreview];
-    updatedPreview.splice(index, 1);
-    setVariantImgPreview(updatedPreview);
-
-    const updatedImages = [...product_images];
-    updatedImages.splice(index, 1);
-    setProduct_Images(updatedImages);
-  };
+  const makeRemoveHandler =
+    (previews, setPreviews, files, setFiles) => (index) => {
+      setPreviews(previews.filter((_, i) => i !== index));
+      setFiles(files.filter((_, i) => i !== index));
+    };
 
   const handleColorChange = (color) => {
     if (!color_styles.includes(color.hex)) {
-      setAddProductValue((prevValue) => ({
-        ...prevValue,
-        color_styles: [...prevValue.color_styles, color.hex],
+      setAddProductValue((prev) => ({
+        ...prev,
+        color_styles: [...prev.color_styles, color.hex],
       }));
     }
   };
-
-  const handleRemoveColor = (colorToRemove) => {
-    setAddProductValue((prevValue) => ({
-      ...prevValue,
-      color_styles: prevValue.color_styles.filter(
-        (color) => color !== colorToRemove
-      ),
+  const handleRemoveColor = (c) =>
+    setAddProductValue((prev) => ({
+      ...prev,
+      color_styles: prev.color_styles.filter((x) => x !== c),
     }));
-  };
 
   const handleAddSize = (e) => {
     e.preventDefault();
-    if (inputValue.trim() !== "") {
+    if (inputValue.trim()) {
       setSizes([...sizes, inputValue.trim()]);
       setInputValue("");
     }
   };
+  const removeSize = (s) => setSizes(sizes.filter((x) => x !== s));
 
-  // Function to remove a size
-  const removeSize = (sizeToRemove) => {
-    setSizes(sizes.filter((size) => size !== sizeToRemove));
+  const validatedForm = () => {
+    const errs = {};
+    if (!name) errs.name = "Product name is required";
+    if (!category_id) errs.category_id = "Category is required";
+    if (!sub_category_id) errs.sub_category_id = "Sub category is required";
+    if (!sub_heading) errs.sub_heading = "Sub heading is required";
+    if (!packaging) errs.packaging = "Packaging is required";
+    if (!warranty) errs.warranty = "Warranty is required";
+    if (!model_num) errs.model_num = "Model number is required";
+    if (!model_name) errs.model_name = "Model name is required";
+    if (!price) errs.price = "Price is required";
+    if (!color_styles.length)
+      errs.color_styles = "At least one color is required";
+    if (!productSpecification)
+      errs.productSpecification = "Specification is required";
+    if (!productSizing) errs.productSizing = "Sizing is required";
+    if (!productUsage) errs.productUsage = "Usage is required";
+    if (!product_images.length)
+      errs.product_images = "At least one variant image is required";
+    setProductErr(errs);
+    return Object.keys(errs).length === 0;
   };
 
   const handleSubmit = (e) => {
     e.preventDefault();
-    if (validatedForm()) {
-      const formData = new FormData();
-      formData.append("name", name);
-      formData.append("category_id", category_id);
-      formData.append("sub_category_id", sub_category_id);
-      formData.append("price", parseInt(price));
-      formData.append("stocks", parseInt(stocks));
-      formData.append("power", power);
-      formData.append("warranty", warranty);
-      formData.append("packaging", packaging);
-      formData.append("serial_number", serial_number);
-      formData.append("model_num", model_num);
-      formData.append("sub_heading", sub_heading);
-      formData.append("model_name", model_name);
-      formData.append("reward_points", parseInt(reward_points));
-      formData.append("specification", productSpecification);
-      formData.append("sizing", productSizing);
-      formData.append("usage", productUsage);
-      formData.append("warranty_icon", warranty_icon);
-      formData.append("galleryimageone", galleryimageone);
-      formData.append("galleryimagetwo", galleryimagetwo);
-      formData.append("product_video", product_video);
-      formData.append("main_image", main_image);
-
-      // Convert arrays to JSON strings
-      formData.append("color_styles", JSON.stringify(color_styles));
-      formData.append("sizes", JSON.stringify(sizes));
-
-      // Append product images
-      if (product_images.length > 0) {
-        product_images.forEach((photo) => {
-          formData.append("product_images", photo);
-        });
-      }
-
-      if (sizing_images.length > 0) {
-        sizing_images.forEach((photo) => {
-          formData.append("sizing_images", photo);
-        });
-      }
-
-      if (usage_images.length > 0) {
-        usage_images.forEach((photo) => {
-          formData.append("usage_images", photo);
-        });
-      }
-
-      if (specification_images.length > 0) {
-        specification_images.forEach((photo) => {
-          formData.append("specification_images", photo);
-        });
-      }
-      dispatch(addBaltraProduct({ formData, enqueueSnackbar, navigate }));
-    } else {
-      enqueueSnackbar("Invalid Input", {
-        variant: "error",
-      });
+    if (!validatedForm()) {
+      enqueueSnackbar("Please fix the errors below", { variant: "error" });
+      return;
     }
+    const formData = new FormData();
+    formData.append("name", name);
+    formData.append("category_id", category_id);
+    formData.append("sub_category_id", sub_category_id);
+    formData.append("price", parseInt(price));
+    formData.append("stocks", parseInt(stocks));
+    formData.append("power", power);
+    formData.append("warranty", warranty);
+    formData.append("packaging", packaging);
+    formData.append("serial_number", serial_number);
+    formData.append("model_num", model_num);
+    formData.append("sub_heading", sub_heading);
+    formData.append("model_name", model_name);
+    formData.append("reward_points", parseInt(reward_points));
+    formData.append("specification", productSpecification);
+    formData.append("sizing", productSizing);
+    formData.append("usage", productUsage);
+    formData.append("warranty_icon", warranty_icon);
+    formData.append("galleryimageone", galleryimageone);
+    formData.append("galleryimagetwo", galleryimagetwo);
+    formData.append("product_video", product_video);
+    formData.append("main_image", main_image);
+    formData.append("color_styles", JSON.stringify(color_styles));
+    formData.append("sizes", JSON.stringify(sizes));
+    product_images.forEach((p) => formData.append("product_images", p));
+    sizing_images.forEach((p) => formData.append("sizing_images", p));
+    usage_images.forEach((p) => formData.append("usage_images", p));
+    specification_images.forEach((p) =>
+      formData.append("specification_images", p),
+    );
+    dispatch(addBaltraProduct({ formData, enqueueSnackbar, navigate }));
   };
 
   useEffect(() => {
     if (error) {
-      enqueueSnackbar(error, {
-        variant: "error",
-      });
+      enqueueSnackbar(error, { variant: "error" });
       dispatch(clearAdminError());
     }
   }, [dispatch, error]);
@@ -578,833 +420,562 @@ const AddProduct = () => {
   useEffect(() => {
     dispatch(dropdownCategory());
   }, [dispatch]);
-
   useEffect(() => {
-    if (category_id) {
-      dispatch(dropdownSubCategory(category_id));
-    }
+    if (category_id) dispatch(dropdownSubCategory(category_id));
   }, [dispatch, category_id]);
 
   return (
-    <>
-      <div className="flex items-center w-full my-2 px-8">
-        <FaInfoCircle className="text-black mr-2" size={20} />
-        <p className="text-xs text-black font-outfit flex-grow md:text-sm">
-          To ensure proper product addition, carefully select the colors and
-          images. Hold the
-          <strong>Ctrl</strong> key (or <strong>Cmd</strong> on Mac) to select
-          multiple colors or images. For sizes, you can manually add multiple
-          entries. To add a product specification, select the editor list
-          options and manually add the list. For sizing, write the description,
-          and for usage, write the description in list format using the editor.
-        </p>
+    <div className="min-h-screen bg-[#f5f6fa]">
+      {/* ── Top bar ── */}
+      <div className="bg-white border-b border-gray-100 px-4 py-4">
+        <div className="max-w-screen-2xl mx-auto flex items-center justify-between">
+          <Link
+            to="/baltra-admin-dashboard/all-products-list"
+            className="inline-flex items-center gap-2 text-sm font-medium text-gray-500 hover:text-gray-800 transition"
+          >
+            <HiOutlineArrowLeftCircle size={20} />
+            Back to Products
+          </Link>
+          <div>
+            <h1 className="text-lg font-bold text-gray-900 text-right">
+              Add New Product
+            </h1>
+            <p className="text-xs text-gray-400 text-right">
+              Fill in all required fields to create a product
+            </p>
+          </div>
+        </div>
       </div>
 
-      <div className="font-gothamNarrow px-8 mt-8 md:mt-4 flex justify-between items-center">
-        <Link
-          to="/baltra-admin-dashboard/all-products-list"
-          className="flex items-center font-gothamNarrow"
-        >
-          <HiOutlineArrowLeftCircle size={24} className="mr-2" />
-          Add Product
-        </Link>
+      {/* ── Tip banner ── */}
+      <div className="max-w-screen-2xl mx-auto px-4 pt-5">
+        <div className="flex gap-3 bg-blue-50 border border-blue-100 rounded-xl px-4 py-3">
+          <FaInfoCircle
+            className="text-blue-400 mt-0.5 flex-shrink-0"
+            size={14}
+          />
+          <p className="text-xs text-blue-600 leading-relaxed">
+            Hold{" "}
+            <kbd className="bg-white border border-blue-200 rounded px-1 py-0.5 font-mono text-[10px]">
+              Ctrl
+            </kbd>{" "}
+            (or{" "}
+            <kbd className="bg-white border border-blue-200 rounded px-1 py-0.5 font-mono text-[10px]">
+              Cmd
+            </kbd>{" "}
+            on Mac) to select multiple images. For sizes, type and click{" "}
+            <strong>Add Size</strong>. Use the rich editor for specification,
+            sizing, and usage descriptions.
+          </p>
+        </div>
       </div>
-      <div className="container mx-auto px-8 my-5 font-sans">
-        <form className="bg-[#FFFFFF] px-3 py-3" onSubmit={handleSubmit}>
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4  focus:ring-1 focus:ring-sky-200">
+
+      <form
+        onSubmit={handleSubmit}
+        className="font-inter px-4 py-4 max-w-screen-2xl mx-auto space-y-6"
+      >
+        {/* ── 1. Classification ── */}
+        <SectionCard
+          title="Classification"
+          subtitle="Select the category this product belongs to"
+        >
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
             <div>
-              <label
-                htmlFor="category_id"
-                className="text-black font-normal mb-2 font-gothamNarrow"
-              >
-                Select Category
-              </label>
+              <Label required>Category</Label>
               <select
-                id="category_id"
                 name="category_id"
-                className="w-full font-gothamNarrow my-1 px-4 py-3 border border-gray-400 rounded-md focus:outline-none focus:border-red-500 focus:ring-gray-300"
                 value={category_id}
                 onChange={handleChange}
+                className={inputCls}
               >
                 <option value="">Select a category</option>
-                {dropdownCategories && dropdownCategories.length > 0 ? (
-                  dropdownCategories.map((category) => (
-                    <option
-                      key={category.category_id}
-                      value={category.category_id}
-                    >
-                      {category.category_name}
+                {dropdownCategories?.length > 0 ? (
+                  dropdownCategories.map((c) => (
+                    <option key={c.category_id} value={c.category_id}>
+                      {c.category_name}
                     </option>
                   ))
                 ) : (
-                  <option value="">Loading categories...</option>
+                  <option disabled>Loading…</option>
                 )}
               </select>
-              {productErr && (
-                <span className="text-xs text-red-600 font-gothamNarrow">
-                  {productErr.category_id}
-                </span>
-              )}
+              <FieldError msg={productErr.category_id} />
             </div>
-
             <div>
-              <label
-                htmlFor="sub_category_id"
-                className="text-black font-normal mb-2 font-gothamNarrow"
-              >
-                Select Sub Category
-              </label>
+              <Label required>Sub Category</Label>
               <select
-                id="sub_category_id"
                 name="sub_category_id"
-                className="w-full font-gothamNarrow my-1 px-4 py-3 border border-gray-400 rounded-md focus:outline-none focus:border-red-500 focus:ring-gray-300"
                 value={sub_category_id}
                 onChange={handleChange}
+                className={inputCls}
+                disabled={!category_id}
               >
-                <option value="">Select Sub Category</option>
+                <option value="">Select sub category</option>
                 {category_id &&
-                  (dropdownSubCategories && dropdownSubCategories.length > 0 ? (
-                    dropdownSubCategories.map((subcategory) => (
-                      <option
-                        key={subcategory.subcategory_id}
-                        value={subcategory.subcategory_id}
-                      >
-                        {subcategory.subcategory_name}
+                  (dropdownSubCategories?.length > 0 ? (
+                    dropdownSubCategories.map((s) => (
+                      <option key={s.subcategory_id} value={s.subcategory_id}>
+                        {s.subcategory_name}
                       </option>
                     ))
                   ) : (
-                    <option value="">Loading categories...</option>
+                    <option disabled>Loading…</option>
                   ))}
               </select>
-              {productErr && (
-                <span className="text-xs text-red-600 font-gothamNarrow">
-                  {productErr.sub_category_id}
-                </span>
-              )}
+              <FieldError msg={productErr.sub_category_id} />
             </div>
+          </div>
+        </SectionCard>
 
+        {/* ── 2. Basic Info ── */}
+        <SectionCard
+          title="Basic Information"
+          subtitle="Core product identity and pricing"
+        >
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
             <div>
-              <label
-                htmlFor="stock"
-                className="text-black font-normal mb-2 font-gothamNarrow"
-              >
-                Product Name
-              </label>
+              <Label required>Product Name</Label>
               <input
                 type="text"
-                id="name"
                 name="name"
-                className="w-full font-gothamNarrow my-1 px-4 py-2 border border-gray-400 rounded-md focus:outline-none focus:border-red-500  focus:ring-gray-300"
-                placeholder="Enter Product Name"
                 value={name}
                 onChange={handleChange}
+                placeholder="e.g. Baltra Air Purifier Pro"
+                className={inputCls}
               />
-              {productErr.name && (
-                <span className="text-xs text-red-600 font-gothamNarrow">
-                  {productErr.name}
-                </span>
-              )}
+              <FieldError msg={productErr.name} />
             </div>
             <div>
-              <label
-                htmlFor="stock"
-                className="text-black font-normal mb-2 font-gothamNarrow"
-              >
-                Product Sub Heading
-              </label>
+              <Label required>Sub Heading</Label>
               <input
                 type="text"
-                id="sub_heading"
                 name="sub_heading"
-                className="w-full font-gothamNarrow my-1 px-4 py-2 border border-gray-400 rounded-md focus:outline-none focus:border-red-500  focus:ring-gray-300"
-                placeholder="Enter Product Sub Heading"
                 value={sub_heading}
                 onChange={handleChange}
+                placeholder="Short tagline for the product"
+                className={inputCls}
               />
-              {productErr.sub_heading && (
-                <span className="text-xs text-red-600 font-gothamNarrow">
-                  {productErr.sub_heading}
-                </span>
-              )}
-            </div>
-            <div className="font-gothamNarrow">
-              <label htmlFor="price" className="text-black font-normal">
-                Price
-              </label>
-              <div className="flex items-center font-gothamNarrow text-black font-normal">
-                <input
-                  type="number"
-                  id="price"
-                  name="price"
-                  className="w-full font-gothamNarrow px-4 my-1 py-2 border border-gray-400 rounded-md focus:outline-none focus:border-red-500  focus:ring-gray-300"
-                  placeholder="Enter your price"
-                  value={price}
-                  onChange={handleChange}
-                />
-              </div>
-              {productErr.price && (
-                <span className="text-xs text-red-600 font-gothamNarrow">
-                  {productErr.price}
-                </span>
-              )}
+              <FieldError msg={productErr.sub_heading} />
             </div>
             <div>
-              <label
-                htmlFor="stock"
-                className="text-black font-normal mb-2 font-gothamNarrow"
-              >
-                Stock
-              </label>
+              <Label required>Price (NPR)</Label>
               <input
                 type="number"
-                id="stocks"
+                name="price"
+                value={price}
+                onChange={handleChange}
+                placeholder="0.00"
+                className={inputCls}
+              />
+              <FieldError msg={productErr.price} />
+            </div>
+            <div>
+              <Label>Stock</Label>
+              <input
+                type="number"
                 name="stocks"
-                className="w-full font-gothamNarrow my-1 px-4 py-2 border border-gray-400 rounded-md focus:outline-none focus:border-red-500  focus:ring-gray-300"
-                placeholder="Enter product stock"
                 value={stocks}
                 onChange={handleChange}
+                placeholder="Available quantity"
+                className={inputCls}
               />
             </div>
             <div>
-              <label
-                htmlFor="Model Name"
-                className="text-black font-normal mb-2 font-gothamNarrow"
-              >
-                Model Name
-              </label>
+              <Label>Reward Points</Label>
               <input
                 type="text"
-                id="model_name"
+                name="reward_points"
+                value={reward_points}
+                onChange={handleChange}
+                placeholder="Points earned on purchase"
+                className={inputCls}
+              />
+            </div>
+          </div>
+        </SectionCard>
+
+        {/* ── 3. Product Details ── */}
+        <SectionCard
+          title="Product Details"
+          subtitle="Technical specifications and identifiers"
+        >
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
+            <div>
+              <Label required>Model Name</Label>
+              <input
+                type="text"
                 name="model_name"
-                className="w-full font-gothamNarrow my-1 px-4 py-2 border border-gray-400 rounded-md focus:outline-none focus:border-red-500  focus:ring-gray-300"
-                placeholder="Enter Model Name"
                 value={model_name}
                 onChange={handleChange}
+                placeholder="e.g. AP-2000X"
+                className={inputCls}
               />
-              {productErr.model_name && (
-                <span className="text-xs text-red-600 font-gothamNarrow">
-                  {productErr.model_name}
-                </span>
-              )}
+              <FieldError msg={productErr.model_name} />
             </div>
             <div>
-              <label
-                htmlFor="model_num"
-                className="text-black font-normal mb-2 font-gothamNarrow"
-              >
-                Model Number
-              </label>
+              <Label required>Model Number</Label>
               <input
                 type="text"
-                id="model_num"
                 name="model_num"
-                className="w-full font-gothamNarrow my-1 px-4 py-2 border border-gray-400 rounded-md focus:outline-none focus:border-red-500  focus:ring-gray-300"
-                placeholder="Enter Model Number"
                 value={model_num}
                 onChange={handleChange}
+                placeholder="e.g. BAL-2024-001"
+                className={inputCls}
               />
-              {productErr.model_num && (
-                <span className="text-xs text-red-600 font-gothamNarrow">
-                  {productErr.model_num}
-                </span>
-              )}
+              <FieldError msg={productErr.model_num} />
             </div>
             <div>
-              <label
-                htmlFor="serial_number"
-                className="text-black font-normal mb-2 font-gothamNarrow"
-              >
-                Serial Number
-              </label>
+              <Label>Serial Number</Label>
               <input
                 type="text"
-                id="serial_number"
                 name="serial_number"
-                className="w-full font-gothamNarrow my-1 px-4 py-2 border border-gray-400 rounded-md focus:outline-none focus:border-red-500  focus:ring-gray-300"
-                placeholder="Enter Serial Number"
                 value={serial_number}
                 onChange={handleChange}
+                placeholder="Product serial number"
+                className={inputCls}
               />
             </div>
-
-            <div className="font-gothamNarrow">
-              <label htmlFor="price" className="text-black font-normal">
-                Power
-              </label>
-              <div className="flex items-center font-gothamNarrow text-black font-normal">
-                <input
-                  type="text"
-                  id="power"
-                  name="power"
-                  className="w-full font-gothamNarrow px-4 my-1 py-2 border border-gray-400 rounded-md focus:outline-none focus:border-red-500  focus:ring-gray-300"
-                  placeholder="Enter your power"
-                  value={power}
-                  onChange={handleChange}
-                />
-              </div>
-            </div>
-            <div className="font-gothamNarrow">
-              <label htmlFor="price" className="text-black font-normal">
-                Warranty:
-              </label>
-              <div className="flex items-center font-gothamNarrow text-black font-normal">
-                <input
-                  type="text"
-                  id="warranty"
-                  name="warranty"
-                  className="w-full font-gothamNarrow px-4 my-1 py-2 border border-gray-400 rounded-md focus:outline-none focus:border-red-500  focus:ring-gray-300"
-                  placeholder="Enter your warranty"
-                  value={warranty}
-                  onChange={handleChange}
-                />
-              </div>
-              {productErr.warranty && (
-                <span className="text-xs text-red-600 font-gothamNarrow">
-                  {productErr.warranty}
-                </span>
-              )}
-            </div>
             <div>
-              <label
-                htmlFor="packaging"
-                className="text-black font-normal mb-2 font-gothamNarrow"
-              >
-                Packaging
-              </label>
+              <Label>Power</Label>
               <input
                 type="text"
-                id="packaging"
+                name="power"
+                value={power}
+                onChange={handleChange}
+                placeholder="e.g. 220V / 50Hz / 45W"
+                className={inputCls}
+              />
+            </div>
+            <div>
+              <Label required>Warranty</Label>
+              <input
+                type="text"
+                name="warranty"
+                value={warranty}
+                onChange={handleChange}
+                placeholder="e.g. 2 Years"
+                className={inputCls}
+              />
+              <FieldError msg={productErr.warranty} />
+            </div>
+            <div>
+              <Label required>Packaging</Label>
+              <input
+                type="text"
                 name="packaging"
-                className="w-full font-gothamNarrow px-4 my-1 py-2 border border-gray-400 rounded-md focus:outline-none focus:border-red-500  focus:ring-gray-300"
-                placeholder="Enter product packaging"
                 value={packaging}
                 onChange={handleChange}
+                placeholder="e.g. Box with foam lining"
+                className={inputCls}
               />
-              {productErr.packaging && (
-                <span className="text-xs text-red-600 font-gothamNarrow">
-                  {productErr.packaging}
-                </span>
-              )}
+              <FieldError msg={productErr.packaging} />
             </div>
+          </div>
+        </SectionCard>
 
+        {/* ── 4. Colors & Sizes ── */}
+        <SectionCard
+          title="Colors & Sizes"
+          subtitle="Available variants for this product"
+        >
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            {/* Colors */}
             <div>
-              <label
-                htmlFor="color"
-                className="text-black font-normal font-gothamNarrow"
-              >
-                Select Product Colors (please select multiple colors)
-              </label>
-              <div className="flex flex-wrap my-1">
-                {color_styles.map((color, index) => (
-                  <div key={index} className="relative mr-2 mb-2">
-                    <div
-                      className="w-6 h-6 rounded-full"
-                      style={{ backgroundColor: color }}
-                    ></div>
-                    <button
-                      className="absolute -top-2 -right-2 bg-red-500 text-white rounded-full w-4 h-4 text-xs"
-                      onClick={() => handleRemoveColor(color)}
-                    >
-                      &times;
-                    </button>
-                  </div>
-                ))}
-              </div>
-              <div className="border border-gray-200 rounded-lg p-4">
+              <Label required>Product Colors</Label>
+              {color_styles.length > 0 && (
+                <div className="flex flex-wrap gap-2 mb-3">
+                  {color_styles.map((c, i) => (
+                    <div key={i} className="relative group">
+                      <div
+                        className="w-8 h-8 rounded-full border-2 border-white shadow-md"
+                        style={{ backgroundColor: c }}
+                      />
+                      <button
+                        type="button"
+                        onClick={() => handleRemoveColor(c)}
+                        className="absolute -top-1.5 -right-1.5 w-4 h-4 bg-red-500 text-white rounded-full flex items-center justify-center opacity-0 group-hover:opacity-100 transition"
+                      >
+                        <FaTimes size={7} />
+                      </button>
+                    </div>
+                  ))}
+                </div>
+              )}
+              <div className="border border-gray-200 rounded-xl overflow-hidden p-3 bg-gray-50">
                 <BlockPicker
                   colors={presetColors}
                   width="100%"
                   onChangeComplete={handleColorChange}
                 />
               </div>
-              {productErr.color_styles && (
-                <span className="text-xs text-red-600 font-gothamNarrow">
-                  {productErr.color_styles}
-                </span>
-              )}
+              <FieldError msg={productErr.color_styles} />
             </div>
-            <div>
-              <label
-                htmlFor="sizes"
-                className="text-black font-normal mb-2 font-gothamNarrow"
-              >
-                Please Enter multiple Product Sizes
-              </label>
-              <input
-                type="text"
-                id="input-size"
-                className="w-full font-gothamNarrow px-4 my-1 py-2 border border-gray-400 rounded-md focus:outline-none focus:border-red-500 focus:ring-gray-300"
-                placeholder="Enter product sizes"
-                value={inputValue}
-                onChange={(e) => setInputValue(e.target.value)}
-              />
-              <button
-                onClick={handleAddSize}
-                className="mt-2 text-sm bg-red-500 hover:bg-red-600 text-white px-4 py-2 rounded font-gothamNarrow"
-              >
-                Add Size
-              </button>
 
-              {/* Display the list of sizes */}
-              <ul className="mt-2">
-                {sizes.map((size, index) => (
-                  <li
-                    key={index}
-                    className="flex justify-between items-center font-gothamNarrow"
-                  >
-                    {size}{" "}
-                    <button
-                      type="button"
-                      onClick={() => removeSize(size)}
-                      className="text-red-500 hover:text-red-700 font-gothamNarrow"
+            {/* Sizes */}
+            <div>
+              <Label>Product Sizes</Label>
+              <div className="flex gap-2 mb-3">
+                <input
+                  type="text"
+                  value={inputValue}
+                  onChange={(e) => setInputValue(e.target.value)}
+                  placeholder="e.g. S, M, L, XL or 32, 34…"
+                  className={inputCls}
+                  onKeyDown={(e) => e.key === "Enter" && handleAddSize(e)}
+                />
+                <button
+                  type="button"
+                  onClick={handleAddSize}
+                  className="px-4 py-2.5 bg-red-600 hover:bg-red-700 text-white text-sm font-semibold rounded-xl transition active:scale-95 whitespace-nowrap"
+                >
+                  Add
+                </button>
+              </div>
+              {sizes.length > 0 ? (
+                <div className="flex flex-wrap gap-2">
+                  {sizes.map((s, i) => (
+                    <span
+                      key={i}
+                      className="inline-flex items-center gap-1.5 bg-gray-100 border border-gray-200 text-gray-700 text-xs font-medium px-3 py-1.5 rounded-full"
                     >
-                      <FaTrash size={14} />
-                    </button>
-                  </li>
-                ))}
-              </ul>
-            </div>
-
-            <div>
-              <label
-                htmlFor="specification"
-                className="text-black font-normal mb-2 font-gothamNarrow"
-              >
-                Product Specification
-              </label>
-              <div className="my-1">
-                {/* <ReactQuill
-                  theme="snow"
-                  value={productSpecification}
-                  onChange={handleSpecificationChange}
-                  className="tex-lg"
-                /> */}
-                <ReactQuill
-                  theme="snow"
-                  value={productSpecification}
-                  onChange={handleSpecificationChange}
-                  modules={quillModules}
-                  formats={quillFormats}
-                  className="bg-white"
-                  placeholder="Enter detailed product description..."
-                />
-
-                {productErr && (
-                  <span className="text-xs text-red-600 font-gothamNarrow">
-                    {productErr.productSpecification}
-                  </span>
-                )}
-              </div>
-            </div>
-
-            <div>
-              <label
-                htmlFor="sizing"
-                className="text-black font-normal mb-2 font-gothamNarrow"
-              >
-                Product Sizing
-              </label>
-              <div className="my-1">
-                {/* <ReactQuill
-                  theme="snow"
-                  value={productSizing}
-                  onChange={handleSizingChange}
-                  className="tex-lg"
-                /> */}
-
-                <ReactQuill
-                  theme="snow"
-                  value={productSizing}
-                  onChange={handleSizingChange}
-                  modules={quillModules}
-                  formats={quillFormats}
-                  className="bg-white"
-                  placeholder="Enter detailed product sizing..."
-                />
-                {productErr && (
-                  <span className="text-xs text-red-600 font-gothamNarrow">
-                    {productErr.productSizing}
-                  </span>
-                )}
-              </div>
-            </div>
-            <div>
-              <label
-                htmlFor="usage"
-                className="text-black font-normal mb-2 font-gothamNarrow"
-              >
-                Product Usage(Both description and List format)
-              </label>
-              <div className="my-1">
-                {/* <ReactQuill
-                  theme="snow"
-                  value={productUsage}
-                  onChange={handleUsageChange}
-                  className="tex-lg"
-                /> */}
-
-                <ReactQuill
-                  theme="snow"
-                  value={productUsage}
-                  onChange={handleUsageChange}
-                  modules={quillModules}
-                  formats={quillFormats}
-                  className="bg-white"
-                  placeholder="Enter detailed product Usage..."
-                />
-                {productErr && (
-                  <span className="text-xs text-red-600 font-gothamNarrow">
-                    {productErr.productUsage}
-                  </span>
-                )}
-              </div>
-            </div>
-
-            <div>
-              <label
-                htmlFor="reward_points"
-                className="text-black font-normal mb-2 font-gothamNarrow"
-              >
-                Reward Points
-              </label>
-              <input
-                type="text"
-                id="reward_points"
-                name="reward_points"
-                className="w-full font-gothamNarrow my-1 px-4 py-2 border border-gray-400 rounded-md focus:outline-none focus:border-red-500  focus:ring-gray-300"
-                placeholder="Enter Reward Point"
-                value={reward_points}
-                onChange={handleChange}
-              />
-              {productErr && (
-                <span className="text-xs text-red-600 font-gothamNarrow">
-                  {productErr.reward_points}
-                </span>
+                      {s}
+                      <button
+                        type="button"
+                        onClick={() => removeSize(s)}
+                        className="text-gray-400 hover:text-red-500 transition"
+                      >
+                        <FaTimes size={9} />
+                      </button>
+                    </span>
+                  ))}
+                </div>
+              ) : (
+                <p className="text-xs text-gray-400 italic">
+                  No sizes added yet
+                </p>
               )}
-            </div>
-            <div className="lg:w-full my-2">
-              <span className="font-gothamNarrow font-normal">
-                Add Warranty Image
-              </span>
-              <div className="w-full font-gothamNarrow h-64 border border-red-400 relative mx-auto my-1">
-                <label
-                  htmlFor="warrantyFile"
-                  className="w-full font-gothamNarrow h-full flex items-center justify-center cursor-pointer"
-                >
-                  {warrantyImgPreview ? (
-                    <img
-                      src={warrantyImgPreview}
-                      alt="warranty"
-                      className="object-contain w-full font-gothamNarrow h-full cursor-pointer"
-                    />
-                  ) : (
-                    <span className="font-gothamNarrow">
-                      <IoCloudUploadOutline size={24} />
-                    </span>
-                  )}
-                </label>
-                <input
-                  id="warrantyFile"
-                  type="file"
-                  name="warranty_icon"
-                  accept="image/*"
-                  className="hidden"
-                  onChange={handleWarrantyFileInputChange}
-                />
-              </div>
-            </div>
-
-            <div className="lg:w-full my-2">
-              <span className="font-gothamNarrow font-normal">
-                Upload Product Video
-              </span>
-              <div className="w-full font-gothamNarrow h-64 border border-red-400 relative mx-auto my-1">
-                <label
-                  htmlFor="productVideo"
-                  className="w-full font-gothamNarrow h-full flex items-center justify-center cursor-pointer"
-                >
-                  {productVideoPreview ? (
-                    <video
-                      src={productVideoPreview}
-                      alt="product video"
-                      className="object-contain w-full font-gothamNarrow h-full cursor-pointer"
-                      controls
-                    />
-                  ) : (
-                    <span className="font-gothamNarrow">
-                      <IoCloudUploadOutline size={24} />
-                    </span>
-                  )}
-                </label>
-                <input
-                  id="productVideo"
-                  type="file"
-                  name="product_video"
-                  accept="video/*"
-                  className="hidden"
-                  onChange={handleProductVideoInputChange}
-                />
-              </div>
-            </div>
-            {/* <button type="submit" className="btn btn-primary">
-              Upload Video
-            </button> */}
-
-            <div className="lg:w-full">
-              <span className="font-gothamNarrow font-normal">
-                Add Gallery Image(One)
-              </span>
-              <div className="w-full font-gothamNarrow h-64 border border-red-400 relative mx-auto my-1">
-                <label
-                  htmlFor="galleryimageone"
-                  className="w-full font-gothamNarrow h-full flex items-center justify-center cursor-pointer"
-                >
-                  {galleryImageOnePreview ? (
-                    <img
-                      src={galleryImageOnePreview}
-                      alt="galleryImag1"
-                      className="object-contain w-full font-gothamNarrow h-full cursor-pointer"
-                    />
-                  ) : (
-                    <span className="font-gothamNarrow">
-                      <IoCloudUploadOutline size={24} />
-                    </span>
-                  )}
-                </label>
-                <input
-                  id="galleryimageone"
-                  type="file"
-                  name="galleryimageone"
-                  accept="image/*"
-                  className="hidden"
-                  onChange={handleGalleryOneFileInputChange}
-                />
-              </div>
-            </div>
-            <div className="lg:w-full">
-              <span className="font-gothamNarrow font-normal">
-                Add Gallery Image(Two)
-              </span>
-              <div className="w-full font-gothamNarrow h-64 border border-red-400 relative mx-auto my-1">
-                <label
-                  htmlFor="galleryimagetwo"
-                  className="w-full font-gothamNarrow h-full flex items-center justify-center cursor-pointer"
-                >
-                  {galleryImageTwoPreview ? (
-                    <img
-                      src={galleryImageTwoPreview}
-                      alt="galleryimagetwo"
-                      className="object-contain w-full font-gothamNarrow h-full cursor-pointer"
-                    />
-                  ) : (
-                    <span className="font-gothamNarrow">
-                      <IoCloudUploadOutline size={24} />
-                    </span>
-                  )}
-                </label>
-                <input
-                  id="galleryimagetwo"
-                  type="file"
-                  name="galleryimagetwo"
-                  accept="image/*"
-                  className="hidden"
-                  onChange={handleGalleryTwoFileInputChange}
-                />
-              </div>
-            </div>
-            <div className="lg:w-full">
-              <span className="font-gothamNarrow font-normal">
-                Product Main Image
-              </span>
-              <div className="w-full font-gothamNarrow h-64 border border-red-400 relative mx-auto my-1">
-                <label
-                  htmlFor="main_image"
-                  className="w-full font-gothamNarrow h-full flex items-center justify-center cursor-pointer"
-                >
-                  {mainImagePreview ? (
-                    <img
-                      src={mainImagePreview}
-                      alt="main_image"
-                      className="object-contain w-full font-gothamNarrow h-full cursor-pointer"
-                    />
-                  ) : (
-                    <span className="font-gothamNarrow">
-                      <IoCloudUploadOutline size={24} />
-                    </span>
-                  )}
-                </label>
-                <input
-                  id="main_image"
-                  type="file"
-                  name="main_image"
-                  accept="image/*"
-                  className="hidden"
-                  onChange={handleMainFileChange}
-                />
-              </div>
             </div>
           </div>
+        </SectionCard>
 
-          <div className="lg:w-1/2 my-5">
-            <span className="font-gothamNarrow font-normal">
-              Add ProductVariantImages (please upload Product Variant
-              images(Multiple))
-            </span>
-            <div className="mt-4 border border-gray-200 p-4 rounded">
-              <input
-                type="file"
+        {/* ── 5. Rich Text Content ── */}
+        <SectionCard
+          title="Product Content"
+          subtitle="Detailed descriptions for specification, sizing, and usage"
+        >
+          <div className="space-y-6">
+            <div>
+              <Label required>Product Specification</Label>
+              <div className="rounded-xl overflow-hidden border border-gray-200">
+                <ReactQuill
+                  theme="snow"
+                  value={productSpecification}
+                  onChange={setProductSpecification}
+                  modules={quillModules}
+                  formats={quillFormats}
+                  placeholder="Enter detailed product specification…"
+                  className="bg-white"
+                />
+              </div>
+              <FieldError msg={productErr.productSpecification} />
+            </div>
+            <div>
+              <Label required>Product Sizing</Label>
+              <div className="rounded-xl overflow-hidden border border-gray-200">
+                <ReactQuill
+                  theme="snow"
+                  value={productSizing}
+                  onChange={setProductSizing}
+                  modules={quillModules}
+                  formats={quillFormats}
+                  placeholder="Enter sizing details and guide…"
+                  className="bg-white"
+                />
+              </div>
+              <FieldError msg={productErr.productSizing} />
+            </div>
+            <div>
+              <Label required>Product Usage</Label>
+              <div className="rounded-xl overflow-hidden border border-gray-200">
+                <ReactQuill
+                  theme="snow"
+                  value={productUsage}
+                  onChange={setProductUsage}
+                  modules={quillModules}
+                  formats={quillFormats}
+                  placeholder="Describe how to use this product…"
+                  className="bg-white"
+                />
+              </div>
+              <FieldError msg={productErr.productUsage} />
+            </div>
+          </div>
+        </SectionCard>
+
+        {/* ── 6. Media — Single uploads ── */}
+        <SectionCard
+          title="Media — Single Uploads"
+          subtitle="Main image, gallery shots, warranty icon, and product video"
+        >
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5">
+            <UploadZone
+              id="main_image"
+              name="main_image"
+              accept="image/*"
+              preview={mainImagePreview}
+              label="Main Product Image"
+              onChange={makeSingleFileHandler(
+                setMainImagePreview,
+                setMainImage,
+              )}
+            />
+            <UploadZone
+              id="galleryimageone"
+              name="galleryimageone"
+              accept="image/*"
+              preview={galleryImageOnePreview}
+              label="Gallery Image 1"
+              onChange={makeSingleFileHandler(
+                setGalleryImageOnePreview,
+                setGalleryImageOne,
+              )}
+            />
+            <UploadZone
+              id="galleryimagetwo"
+              name="galleryimagetwo"
+              accept="image/*"
+              preview={galleryImageTwoPreview}
+              label="Gallery Image 2"
+              onChange={makeSingleFileHandler(
+                setGalleryImageTwoPreview,
+                setGalleryImageTwo,
+              )}
+            />
+            <UploadZone
+              id="warrantyFile"
+              name="warranty_icon"
+              accept="image/*"
+              preview={warrantyImgPreview}
+              label="Warranty Icon"
+              onChange={makeSingleFileHandler(
+                setWarrantyImgPreview,
+                setWarranty_icon,
+              )}
+            />
+            <UploadZone
+              id="productVideo"
+              name="product_video"
+              accept="video/*"
+              preview={productVideoPreview}
+              label="Product Video"
+              isVideo
+              onChange={makeSingleFileHandler(
+                setProductVideoPreview,
+                setProductVideo,
+              )}
+            />
+          </div>
+        </SectionCard>
+
+        {/* ── 7. Media — Multi uploads ── */}
+        <SectionCard
+          title="Media — Multiple Uploads"
+          subtitle="Variant, specification, usage, and sizing image sets"
+        >
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <div>
+              <MultiUploadZone
+                id="product_images"
                 name="product_images"
-                multiple
-                accept="image/*"
-                className="file:mr-3 file:py-2 file:px-4 file:border-0 hover:file:bg-gray-200"
-                onChange={handleImageChange}
+                previews={variantImgPreview}
+                label="Variant Images"
+                onChange={makeMultiFileHandler(
+                  setVariantImgPreview,
+                  setProduct_Images,
+                )}
+                onRemove={makeRemoveHandler(
+                  variantImgPreview,
+                  setVariantImgPreview,
+                  product_images,
+                  setProduct_Images,
+                )}
               />
-              <div className="flex">
-                {variantImgPreview.map((variantImg, index) => (
-                  <div
-                    key={index}
-                    className="w-56 h-auto border border-gray-300 relative overflow-hidden rounded-sm m-1"
-                  >
-                    <img
-                      src={variantImg}
-                      alt={`variantImages-${index}`}
-                      className="object-contain w-full h-full"
-                    />
-                    <button
-                      onClick={() => handleRemoveImage(index)}
-                      className="absolute top-0 right-0 p-1 text-white bg-red-500 rounded-full hover:bg-red-700"
-                    >
-                      <FaTimes />
-                    </button>
-                  </div>
-                ))}
-              </div>
+              <FieldError msg={productErr.product_images} />
             </div>
-          </div>
-          <div className="lg:w-1/2 my-5">
-            <span className="font-gothamNarrow font-normal">
-              Add SpecificationImages (please upload multiple images)
-            </span>
-            <div className="mt-4 border border-gray-200 p-4 rounded">
-              <input
-                type="file"
-                name="specification_images"
-                multiple
-                accept="image/*"
-                className="file:mr-3 file:py-2 file:px-4 file:border-0 hover:file:bg-gray-200"
-                onChange={handleSpecificationImageChange}
-              />
-              <div className="flex">
-                {specificationImgPreview.map((specificationImg, index) => (
-                  <div
-                    key={index}
-                    className="w-56 h-auto border border-gray-300 relative overflow-hidden rounded-sm m-1"
-                  >
-                    <img
-                      src={specificationImg}
-                      alt={`variantImages-${index}`}
-                      className="object-contain w-full h-full"
-                    />
-                    <button
-                      onClick={() => handleSpecificationRemoveImage(index)}
-                      className="absolute top-0 right-0 p-1 text-white bg-red-500 rounded-full hover:bg-red-700"
-                    >
-                      <FaTimes />
-                    </button>
-                  </div>
-                ))}
-              </div>
-            </div>
-          </div>
-          <div className="lg:w-1/2 my-5">
-            <span className="font-gothamNarrow font-normal">
-              Add UsageImages (please upload multiple images)
-            </span>
-            <div className="mt-4 border border-gray-200 p-4 rounded">
-              <input
-                type="file"
-                name="usage_images"
-                multiple
-                accept="image/*"
-                className="file:mr-3 file:py-2 file:px-4 file:border-0 hover:file:bg-gray-200"
-                onChange={handleUsageImageChange}
-              />
-              <div className="flex">
-                {usageImgPreview.map((usageImage, index) => (
-                  <div
-                    key={index}
-                    className="w-56 h-auto border border-gray-300 relative overflow-hidden rounded-sm m-1"
-                  >
-                    <img
-                      src={usageImage}
-                      alt={`variantImages-${index}`}
-                      className="object-contain w-full h-full"
-                    />
-                    <button
-                      onClick={() => handleUsageRemoveImage(index)}
-                      className="absolute top-0 right-0 p-1 text-white bg-red-500 rounded-full hover:bg-red-700"
-                    >
-                      <FaTimes />
-                    </button>
-                  </div>
-                ))}
-              </div>
-            </div>
-          </div>
-
-          <div className="lg:w-1/2 my-5">
-            <span className="font-gothamNarrow font-normal">
-              Add SizingImages (please upload multiple images)
-            </span>
-            <div className="mt-4 border border-gray-200 p-4 rounded">
-              <input
-                type="file"
-                name="sizing_images"
-                multiple
-                accept="image/*"
-                className="file:mr-3 file:py-2 file:px-4 file:border-0 hover:file:bg-gray-200"
-                onChange={handleSizingImageChange}
-              />
-              <div className="flex">
-                {sizingImgPreview.map((sizingImage, index) => (
-                  <div
-                    key={index}
-                    className="w-56 h-auto border border-gray-300 relative overflow-hidden rounded-sm m-1"
-                  >
-                    <img
-                      src={sizingImage}
-                      alt={`variantImages-${index}`}
-                      className="object-contain w-full h-full"
-                    />
-                    <button
-                      onClick={() => handleSizingRemoveImage(index)}
-                      className="absolute top-0 right-0 p-1 text-white bg-red-500 rounded-full hover:bg-red-700"
-                    >
-                      <FaTimes />
-                    </button>
-                  </div>
-                ))}
-              </div>
-            </div>
-          </div>
-
-          <div className="flex justify-center md:justify-start mt-2 py-2">
-            <button
-              className="relative bg-red-600 hover:bg-red-700 text-white py-2 px-8 rounded font-gothamNarrow"
-              type="submit"
-              disabled={isLoading}
-            >
-              {isLoading && (
-                <span className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2">
-                  <div className="animate-spin rounded-full h-4 w-4 border-t-2 border-b-2 border-white"></div>
-                </span>
+            <MultiUploadZone
+              id="specification_images"
+              name="specification_images"
+              previews={specificationImgPreview}
+              label="Specification Images"
+              onChange={makeMultiFileHandler(
+                setSpecificationImgPreview,
+                setSpecification_Images,
               )}
-              Add Product
-            </button>
+              onRemove={makeRemoveHandler(
+                specificationImgPreview,
+                setSpecificationImgPreview,
+                specification_images,
+                setSpecification_Images,
+              )}
+            />
+            <MultiUploadZone
+              id="usage_images"
+              name="usage_images"
+              previews={usageImgPreview}
+              label="Usage Images"
+              onChange={makeMultiFileHandler(
+                setUsageImgPreview,
+                setUsage_Images,
+              )}
+              onRemove={makeRemoveHandler(
+                usageImgPreview,
+                setUsageImgPreview,
+                usage_images,
+                setUsage_Images,
+              )}
+            />
+            <MultiUploadZone
+              id="sizing_images"
+              name="sizing_images"
+              previews={sizingImgPreview}
+              label="Sizing Images"
+              onChange={makeMultiFileHandler(
+                setSizingImgPreview,
+                setSizing_Images,
+              )}
+              onRemove={makeRemoveHandler(
+                sizingImgPreview,
+                setSizingImgPreview,
+                sizing_images,
+                setSizing_Images,
+              )}
+            />
           </div>
-        </form>
-      </div>
-    </>
+        </SectionCard>
+
+        {/* ── Submit ── */}
+        <div className="flex items-center justify-between bg-white rounded-2xl border border-gray-100 shadow-sm px-6 py-4">
+          <p className="text-xs text-gray-400">
+            Fields marked <span className="text-red-500 font-semibold">*</span>{" "}
+            are required
+          </p>
+          <button
+            type="submit"
+            disabled={isLoading}
+            className="relative inline-flex items-center gap-2 bg-red-600 hover:bg-red-700 disabled:opacity-60 text-white font-semibold text-sm px-8 py-3 rounded-xl shadow-md shadow-red-200 transition active:scale-95"
+          >
+            {isLoading ? (
+              <>
+                <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                Saving…
+              </>
+            ) : (
+              "Add Product"
+            )}
+          </button>
+        </div>
+      </form>
+    </div>
   );
 };
 
