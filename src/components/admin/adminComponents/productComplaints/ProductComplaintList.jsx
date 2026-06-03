@@ -1,7 +1,14 @@
 import moment from "moment";
 import { enqueueSnackbar } from "notistack";
 import { useEffect, useState } from "react";
-import { FaEye, FaSyncAlt, FaTrash, FaTrashAlt } from "react-icons/fa";
+import {
+  HiOutlineArrowPath,
+  HiOutlineExclamationCircle,
+  HiOutlineEye,
+  HiOutlinePencilSquare,
+  HiOutlineTrash,
+  HiOutlineUserMinus,
+} from "react-icons/hi2";
 import { useDispatch, useSelector } from "react-redux";
 import { Link } from "react-router-dom";
 import {
@@ -11,270 +18,312 @@ import {
   deleteProductComplaint,
 } from "../../../../redux/features/customer/customerSlice";
 import DeleteComplaintModal from "./deleteComplaintModal/DeleteComplaintModal";
+
 const ProductComplaintList = () => {
   const { loading, error, productComplaints } = useSelector(
-    (state) => state.customer
+    (state) => state.customer,
   );
   const dispatch = useDispatch();
 
   const [selectedProductsId, setSelectedProductsId] = useState([]);
   const [selectedProductId, setSelectedProductId] = useState(null);
 
-  const handleSelectAll = (event) => {
-    if (event.target.checked) {
-      const allProductsIds = productComplaints.map((product) => product.id);
-      setSelectedProductsId(allProductsIds);
-    } else {
-      setSelectedProductsId([]);
-    }
+  const handleSelectAll = (e) => {
+    setSelectedProductsId(
+      e.target.checked ? productComplaints.map((p) => p.id) : [],
+    );
   };
 
-  const handleSelectProduct = (event, productId) => {
-    if (event.target.checked) {
-      setSelectedProductsId((prev) => [...prev, productId]);
-    } else {
-      setSelectedProductsId((prev) =>
-        prev.filter((productId) => productId !== productId)
-      );
-    }
+  const handleSelectProduct = (e, id) => {
+    setSelectedProductsId((prev) =>
+      e.target.checked ? [...prev, id] : prev.filter((i) => i !== id),
+    );
   };
 
   const handleMultipleDelete = () => {
-    if (selectedProductsId.length > 0) {
-      dispatch(
-        deleteMultipleProductComplaints({
-          complaint_ids: selectedProductsId,
-          enqueueSnackbar,
-        })
-      ).then(() => {
-        dispatch(allProductComplaints());
-      });
-
-      setSelectedProductsId([]);
-    }
+    if (!selectedProductsId.length) return;
+    dispatch(
+      deleteMultipleProductComplaints({
+        complaint_ids: selectedProductsId,
+        enqueueSnackbar,
+      }),
+    ).then(() => dispatch(allProductComplaints()));
+    setSelectedProductsId([]);
   };
 
-  const handleOpenModal = (id) => {
-    setSelectedProductId(id);
-  };
-
+  const handleOpenModal = (id) => setSelectedProductId(id);
+  const handleCloseModal = () => setSelectedProductId(null);
   const handleReset = () => {
     setSelectedProductId(null);
     setSelectedProductsId([]);
-    dispatch(allProductComplaints(page));
-  };
-
-  const handleCloseModal = () => {
-    setSelectedProductId(null);
+    dispatch(allProductComplaints());
   };
 
   const handleDeleteConfirm = () => {
-    if (selectedProductId !== null) {
-      dispatch(
-        deleteProductComplaint({
-          complaint_id: selectedProductId,
-          enqueueSnackbar,
-        })
-      );
-      setSelectedProductId(null);
-    }
+    if (selectedProductId == null) return;
+    dispatch(
+      deleteProductComplaint({
+        complaint_id: selectedProductId,
+        enqueueSnackbar,
+      }),
+    );
+    setSelectedProductId(null);
   };
 
   useEffect(() => {
-    if (error) {
-      dispatch(clearCustomerError());
-    }
+    if (error) dispatch(clearCustomerError());
   }, [dispatch, error]);
 
   useEffect(() => {
     dispatch(allProductComplaints());
   }, [dispatch]);
+
+  const allSelected =
+    productComplaints?.length > 0 &&
+    selectedProductsId.length === productComplaints.length;
+
+  const indeterminate =
+    selectedProductsId.length > 0 &&
+    selectedProductsId.length < (productComplaints?.length ?? 0);
+
   return (
-    <>
-      <div className="font-gothamNarrow container mx-auto px-4 py-8">
-        <div className="flex justify-between mb-4">
-          <h2 className="text-lg font-semibold font-gothamNarrow">
-            Product Complaints List
-          </h2>
-        </div>
-        <div className="bg-[#FFFFFF] px-2 py-4">
-          <div className="flex mb-2 text-xs">
-            <button
-              className="flex cursor-pointer items-center gap-1 px-4 py-2 text-sm border border-gray-300 rounded-md hover:bg-gray-50 transition-colors"
-              onClick={handleReset}
-            >
-              <FaSyncAlt className="text-gray-500" /> Reset
-            </button>
+    <div className="font-gothamNarrow max-w-screen-2xl mx-auto px-4 py-6">
+      {/* ── Page Header ── */}
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 mb-5">
+        <div className="flex items-center gap-3">
+          <div className="w-10 h-10 rounded-xl bg-red-50 flex items-center justify-center flex-shrink-0">
+            <HiOutlineExclamationCircle size={20} className="text-red-500" />
           </div>
+          <div>
+            <h1 className="text-base font-semibold text-gray-900 tracking-tight">
+              Product complaints
+            </h1>
+            <p className="text-xs text-gray-400 mt-0.5">
+              {productComplaints?.length ?? 0} complaints total
+            </p>
+          </div>
+        </div>
 
+        <div className="flex items-center gap-2">
           {selectedProductsId.length > 0 && (
-            <div className="flex flex-wrap gap-2 mb-4 p-3 bg-blue-50 rounded-lg border border-blue-200">
-              <span className="text-sm text-blue-700 font-medium mr-2">
-                {selectedProductsId.length} item(s) selected
-              </span>
-            </div>
+            <button
+              onClick={handleMultipleDelete}
+              className="inline-flex items-center gap-2 px-3.5 py-2 rounded-lg bg-red-50 border border-red-200 text-red-600 text-xs font-semibold hover:bg-red-100 transition-colors"
+            >
+              <HiOutlineUserMinus size={14} />
+              Delete {selectedProductsId.length} selected
+            </button>
           )}
+          <button
+            onClick={handleReset}
+            className="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-lg border border-gray-200 text-xs font-semibold text-gray-500 hover:bg-gray-50 transition-colors"
+          >
+            <HiOutlineArrowPath size={13} />
+            Reset
+          </button>
+        </div>
+      </div>
 
-          <div className="bg-white font-sans table-container hide-scrollbar overflow-x-auto">
-            {selectedProductsId?.length > 0 && (
-              <div className="mb-3 flex justify-start">
-                <button
-                  className="flex items-center gap-2 px-3 py-1.5 rounded-lg 
-                   bg-red-500 text-white text-sm font-medium
-                   hover:bg-red-600 transition"
-                  onClick={handleMultipleDelete}
-                >
-                  <FaTrashAlt className="text-white" />
-                  Delete Selected
-                </button>
-              </div>
-            )}
-            <table className="min-w-full divide-y divide-gray-200 border border-gray-300">
-              <thead className="font-gothamNarrow">
+      {/* ── Selected banner ── */}
+      {selectedProductsId.length > 0 && (
+        <div className="flex items-center gap-2 mb-4 px-4 py-2.5 bg-red-50 border border-red-200 rounded-xl">
+          <span className="w-2 h-2 rounded-full bg-red-400 animate-pulse" />
+          <span className="text-xs font-semibold text-red-600">
+            {selectedProductsId.length} complaint
+            {selectedProductsId.length > 1 ? "s" : ""} selected
+          </span>
+        </div>
+      )}
+
+      {/* ── Table Card ── */}
+      <div className="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden">
+        <div className="overflow-x-auto">
+          <table className="min-w-full">
+            <thead>
+              <tr className="bg-gray-50 border-b border-gray-100">
+                <th className="px-4 py-3 w-10">
+                  <input
+                    type="checkbox"
+                    ref={(el) => {
+                      if (el) el.indeterminate = indeterminate;
+                    }}
+                    checked={allSelected}
+                    onChange={handleSelectAll}
+                    className="w-3.5 h-3.5 cursor-pointer accent-red-500"
+                  />
+                </th>
+                {[
+                  "S.N.",
+                  "Customer",
+                  "Model",
+                  "Serial no.",
+                  "Damage",
+                  "Date",
+                  "Actions",
+                ].map((h) => (
+                  <th
+                    key={h}
+                    className="px-4 py-3 text-left text-[11px] font-semibold uppercase tracking-wider text-gray-500 whitespace-nowrap"
+                  >
+                    {h}
+                  </th>
+                ))}
+              </tr>
+            </thead>
+
+            <tbody className="divide-y divide-gray-50">
+              {loading ? (
                 <tr>
-                  <th className="px-4 py-3 text-left text-sm font-semibold text-black border-l border-r accent-red-500">
-                    <input
-                      type="checkbox"
-                      onChange={handleSelectAll}
-                      checked={
-                        productComplaints?.length > 0 &&
-                        selectedProductsId?.length === productComplaints?.length
-                      }
-                    />
-                  </th>
-
-                  <th className="px-4 py-2 font-gothamNarrow text-left text-sm font-semibold text-black">
-                    S.N.
-                  </th>
-
-                  <th className="px-4 py-3 font-gothamNarrow text-left text-sm font-semibold text-black border-l border-r border-gray-300">
-                    ModelName
-                  </th>
-                  <th className="px-4 py-3 font-gothamNarrow text-left text-sm font-semibold text-black border-l border-r border-gray-300">
-                    ModelNumber
-                  </th>
-                  <th className="px-4 py-3 font-gothamNarrow text-left text-sm font-semibold text-black border-l border-r border-gray-300">
-                    CustomerName
-                  </th>
-                  <th className="px-4 py-3 font-gothamNarrow text-left text-sm font-semibold text-black border-l border-r border-gray-300">
-                    DamageImage
-                  </th>
-                  <th className="px-4 py-3 font-gothamNarrow text-left text-sm font-semibold text-black border-l border-r border-gray-300">
-                    WarrantyImage
-                  </th>
-
-                  <th className="px-4 py-3 font-gothamNarrow text-left text-sm font-semibold text-black border-l border-r border-gray-300">
-                    SerialNumber
-                  </th>
-
-                  <th className="px-4 py-3 font-gothamNarrow text-left text-sm font-semibold text-black border-l border-r border-gray-300">
-                    CreatedAt
-                  </th>
-                  <th className="px-4 py-3 font-gothamNarrow text-left text-sm font-semibold text-black border-l border-r border-gray-300">
-                    Actions
-                  </th>
+                  <td colSpan={8} className="py-16 text-center">
+                    <div className="flex flex-col items-center gap-3">
+                      <div className="w-7 h-7 rounded-full border-2 border-red-400 border-t-transparent animate-spin" />
+                      <span className="text-xs text-gray-400">
+                        Loading complaints…
+                      </span>
+                    </div>
+                  </td>
                 </tr>
-              </thead>
-              <tbody className="bg-white divide-y divide-gray-200">
-                {loading ? (
-                  <tr>
-                    <td colSpan={12} className="text-center">
-                      <div className="inline-block animate-spin rounded-full h-4 w-4 border-t-2 border-gray-800 border-t-gray-800"></div>
-                    </td>
-                  </tr>
-                ) : productComplaints && productComplaints?.length > 0 ? (
-                  productComplaints &&
-                  productComplaints?.map((item, index) => (
+              ) : productComplaints?.length > 0 ? (
+                productComplaints.map((item, index) => {
+                  const isSelected = selectedProductsId.includes(item.id);
+                  return (
                     <tr
                       key={item.id}
-                      className="hover:bg-[#FFF0E5] hover:shadow-sm border-t border-b border-r border-l border-gray-300 cursor-pointer"
+                      className={`transition-colors duration-100 ${
+                        isSelected ? "bg-red-50/70" : "hover:bg-gray-50/70"
+                      }`}
                     >
-                      <td className="px-4 py-2 font-gothamNarrow text-sm font-semibold text-black whitespace-nowrap border-gray-300 border-l border-r accent-red-500">
+                      {/* Checkbox */}
+                      <td className="px-4 py-3">
                         <input
                           type="checkbox"
-                          className="accent-red-500"
-                          checked={selectedProductsId.includes(item.id)}
+                          className="w-3.5 h-3.5 cursor-pointer accent-red-500"
+                          checked={isSelected}
                           onChange={(e) => handleSelectProduct(e, item.id)}
                         />
                       </td>
-                      <td className="px-4 font-gothamNarrow py-1 whitespace-nowrap text-xs text-gray-500">
-                        {index + 1}
+
+                      {/* S.N. */}
+                      <td className="px-4 py-3">
+                        <span className="text-xs font-medium text-gray-400">
+                          {index + 1}
+                        </span>
                       </td>
 
-                      <td className="px-4 py-1 whitespace-nowrap text-sm font-gothamNarrow text-[#000000]">
-                        {item?.model_name}
-                      </td>
-                      <td className="px-4 py-1 whitespace-nowrap text-sm font-gothamNarrow text-[#000000]">
-                        {item?.model_num}
-                      </td>
-
-                      <td className="px-4 py-1 whitespace-nowrap text-sm font-gothamNarrow text-[#000000]">
-                        {item?.customer_name}
-                      </td>
-                      <td className="px-4 py-1 whitespace-nowrap text-xs text-gray-500">
-                        <img
-                          src={item?.damaged_image_url}
-                          alt={`Bill Photo`}
-                          className="h-10 w-12 object-contain"
-                        />
-                      </td>
-                      <td className="px-4 py-1 whitespace-nowrap text-xs text-gray-500">
-                        <img
-                          src={item?.warranty_image_url}
-                          alt={`Bill Photo`}
-                          className="h-10 w-12 object-cover"
-                        />
+                      {/* Customer */}
+                      <td className="px-4 py-3 whitespace-nowrap">
+                        <span className="text-sm font-semibold text-gray-800">
+                          {item?.customer_name || "—"}
+                        </span>
                       </td>
 
-                      <td className="px-4 py-1 whitespace-nowrap text-sm font-gothamNarrow text-[#000000]">
-                        {item?.serial_number}
+                      {/* Model */}
+                      <td className="px-4 py-3 whitespace-nowrap">
+                        <p className="text-sm font-semibold text-gray-800 leading-tight">
+                          {item?.model_name || "—"}
+                        </p>
+                        <p className="text-[11px] text-gray-400 mt-0.5">
+                          #{item?.model_num || "—"}
+                        </p>
                       </td>
 
-                      <td className="px-4 font-gothamNarrow py-1 whitespace-nowrap text-sm text-[#000000]">
-                        {moment(item.date_joined).format("dddd, D MMM YYYY")}
+                      {/* Serial no. */}
+                      <td className="px-4 py-3 whitespace-nowrap">
+                        <span className="inline-flex items-center px-2 py-0.5 rounded-md bg-gray-100 border border-gray-200 text-xs font-semibold text-gray-600">
+                          {item?.serial_number || "—"}
+                        </span>
                       </td>
-                      <td className="px-4 py-1 whitespace-nowrap text-xs text-gray-500 border-b border-gray-300">
-                        <div className="flex space-x-2">
+
+                      {/* Damage */}
+                      <td className="px-4 py-3 whitespace-nowrap">
+                        {item?.damaged_image_url ? (
+                          <div className="w-11 h-9 rounded-lg overflow-hidden border border-gray-100">
+                            <img
+                              src={item.damaged_image_url}
+                              alt="Damage"
+                              className="w-full h-full object-cover"
+                            />
+                          </div>
+                        ) : (
+                          <span className="inline-flex items-center px-2 py-0.5 rounded-md bg-red-50 border border-dashed border-red-200 text-[10px] font-semibold text-red-400">
+                            N/A
+                          </span>
+                        )}
+                      </td>
+
+                      {/* Date */}
+                      <td className="px-4 py-3 whitespace-nowrap">
+                        <span className="text-xs text-gray-400">
+                          {moment(item.created_at || item.date_joined).format(
+                            "D MMM YYYY",
+                          )}
+                        </span>
+                      </td>
+
+                      {/* Actions */}
+                      <td className="px-4 py-3 whitespace-nowrap">
+                        <div className="flex items-center gap-1.5">
                           <Link
                             to={`/baltra-admin-dashboard/single-product-complaint/${item.id}`}
+                            className="w-7 h-7 rounded-lg bg-sky-50 border border-sky-100 flex items-center justify-center hover:bg-sky-100 transition-colors"
+                            title="View"
                           >
-                            <FaEye
-                              className="text-blue-500 hover:text-blue-700"
-                              title="Edit"
+                            <HiOutlineEye size={13} className="text-sky-500" />
+                          </Link>
+                          <Link
+                            to={`/baltra-admin-dashboard/edit-product-complaint/${item.id}`}
+                            className="w-7 h-7 rounded-lg bg-emerald-50 border border-emerald-100 flex items-center justify-center hover:bg-emerald-100 transition-colors"
+                            title="Edit"
+                          >
+                            <HiOutlinePencilSquare
+                              size={13}
+                              className="text-emerald-500"
                             />
                           </Link>
-                          <FaTrash
-                            className="text-red-500 hover:text-red-700 cursor-pointer"
-                            title="Delete"
+                          <button
                             onClick={() => handleOpenModal(item.id)}
-                          />
-                          {selectedProductId !== null && (
-                            <DeleteComplaintModal
-                              onClose={handleCloseModal}
-                              onConfirm={handleDeleteConfirm}
+                            className="w-7 h-7 rounded-lg bg-red-50 border border-red-100 flex items-center justify-center hover:bg-red-100 transition-colors"
+                            title="Delete"
+                          >
+                            <HiOutlineTrash
+                              size={13}
+                              className="text-red-500"
                             />
-                          )}
+                          </button>
                         </div>
+
+                        {selectedProductId === item.id && (
+                          <DeleteComplaintModal
+                            onClose={handleCloseModal}
+                            onConfirm={handleDeleteConfirm}
+                          />
+                        )}
                       </td>
                     </tr>
-                  ))
-                ) : (
-                  <tr>
-                    <td
-                      className="text-gray-500 text-sm font-gothamNarrow"
-                      colSpan={12}
-                      style={{ textAlign: "center" }}
-                    >
-                      No Data found
-                    </td>
-                  </tr>
-                )}
-              </tbody>
-            </table>
-          </div>
+                  );
+                })
+              ) : (
+                <tr>
+                  <td colSpan={8} className="py-16 text-center">
+                    <div className="flex flex-col items-center gap-3">
+                      <div className="w-11 h-11 rounded-xl bg-red-50 flex items-center justify-center">
+                        <HiOutlineExclamationCircle
+                          size={22}
+                          className="text-red-300"
+                        />
+                      </div>
+                      <p className="text-sm text-gray-400">
+                        No complaints found
+                      </p>
+                    </div>
+                  </td>
+                </tr>
+              )}
+            </tbody>
+          </table>
         </div>
       </div>
-    </>
+    </div>
   );
 };
 

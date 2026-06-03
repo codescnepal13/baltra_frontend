@@ -536,13 +536,13 @@ const EditProduct = () => {
         >
           <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
             <div>
-              <Label>Product Name</Label>
+              <Label>Model Name</Label>
               <input
                 type="text"
-                name="name"
-                value={name}
+                name="model_name"
+                value={model_name}
                 onChange={handleChange}
-                placeholder="Product name"
+                placeholder="e.g. Baltra Air Purifier Pro"
                 className={inputCls}
               />
             </div>
@@ -600,13 +600,13 @@ const EditProduct = () => {
         >
           <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
             <div>
-              <Label>Model Name</Label>
+              <Label>Product Name</Label>
               <input
                 type="text"
-                name="model_name"
-                value={model_name}
+                name="name"
+                value={name}
                 onChange={handleChange}
-                placeholder="e.g. AP-2000X"
+                placeholder="e.g. Baltra Air Purifier AP-2000X"
                 className={inputCls}
               />
             </div>

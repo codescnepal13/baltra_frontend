@@ -1,4 +1,5 @@
 import { memo, useState } from "react";
+import { FaTrashAlt } from "react-icons/fa";
 import { IoCloseSharp } from "react-icons/io5";
 
 const DeleteComplaintModal = ({ onClose, onConfirm }) => {
@@ -11,35 +12,58 @@ const DeleteComplaintModal = ({ onClose, onConfirm }) => {
 
   return (
     <>
-      <div className="fixed inset-0 z-50 overflow-auto bg-opacity-50 flex items-center justify-center">
-        <div className="bg-white p-8 max-w-md mx-auto rounded shadow-md relative">
-          {/* Add close icon */}
-          <IoCloseSharp
-            className="absolute top-2 right-2 cursor-pointer"
-            size={24}
-            onClick={onClose}
-          />
+      <div
+        className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-[2px]"
+        onClick={(e) => e.target === e.currentTarget && onClose()}
+      >
+        <div className="bg-white w-full max-w-sm mx-4 rounded-2xl shadow-xl overflow-hidden">
+          {/* Top accent bar */}
+          <div className="h-1 w-full bg-gradient-to-r from-red-400 to-red-600" />
 
-          <div className="text-center mb-4">
-            <h2 className="text-2xl font-bold text-gray-700 py-2 font-gothamNarrow">
-              Delete Item
-            </h2>
-            <h3 className="text-gray-500 tex-sm font-gothamNarrow">
-              Are you sure you want to delete this Item?
+          {/* Header */}
+          <div className="flex items-center justify-between px-5 pt-5 pb-3">
+            <div className="flex items-center gap-2.5">
+              <div className="w-8 h-8 rounded-full bg-red-50 flex items-center justify-center flex-shrink-0">
+                <FaTrashAlt className="text-red-500" size={13} />
+              </div>
+              <h2 className="text-[14px] font-semibold tracking-[-0.01em] text-gray-800">
+                Delete Item
+              </h2>
+            </div>
+            <button
+              onClick={onClose}
+              className="p-1.5 rounded-lg text-gray-300 hover:text-gray-500 hover:bg-gray-100 transition-colors"
+              aria-label="Close"
+            >
+              <IoCloseSharp size={18} />
+            </button>
+          </div>
+
+          {/* Divider */}
+          <div className="h-px bg-gray-100 mx-5" />
+
+          {/* Body */}
+          <div className="px-5 py-5">
+            <h3 className="text-sm font-semibold text-gray-700">
+              Are you sure you want to delete this item?
             </h3>
           </div>
-          <div className="flex justify-center">
+
+          {/* Footer */}
+          <div className="flex items-center justify-end gap-2 px-5 pb-5">
             <button
-              className="bg-gray-300 text-gray-700 px-4 py-2 rounded mr-2 hover:bg-gray-400 font-gothamNarrow"
               onClick={onClose}
+              className="px-4 py-2 text-[12.5px] font-medium tracking-[0.02em] text-gray-500 bg-gray-100 hover:bg-gray-200 rounded-lg transition-colors"
             >
               Cancel
             </button>
             <button
-              className="bg-red-500 text-white px-4 py-2 rounded hover:bg-red-600 font-gothamNarrow"
               onClick={handleConfirm}
+              disabled={confirmed}
+              className="inline-flex items-center gap-1.5 px-4 py-2 text-[12.5px] font-medium tracking-[0.02em] text-white bg-red-500 hover:bg-red-600 disabled:bg-red-300 disabled:cursor-not-allowed rounded-lg transition-colors"
             >
-              Delete
+              <FaTrashAlt size={11} />
+              {confirmed ? "Deleting..." : "Delete"}
             </button>
           </div>
         </div>

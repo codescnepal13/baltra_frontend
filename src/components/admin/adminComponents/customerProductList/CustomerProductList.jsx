@@ -21,9 +21,8 @@ import UpdateModal from "./updateModal/UpdateModal";
 
 const CustomerProductList = () => {
   const { loading, error, isError, allCustomerProductsList } = useSelector(
-    (state) => state.customer
+    (state) => state.customer,
   );
-
   const dispatch = useDispatch();
 
   const [openUpdateModal, setOpenUpdateModal] = useState(false);
@@ -31,22 +30,19 @@ const CustomerProductList = () => {
   const [selectedCustomerId, setSelectedCustomerId] = useState(null);
   const [selectedCustomersId, setSelectedCustomersId] = useState([]);
 
-  const handleSelectAll = (event) => {
-    if (event.target.checked) {
-      const allCustomerIds = allCustomerProductsList.map(
-        (customer) => customer.id
-      );
-      setSelectedCustomersId(allCustomerIds);
+  const handleSelectAll = (e) => {
+    if (e.target.checked) {
+      setSelectedCustomersId(allCustomerProductsList.map((c) => c.id));
     } else {
       setSelectedCustomersId([]);
     }
   };
 
-  const handleSelectCustomer = (event, id) => {
-    if (event.target.checked) {
+  const handleSelectCustomer = (e, id) => {
+    if (e.target.checked) {
       setSelectedCustomersId((prev) => [...prev, id]);
     } else {
-      setSelectedCustomersId((prev) => prev.filter((id) => id !== id));
+      setSelectedCustomersId((prev) => prev.filter((i) => i !== id));
     }
   };
 
@@ -56,34 +52,30 @@ const CustomerProductList = () => {
         deleteMultipleCustomer({
           stock_ids: selectedCustomersId,
           enqueueSnackbar,
-        })
-      ).then(() => {
-        dispatch(getAllCustomerAddedProductList(page));
-      });
-
+        }),
+      ).then(() => dispatch(getAllCustomerAddedProductList()));
       setSelectedCustomersId([]);
     }
   };
-  const handleOpenModal = (id) => {
-    setSelectedCustomerId(id);
-  };
 
-  const handleCloseModal = () => {
-    setSelectedCustomerId(null);
-  };
+  const handleOpenModal = (id) => setSelectedCustomerId(id);
+  const handleCloseModal = () => setSelectedCustomerId(null);
 
   const handleReset = () => {
     setOpenUpdateModal(false);
     setSelectedItem(null);
-    selectedCustomersId([]);
-    selectedCustomerId(null);
-    dispatch(getAllCustomerAddedProductList(page));
+    setSelectedCustomersId([]);
+    setSelectedCustomerId(null);
+    dispatch(getAllCustomerAddedProductList());
   };
 
   const handleDeleteConfirm = () => {
     if (selectedCustomerId !== null) {
       dispatch(
-        deleteCustomerProduct({ stock_id: selectedCustomerId, enqueueSnackbar })
+        deleteCustomerProduct({
+          stock_id: selectedCustomerId,
+          enqueueSnackbar,
+        }),
       );
       setSelectedCustomerId(null);
     }
@@ -100,309 +92,319 @@ const CustomerProductList = () => {
   };
 
   useEffect(() => {
-    if (error) {
-      dispatch(clearCustomerError());
-    }
+    if (error) dispatch(clearCustomerError());
   }, [dispatch, error]);
-
   useEffect(() => {
-    if (isError) {
-      dispatch(clearCustomerError());
-    }
+    if (isError) dispatch(clearCustomerError());
   }, [dispatch, isError]);
-
   useEffect(() => {
     dispatch(getAllCustomerAddedProductList());
   }, [dispatch]);
+
+  const allSelected =
+    allCustomerProductsList?.length > 0 &&
+    selectedCustomersId.length === allCustomerProductsList.length;
+
   return (
-    <>
-      <div className="flex items-center w-full my-2 px-4">
-        <FaInfoCircle className="text-black mr-2" size={20} />
-        <p className="text-xs md:text-sm text-black font-outfit flex-grow">
-          To approve a Customer Added Product from the Dashboard, click the
-          "isVerified" button from the table list below. After clicking, a popup
-          will display with verification options and a discount. Once approved,
-          select and update.
-        </p>
-      </div>
-      <div className="font-gothamNarrow container mx-auto px-4 py-8">
-        <div className="flex justify-between mb-4">
-          <h2 className="text-lg font-semibold font-gothamNarrow">
-            Customer Products List
-          </h2>
+    <div className="min-h-screen bg-slate-50">
+      <div className="max-w-screen-2xl mx-auto px-4 py-4 flex flex-col gap-4">
+        {/* ── Info banner ── */}
+        <div className="flex items-start gap-3 bg-blue-50 border border-blue-200 rounded-xl px-4 py-3">
+          <FaInfoCircle
+            className="text-blue-500 mt-0.5 flex-shrink-0"
+            size={15}
+          />
+          <p className="text-xs text-blue-700 leading-relaxed">
+            Click <span className="font-semibold">isVerified</span> to open the
+            approval popup with verification options and discount. Use the{" "}
+            <span className="font-semibold">View</span> button to see full
+            product details.
+          </p>
         </div>
-        <div className="bg-[#FFFFFF] px-2 py-4">
-          <div className="flex mb-2 text-xs">
-            <button
-              className="flex cursor-pointer items-center gap-1 px-4 py-2 text-sm border border-gray-300 rounded-md hover:bg-gray-50 transition-colors"
-              onClick={handleReset}
-            >
-              <FaSyncAlt className="text-gray-500" /> Reset
-            </button>
+
+        {/* ── Main card ── */}
+        <div className="bg-white rounded-2xl border border-slate-200 overflow-hidden">
+          {/* Card header */}
+          <div className="px-4 py-4 border-b border-slate-100 flex items-center justify-between gap-4 flex-wrap">
+            <div>
+              <h2 className="text-base font-bold text-slate-900">
+                Customer Products
+              </h2>
+              {allCustomerProductsList?.length > 0 && (
+                <p className="text-xs text-slate-400 mt-0.5">
+                  {allCustomerProductsList.length} total records
+                </p>
+              )}
+            </div>
+
+            <div className="flex items-center gap-2">
+              {selectedCustomersId.length > 0 && (
+                <button
+                  onClick={handleMultipleDelete}
+                  className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-red-500 hover:bg-red-600 text-white text-xs font-semibold transition-colors"
+                >
+                  <FaTrashAlt size={11} />
+                  Delete {selectedCustomersId.length} selected
+                </button>
+              )}
+              <button
+                onClick={handleReset}
+                className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg border border-slate-200 bg-white hover:bg-slate-50 text-slate-600 text-xs font-medium transition-colors"
+              >
+                <FaSyncAlt size={11} />
+                Reset
+              </button>
+            </div>
           </div>
 
+          {/* Selection bar */}
           {selectedCustomersId.length > 0 && (
-            <div className="flex flex-wrap gap-2 mb-4 p-3 bg-blue-50 rounded-lg border border-blue-200">
-              <span className="text-sm text-blue-700 font-medium mr-2">
-                {selectedCustomersId.length} item(s) selected
+            <div className="px-6 py-2 bg-blue-50 border-b border-blue-100 flex items-center gap-2">
+              <span className="w-1.5 h-1.5 rounded-full bg-blue-500 inline-block" />
+              <span className="text-xs font-medium text-blue-700">
+                {selectedCustomersId.length} item
+                {selectedCustomersId.length > 1 ? "s" : ""} selected
               </span>
             </div>
           )}
 
-          <div className="bg-white font-sans table-container hide-scrollbar overflow-x-auto">
-            {selectedCustomersId?.length > 0 && (
-              <div className="mb-3 flex justify-start">
-                <button
-                  className="flex items-center gap-2 px-3 py-1.5 rounded-lg 
-                   bg-red-500 text-white text-sm font-medium
-                   hover:bg-red-600 transition"
-                  onClick={handleMultipleDelete}
-                >
-                  <FaTrashAlt className="text-white" />
-                  Delete Selected
-                </button>
-              </div>
-            )}
-            <table className="min-w-full divide-y divide-gray-200 border border-gray-300">
-              <thead className="font-gothamNarrow">
-                <tr>
-                  <th className="px-4 py-3 text-left text-sm font-semibold text-black border-l border-r accent-red-500">
+          {/* Table — only essential columns */}
+          <div className="overflow-x-auto">
+            <table className="min-w-full text-sm">
+              <thead>
+                <tr className="bg-slate-50 border-b border-slate-200">
+                  <Th>
                     <input
                       type="checkbox"
+                      className="accent-blue-600 w-3 h-3"
                       onChange={handleSelectAll}
-                      checked={
-                        allCustomerProductsList.length > 0 &&
-                        selectedCustomersId.length ===
-                          allCustomerProductsList.length
-                      }
+                      checked={allSelected}
                     />
-                  </th>
-
-                  <th className="px-4 py-2 font-gothamNarrow text-left text-sm font-semibold text-black">
-                    S.N.
-                  </th>
-                  <th className="px-4 py-3 font-gothamNarrow text-left text-sm font-semibold text-black border-l border-r border-gray-300">
-                    CustomerName
-                  </th>
-                  <th className="px-4 py-3 font-gothamNarrow text-left text-sm font-semibold text-black border-l border-r border-gray-300">
-                    ModelName
-                  </th>
-                  <th className="px-4 py-3 font-gothamNarrow text-left text-sm font-semibold text-black border-l border-r border-gray-300">
-                    ModelNumber
-                  </th>
-                  <th className="px-4 py-3 font-gothamNarrow text-left text-sm font-semibold text-black border-l border-r border-gray-300">
-                    SerialNumber
-                  </th>
-                  <th className="px-4 py-3 font-gothamNarrow text-left text-sm font-semibold text-black border-l border-r border-gray-300">
-                    StoreName
-                  </th>
-                  <th className="px-4 py-3 font-gothamNarrow text-left text-sm font-semibold text-black border-l border-r border-gray-300">
-                    StoreLocation
-                  </th>
-                  <th className="px-4 py-3 font-gothamNarrow text-left text-sm font-semibold text-black border-l border-r border-gray-300">
-                    StoreNumber
-                  </th>
-                  <th className="px-4 py-3 font-gothamNarrow text-left text-sm font-semibold text-black border-l border-r border-gray-300">
-                    PurchaseDate
-                  </th>
-                  <th className="px-4 py-3 font-gothamNarrow text-left text-sm font-semibold text-black border-l border-r border-gray-300">
-                    WarrantyIssues
-                  </th>
-                  <th className="px-4 py-3 font-gothamNarrow text-left text-sm font-semibold text-black border-l border-r border-gray-300">
-                    WarrantyExpired
-                  </th>
-                  <th className="px-4 py-3 font-gothamNarrow text-left text-sm font-semibold text-black border-l border-r border-gray-300">
-                    ProductImage
-                  </th>
-                  <th className="px-4 py-3 font-gothamNarrow text-left text-sm font-semibold text-black border-l border-r border-gray-300">
-                    BillImage
-                  </th>
-                  <th className="px-4 py-3 font-gothamNarrow text-left text-sm font-semibold text-black border-l border-r border-gray-300">
-                    WarrantyImage
-                  </th>
-                  <th className="px-4 py-3 font-gothamNarrow text-left text-sm font-semibold text-black border-l border-r border-gray-300">
-                    Status
-                  </th>
-                  <th className="px-4 py-3 font-gothamNarrow text-left text-sm font-semibold text-black border-l border-r border-gray-300">
-                    isVerified
-                  </th>
-                  <th className="px-4 py-3 font-gothamNarrow text-left text-sm font-semibold text-black border-l border-r border-gray-300">
-                    CreatedAt
-                  </th>
-                  <th className="px-4 py-3 font-gothamNarrow text-left text-sm font-semibold text-black border-l border-r border-gray-300">
-                    Actions
-                  </th>
+                  </Th>
+                  <Th>S.N</Th>
+                  <Th>Customer</Th>
+                  <Th>Product image</Th>
+                  <Th>Model</Th>
+                  <Th>Purchase date</Th>
+                  <Th>Status</Th>
+                  <Th>Verified</Th>
+                  <Th>Created at</Th>
+                  <Th>Actions</Th>
                 </tr>
               </thead>
-              <tbody className="bg-white divide-y divide-gray-200">
+
+              <tbody className="divide-y divide-slate-100">
                 {loading ? (
                   <tr>
-                    <td colSpan={12} className="text-center">
-                      <div className="inline-block animate-spin rounded-full h-4 w-4 border-t-2 border-gray-800 border-t-gray-800"></div>
+                    <td colSpan={10} className="py-14 text-center">
+                      <div className="inline-flex flex-col items-center gap-2">
+                        <div className="w-6 h-6 rounded-full border-2 border-slate-200 border-t-blue-500 animate-spin" />
+                        <span className="text-xs text-slate-400">Loading…</span>
+                      </div>
                     </td>
                   </tr>
-                ) : allCustomerProductsList &&
-                  allCustomerProductsList?.length > 0 ? (
-                  allCustomerProductsList &&
-                  allCustomerProductsList?.map((item, index) => (
-                    <tr
-                      key={item.id}
-                      className="hover:bg-[#FFF0E5] hover:shadow-sm border-t border-b border-r border-l border-gray-300 cursor-pointer"
-                    >
-                      <td className="px-4 py-2 font-gothamNarrow text-sm font-semibold text-black whitespace-nowrap border-gray-300 border-l border-r accent-red-500">
-                        <input
-                          type="checkbox"
-                          className="accent-red-500"
-                          checked={selectedCustomersId.includes(item.id)}
-                          onChange={(e) => handleSelectCustomer(e, item.id)}
-                        />
-                      </td>
-                      <td className="px-4 font-gothamNarrow py-1 whitespace-nowrap text-xs text-gray-500">
-                        {index + 1}
-                      </td>
-                      <td className="px-4 py-1 whitespace-nowrap text-sm font-gothamNarrow text-[#000000]">
-                        {item?.customer?.firstname} {item?.customer?.lastname}
-                      </td>
-                      <td className="px-4 py-1 whitespace-nowrap text-sm font-gothamNarrow text-[#000000]">
-                        {item?.model_name}
-                      </td>
-                      <td className="px-4 py-1 whitespace-nowrap text-sm font-gothamNarrow text-[#000000]">
-                        {item?.model_num}
-                      </td>
-                      <td className="px-4 py-1 whitespace-nowrap text-sm font-gothamNarrow text-[#000000]">
-                        {item?.serial_number}
-                      </td>
-                      <td className="px-4 py-1 whitespace-nowrap text-sm font-gothamNarrow text-[#000000]">
-                        {item?.store_name}
-                      </td>
-                      <td className="px-4 py-1 whitespace-nowrap text-sm font-gothamNarrow text-[#000000]">
-                        {item?.store_location}
-                      </td>
-                      <td className="px-4 py-1 whitespace-nowrap text-sm font-gothamNarrow text-[#000000]">
-                        {item?.store_number}
-                      </td>
-                      <td className="px-4 py-1 whitespace-nowrap text-sm font-gothamNarrow text-[#000000]">
-                        {moment(item?.purchase_date).format("Do MMM, YYYY")}
-                      </td>
-                      <td className="px-4 py-1 whitespace-nowrap text-sm font-gothamNarrow text-[#000000]">
-                        {item?.warranty_issue
-                          ? moment(item.warranty_issue).format("Do MMM, YYYY")
-                          : "-"}
-                      </td>
-
-                      <td className="px-4 py-1 whitespace-nowrap text-sm font-gothamNarrow text-[#000000]">
-                        {item?.warranty_expiry
-                          ? moment(item.warranty_expiry).format("Do MMM, YYYY")
-                          : "-"}
-                      </td>
-                      <td className="px-4 py-1 whitespace-nowrap text-xs text-gray-500">
-                        <img
-                          src={item?.product_image}
-                          alt={`User Photo`}
-                          className="h-10 w-12 object-contain"
-                        />
-                      </td>
-                      <td className="px-4 py-1 whitespace-nowrap text-xs text-gray-500">
-                        <img
-                          src={item?.bill_image_one}
-                          alt={`Bill Photo`}
-                          className="h-10 w-12 object-contain"
-                        />
-                      </td>
-                      <td className="px-4 py-1 whitespace-nowrap text-xs text-gray-500">
-                        <img
-                          src={item?.warranty_image}
-                          alt={`Bill Photo`}
-                          className="h-10 w-12 object-contain"
-                        />
-                      </td>
-                      <td className="px-4 py-1 whitespace-nowrap text-sm font-gothamNarrow">
-                        {item?.status === "Pending" ? (
-                          <span className="bg-gray-600 text-white px-3 py-1 rounded-full cursor-pointer">
-                            Pending
-                          </span>
-                        ) : item?.status === "Approved" ? (
-                          <span className="bg-green-600 text-white px-3 py-1 rounded-full cursor-pointer">
-                            Approved
-                          </span>
-                        ) : (
-                          <span className="bg-gray-600 text-white px-3 py-1 rounded-full cursor-pointer">
-                            {item?.status}
-                          </span>
-                        )}
-                      </td>
-
-                      <td className="px-4 py-1 whitespace-nowrap text-sm font-gothamNarrow">
-                        {item?.is_verified ? (
-                          <span
-                            className="bg-green-600 text-white px-3 py-1 rounded-full cursor-pointer"
-                            onClick={() => handleOpenUpdateModal(item)}
-                          >
-                            Verified
-                          </span>
-                        ) : (
-                          <span
-                            className="bg-red-600 text-white px-3 py-1 rounded-full cursor-pointer"
-                            onClick={() => handleOpenUpdateModal(item)}
-                          >
-                            Unverified
-                          </span>
-                        )}
-                      </td>
-
-                      <td className="px-4 font-gothamNarrow py-1 whitespace-nowrap text-sm text-[#000000]">
-                        {moment(item.created_at).format("dddd, D MMM YYYY")}
-                      </td>
-                      <td className="px-4 py-1 whitespace-nowrap text-xs text-gray-500 border-b border-gray-300">
-                        <div className="flex space-x-2">
-                          <Link
-                            to={`/baltra-admin-dashboard/single-customer-product-list/${item.id}`}
-                          >
-                            <FaEye
-                              className="text-blue-500 hover:text-blue-700"
-                              title="View"
-                            />
-                          </Link>
-
-                          <FaTrash
-                            className="text-red-500 hover:text-red-700 cursor-pointer"
-                            title="Delete"
-                            onClick={() => handleOpenModal(item.id)}
+                ) : allCustomerProductsList?.length > 0 ? (
+                  allCustomerProductsList.map((item, index) => {
+                    const isChecked = selectedCustomersId.includes(item.id);
+                    return (
+                      <tr
+                        key={item.id}
+                        className={`transition-colors hover:bg-slate-50 ${isChecked ? "bg-blue-50/50" : ""}`}
+                      >
+                        {/* Checkbox */}
+                        <Td>
+                          <input
+                            type="checkbox"
+                            className="accent-blue-600 w-3 h-3"
+                            checked={isChecked}
+                            onChange={(e) => handleSelectCustomer(e, item.id)}
                           />
-                          {selectedCustomerId !== null && (
-                            <DeleteCustomerModal
-                              onClose={handleCloseModal}
-                              onConfirm={handleDeleteConfirm}
+                        </Td>
+
+                        {/* Row number */}
+                        <Td>
+                          <span className="text-xs text-slate-400">
+                            {index + 1}
+                          </span>
+                        </Td>
+
+                        {/* Customer name with avatar */}
+                        <Td>
+                          <div className="flex items-center gap-2.5">
+                            <div className="w-8 h-8 rounded-full bg-blue-100 text-blue-700 text-[11px] font-bold flex items-center justify-center flex-shrink-0 uppercase">
+                              {item?.customer?.firstname?.[0]}
+                              {item?.customer?.lastname?.[0]}
+                            </div>
+                            <div className="min-w-0">
+                              <div className="font-medium text-slate-800 text-sm whitespace-nowrap">
+                                {item?.customer?.firstname}{" "}
+                                {item?.customer?.lastname}
+                              </div>
+                              <div className="text-[11px] text-slate-400 whitespace-nowrap">
+                                {item?.store_name ?? "—"}
+                              </div>
+                            </div>
+                          </div>
+                        </Td>
+
+                        {/* Product image */}
+                        <Td>
+                          <div className="w-11 h-11 rounded-lg border border-slate-200 bg-slate-50 overflow-hidden">
+                            <img
+                              src={item?.product_image}
+                              alt="Product"
+                              className="w-full h-full object-contain"
                             />
-                          )}
-                        </div>
-                      </td>
-                    </tr>
-                  ))
+                          </div>
+                        </Td>
+
+                        {/* Model name + number */}
+                        <Td>
+                          <div className="text-sm text-slate-700 font-medium whitespace-nowrap">
+                            {item?.model_name ?? "—"}
+                          </div>
+                          <div className="text-[11px] font-mono text-slate-400 mt-0.5">
+                            {item?.model_num ?? ""}
+                          </div>
+                        </Td>
+
+                        {/* Purchase date */}
+                        <Td>
+                          <span className="text-xs text-slate-600 whitespace-nowrap">
+                            {item?.purchase_date
+                              ? moment(item.purchase_date).format("D MMM YYYY")
+                              : "—"}
+                          </span>
+                        </Td>
+
+                        {/* Status */}
+                        <Td>
+                          <StatusBadge status={item?.status} />
+                        </Td>
+
+                        {/* isVerified */}
+                        <Td>
+                          <button
+                            onClick={() => handleOpenUpdateModal(item)}
+                            className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-semibold border transition-opacity hover:opacity-75 ${
+                              item?.is_verified
+                                ? "bg-green-50 text-green-700 border-green-200"
+                                : "bg-red-50 text-red-600 border-red-200"
+                            }`}
+                          >
+                            <span
+                              className={`w-1.5 h-1.5 rounded-full ${item?.is_verified ? "bg-green-500" : "bg-red-400"}`}
+                            />
+                            {item?.is_verified ? "Verified" : "Not Verified"}
+                          </button>
+                        </Td>
+
+                        {/* Created at */}
+                        <Td>
+                          <span className="text-xs text-slate-400 whitespace-nowrap">
+                            {moment(item.created_at).format("D MMM YYYY")}
+                          </span>
+                        </Td>
+
+                        {/* Actions */}
+                        <Td>
+                          <div className="flex items-center gap-1.5">
+                            <Link
+                              to={`/baltra-admin-dashboard/single-customer-product-list/${item.id}`}
+                              className="w-7 h-7 rounded-lg bg-blue-50 border border-blue-100 text-blue-500 hover:bg-blue-100 flex items-center justify-center transition-colors"
+                              title="View full details"
+                            >
+                              <FaEye size={12} />
+                            </Link>
+                            <button
+                              className="w-7 h-7 rounded-lg bg-red-50 border border-red-100 text-red-500 hover:bg-red-100 flex items-center justify-center transition-colors"
+                              title="Delete"
+                              onClick={() => handleOpenModal(item.id)}
+                            >
+                              <FaTrash size={12} />
+                            </button>
+                            {selectedCustomerId === item.id && (
+                              <DeleteCustomerModal
+                                onClose={handleCloseModal}
+                                onConfirm={handleDeleteConfirm}
+                              />
+                            )}
+                          </div>
+                        </Td>
+                      </tr>
+                    );
+                  })
                 ) : (
                   <tr>
-                    <td
-                      className="text-gray-500 text-sm font-gothamNarrow"
-                      colSpan={12}
-                      style={{ textAlign: "center" }}
-                    >
-                      No Data found
+                    <td colSpan={10} className="py-16 text-center">
+                      <div className="flex flex-col items-center gap-2">
+                        <div className="w-10 h-10 rounded-full bg-slate-100 flex items-center justify-center">
+                          <FaInfoCircle className="text-slate-300" size={18} />
+                        </div>
+                        <p className="text-sm font-medium text-slate-500">
+                          No records found
+                        </p>
+                        <p className="text-xs text-slate-400">
+                          Customer products will appear here once added.
+                        </p>
+                      </div>
                     </td>
                   </tr>
-                )}
-
-                {openUpdateModal && (
-                  <UpdateModal
-                    item={selectedItem}
-                    onClose={handleCloseUpdateModal}
-                  />
                 )}
               </tbody>
             </table>
           </div>
+
+          {/* Footer */}
+          {allCustomerProductsList?.length > 0 && (
+            <div className="px-6 py-3 border-t border-slate-100 flex items-center justify-between">
+              <span className="text-xs text-slate-400">
+                {allCustomerProductsList.length} record
+                {allCustomerProductsList.length !== 1 ? "s" : ""}
+              </span>
+              {selectedCustomersId.length > 0 && (
+                <span className="text-xs text-blue-600 font-medium">
+                  {selectedCustomersId.length} selected
+                </span>
+              )}
+            </div>
+          )}
         </div>
       </div>
-    </>
+
+      {/* Modals rendered outside table */}
+      {openUpdateModal && (
+        <UpdateModal item={selectedItem} onClose={handleCloseUpdateModal} />
+      )}
+    </div>
+  );
+};
+
+/* ── Reusable table primitives ── */
+const Th = ({ children }) => (
+  <th className="px-4 py-2.5 text-left text-[11px] font-semibold text-slate-400 uppercase tracking-wide whitespace-nowrap">
+    {children}
+  </th>
+);
+
+const Td = ({ children }) => (
+  <td className="px-4 py-3 align-middle">{children}</td>
+);
+
+const StatusBadge = ({ status }) => {
+  const styles = {
+    Approved: "bg-green-50 text-green-700 border-green-200",
+    Pending: "bg-amber-50 text-amber-700 border-amber-200",
+    Rejected: "bg-red-50   text-red-600   border-red-200",
+  };
+  const cls = styles[status] ?? "bg-slate-100 text-slate-500 border-slate-200";
+  return (
+    <span
+      className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-semibold border ${cls}`}
+    >
+      <span className="w-1.5 h-1.5 rounded-full bg-current opacity-60" />
+      {status ?? "—"}
+    </span>
   );
 };
 

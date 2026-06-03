@@ -1,15 +1,14 @@
 import { debounce } from "lodash";
 import moment from "moment";
 import { enqueueSnackbar } from "notistack";
-import React, { useCallback, useEffect, useState } from "react";
+import React, { useCallback, useEffect, useRef, useState } from "react";
+import { HiOutlineRefresh, HiOutlineSearch } from "react-icons/hi";
 import {
-  FaPencilAlt,
-  FaPlusCircle,
-  FaSearch,
-  FaSyncAlt,
-  FaTrash,
-  FaTrashAlt,
-} from "react-icons/fa";
+  HiOutlinePencilSquare,
+  HiOutlinePlus,
+  HiOutlineShieldCheck,
+  HiOutlineTrash,
+} from "react-icons/hi2";
 import { useDispatch, useSelector } from "react-redux";
 import { Link } from "react-router-dom";
 import {
@@ -23,9 +22,8 @@ import WarrantyDeletePopUp from "./warrantyDeletePopUp/WarrantyDeletePopUp";
 
 const AllWarrantyPackageList = () => {
   const { loading, error, allWarrantyPackagesList } = useSelector(
-    (state) => state.admin
+    (state) => state.admin,
   );
-
   const warrantyPagination =
     useSelector((state) => state.admin.warrantyPagination) || {};
   const { page, total_pages, results_per_page } = warrantyPagination;
@@ -35,63 +33,57 @@ const AllWarrantyPackageList = () => {
   const [selectedWarrantysId, setSelectedWarrantysId] = useState([]);
   const [searchByPackageType, setSearchByPackageType] = useState("");
 
-  const handleSelectAll = (event) => {
-    if (event.target.checked) {
-      const allWarrantysId = allWarrantyPackagesList.map(
-        (warranty) => warranty.id
-      );
-      setSelectedWarrantysId(allWarrantysId);
-    } else {
-      setSelectedWarrantysId([]);
-    }
+  const selectAllRef = useRef(null);
+
+  // Sync indeterminate state
+  useEffect(() => {
+    if (!selectAllRef.current) return;
+    const total = allWarrantyPackagesList?.length ?? 0;
+    const n = selectedWarrantysId.length;
+    selectAllRef.current.indeterminate = n > 0 && n < total;
+  }, [selectedWarrantysId, allWarrantyPackagesList]);
+
+  const handleSelectAll = (e) => {
+    setSelectedWarrantysId(
+      e.target.checked ? allWarrantyPackagesList.map((w) => w.id) : [],
+    );
   };
 
-  const handleSelectWarranty = (event, warrantyId) => {
-    if (event.target.checked) {
-      setSelectedWarrantysId((prev) => [...prev, warrantyId]);
-    } else {
-      setSelectedWarrantysId((prev) => prev.filter((id) => id !== warrantyId));
-    }
+  const handleSelectWarranty = (e, id) => {
+    setSelectedWarrantysId((prev) =>
+      e.target.checked ? [...prev, id] : prev.filter((i) => i !== id),
+    );
   };
 
   const handleMultipleDelete = () => {
-    if (selectedWarrantysId.length > 0) {
-      dispatch(
-        deleteMultipleWarrantyPackage({
-          form_ids: selectedWarrantysId,
-          enqueueSnackbar,
-        })
-      ).then(() => {
-        dispatch(getAllWarrantyPackages({ page, type: searchByPackageType }));
-      });
-
-      setSelectedWarrantysId([]);
-    }
+    if (!selectedWarrantysId.length) return;
+    dispatch(
+      deleteMultipleWarrantyPackage({
+        form_ids: selectedWarrantysId,
+        enqueueSnackbar,
+      }),
+    ).then(() =>
+      dispatch(getAllWarrantyPackages({ page, type: searchByPackageType })),
+    );
+    setSelectedWarrantysId([]);
   };
 
-  const handleOpenModal = (warrantyId) => {
-    setSelectedWarrantyId(warrantyId);
-  };
+  const handleOpenModal = (id) => setSelectedWarrantyId(id);
+  const handleCloseModal = () => setSelectedWarrantyId(null);
 
-  const handleCloseModal = () => {
+  const handleDeleteConfirm = () => {
+    if (selectedWarrantyId == null) return;
+    dispatch(
+      deleteWarrantyCard({ form_id: selectedWarrantyId, enqueueSnackbar }),
+    );
     setSelectedWarrantyId(null);
   };
 
-  const handleDeleteConfirm = () => {
-    if (selectedWarrantyId !== null) {
-      dispatch(
-        deleteWarrantyCard({ form_id: selectedWarrantyId, enqueueSnackbar })
-      );
-      setSelectedWarrantyId(null);
-    }
-  };
-
-  // Debounced search function
   const debouncedSearch = useCallback(
-    debounce((query) => {
-      dispatch(getAllWarrantyPackages({ page: 1, type: query }));
+    debounce((q) => {
+      dispatch(getAllWarrantyPackages({ page: 1, type: q }));
     }, 300),
-    [dispatch]
+    [dispatch],
   );
 
   const handleInputChange = (e) => {
@@ -102,187 +94,251 @@ const AllWarrantyPackageList = () => {
   const handlePageChange = useCallback(
     (newPage) => {
       dispatch(
-        getAllWarrantyPackages({ page: newPage, type: searchByPackageType })
+        getAllWarrantyPackages({ page: newPage, type: searchByPackageType }),
       );
     },
-    [dispatch, searchByPackageType]
+    [dispatch, searchByPackageType],
   );
 
   const handleReset = () => {
     setSelectedWarrantyId(null);
     setSelectedWarrantysId([]);
     setSearchByPackageType("");
-    dispatch(getAllWarrantyPackages({ page: newPage }));
+    dispatch(getAllWarrantyPackages({ page: 1 }));
   };
 
   useEffect(() => {
-    if (error) {
-      dispatch(clearAdminError());
-    }
+    if (error) dispatch(clearAdminError());
   }, [dispatch, error]);
 
   useEffect(() => {
     dispatch(getAllWarrantyPackages({ page, type: searchByPackageType }));
-  }, [dispatch, page, searchByPackageType]);
+  }, [dispatch]);
+
+  const allSelected =
+    (allWarrantyPackagesList?.length ?? 0) > 0 &&
+    selectedWarrantysId.length === allWarrantyPackagesList?.length;
 
   return (
-    <>
-      <div className="font-gothamNarrow container mx-auto px-4 py-8">
-        <div className="flex justify-between mb-4">
-          <h2 className="text-lg font-semibold font-gothamNarrow">
-            All Warranty List
-          </h2>
-          <Link to="/baltra-admin-dashboard/add/warranty-package">
-            <button className="bg-red-600 hover:bg-red-700 text-white py-2 px-4 rounded inline-flex items-center font-gothamNarrow">
-              <FaPlusCircle className="mr-2" />
-              Add Warranty Package
-            </button>
-          </Link>
+    <div className="font-gothamNarrow max-w-screen-2xl mx-auto px-4 py-6">
+      {/* ── Header ── */}
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 mb-5">
+        <div className="flex items-center gap-3">
+          <div className="w-10 h-10 rounded-xl bg-amber-50 flex items-center justify-center flex-shrink-0">
+            <HiOutlineShieldCheck size={20} className="text-amber-500" />
+          </div>
+          <div>
+            <h1 className="text-base font-semibold text-gray-900 tracking-tight">
+              Warranty packages
+            </h1>
+            <p className="text-xs text-gray-400 mt-0.5">
+              {allWarrantyPackagesList?.length ?? 0} packages total
+            </p>
+          </div>
         </div>
 
-        <div className="bg-[#FFFFFF] px-2 py-4">
-          <div className="flex mb-2 text-xs items-center">
-            <div className="relative mr-2 flex items-center">
-              <input
-                type="text"
-                placeholder="Search by Package Type"
-                className="w-42 pl-4 pr-10 py-2 border border-gray-300 rounded-sm text-sm focus:outline-none focus:border-red-500 focus:ring-gray-300 font-gothamNarrow"
-                value={searchByPackageType}
-                onChange={handleInputChange}
-              />
-              <button className="bg-red-600 hover:bg-red-700 text-white py-3 px-4 ml-1 inline-flex items-center rounded-sm font-gothamNarrow">
-                <FaSearch />
-              </button>
-            </div>
-            <button
-              className="flex cursor-pointer items-center gap-1 px-4 py-2 text-sm border border-gray-300 rounded-md hover:bg-gray-50 transition-colors"
-              onClick={handleReset}
-            >
-              <FaSyncAlt className="text-gray-500" /> Reset
-            </button>
-          </div>
+        <Link to="/baltra-admin-dashboard/add/warranty-package">
+          <button className="inline-flex items-center gap-2 px-3.5 py-2 rounded-lg bg-red-50 border border-red-200 text-red-600 text-xs font-semibold hover:bg-red-100 transition-colors">
+            <HiOutlinePlus size={14} />
+            Add warranty package
+          </button>
+        </Link>
+      </div>
 
-          {selectedWarrantysId.length > 0 && (
-            <div className="flex flex-wrap gap-2 mb-4 p-3 bg-blue-50 rounded-lg border border-blue-200">
-              <span className="text-sm text-blue-700 font-medium mr-2">
-                {selectedWarrantysId.length} item(s) selected
-              </span>
-            </div>
-          )}
+      {/* ── Toolbar ── */}
+      <div className="flex items-center gap-2 mb-4 flex-wrap">
+        <div className="relative flex items-center">
+          <HiOutlineSearch
+            size={14}
+            className="absolute left-3 text-gray-400 pointer-events-none"
+          />
+          <input
+            type="text"
+            placeholder="Search by package type…"
+            value={searchByPackageType}
+            onChange={handleInputChange}
+            className="pl-8 pr-3 py-2 text-xs border border-gray-200 rounded-lg bg-white focus:outline-none focus:border-blue-400 focus:ring-1 focus:ring-blue-100 w-52 text-gray-700 placeholder:text-gray-400"
+          />
+        </div>
 
-          <div className="bg-white font-sans table-container hide-scrollbar overflow-x-auto">
-            {selectedWarrantysId?.length > 0 && (
-              <div className="mb-3 flex justify-start">
-                <button
-                  className="flex items-center gap-2 px-3 py-1.5 rounded-lg 
-                   bg-red-500 text-white text-sm font-medium
-                   hover:bg-red-600 transition"
-                  onClick={handleMultipleDelete}
-                >
-                  <FaTrashAlt className="text-white" />
-                  Delete Selected
-                </button>
-              </div>
-            )}
+        <button
+          onClick={handleReset}
+          className="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-lg border border-gray-200 text-xs font-semibold text-gray-500 hover:bg-gray-50 transition-colors"
+        >
+          <HiOutlineRefresh size={13} />
+          Reset
+        </button>
 
-            <table className="min-w-full divide-y divide-gray-200 border border-gray-300">
-              <thead className="font-gothamNarrow">
+        {selectedWarrantysId.length > 0 && (
+          <button
+            onClick={handleMultipleDelete}
+            className="inline-flex items-center gap-2 px-3.5 py-2 rounded-lg bg-red-50 border border-red-200 text-red-600 text-xs font-semibold hover:bg-red-100 transition-colors"
+          >
+            <HiOutlineTrash size={13} />
+            Delete {selectedWarrantysId.length} selected
+          </button>
+        )}
+      </div>
+
+      {/* ── Selection banner ── */}
+      {selectedWarrantysId.length > 0 && (
+        <div className="flex items-center gap-2 mb-4 px-4 py-2.5 bg-amber-50 border border-amber-200 rounded-xl">
+          <span className="w-2 h-2 rounded-full bg-amber-400 animate-pulse" />
+          <span className="text-xs font-semibold text-amber-600">
+            {selectedWarrantysId.length} item
+            {selectedWarrantysId.length > 1 ? "s" : ""} selected
+          </span>
+        </div>
+      )}
+
+      {/* ── Table Card ── */}
+      <div className="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden">
+        <div className="overflow-x-auto">
+          <table className="min-w-full">
+            <thead>
+              <tr className="bg-gray-50 border-b border-gray-100">
+                <th className="px-4 py-3 w-10">
+                  <input
+                    ref={selectAllRef}
+                    type="checkbox"
+                    checked={allSelected}
+                    onChange={handleSelectAll}
+                    className="w-3 h-3 cursor-pointer accent-amber-500"
+                  />
+                </th>
+                {[
+                  "S.N.",
+                  "Subcategory",
+                  "Duration",
+                  "Package type",
+                  "Amount",
+                  "Offers",
+                  "Created at",
+                  "Actions",
+                ].map((h) => (
+                  <th
+                    key={h}
+                    className="px-4 py-3 text-left text-[11px] font-semibold uppercase tracking-wider text-gray-500 whitespace-nowrap"
+                  >
+                    {h}
+                  </th>
+                ))}
+              </tr>
+            </thead>
+
+            <tbody className="divide-y divide-gray-50">
+              {loading ? (
                 <tr>
-                  <th className="px-4 py-3 text-left text-sm font-semibold text-black border-l border-r accent-red-500">
-                    <input
-                      type="checkbox"
-                      onChange={handleSelectAll}
-                      checked={
-                        allWarrantyPackagesList?.length > 0 &&
-                        selectedWarrantysId?.length ===
-                          allWarrantyPackagesList?.length
-                      }
-                    />
-                  </th>
-                  <th className="px-4 py-2 font-gothamNarrow text-left text-sm font-semibold text-black whitespace-nowrap">
-                    S.N.
-                  </th>
-                  <th className="px-4 py-3 font-gothamNarrow text-left text-sm font-semibold text-black border-l border-r border-gray-300 whitespace-nowrap">
-                    SubCategory
-                  </th>
-                  <th className="px-4 py-3 font-gothamNarrow text-left text-sm font-semibold text-black border-l border-r border-gray-300 whitespace-nowrap">
-                    Duration
-                  </th>
-                  <th className="px-4 py-3 font-gothamNarrow text-left text-sm font-semibold text-black border-l border-r border-gray-300 whitespace-nowrap">
-                    Package Type
-                  </th>
-                  <th className="px-4 py-3 font-gothamNarrow text-left text-sm font-semibold text-black border-l border-r border-gray-300 whitespace-nowrap">
-                    Amount
-                  </th>
-                  <th className="px-4 py-3 font-gothamNarrow text-left text-sm font-semibold text-black border-l border-r border-gray-300 whitespace-nowrap">
-                    Offers
-                  </th>
-                  <th className="px-4 py-3 font-gothamNarrow text-left text-sm font-semibold text-black border-l border-r border-gray-300 whitespace-nowrap">
-                    Created At
-                  </th>
-                  <th className="px-4 py-3 font-gothamNarrow text-left text-sm font-semibold text-black border-l border-r border-gray-300 whitespace-nowrap">
-                    Actions
-                  </th>
+                  <td colSpan={9} className="py-16 text-center">
+                    <div className="flex flex-col items-center gap-3">
+                      <div className="w-7 h-7 rounded-full border-2 border-amber-400 border-t-transparent animate-spin" />
+                      <span className="text-xs text-gray-400">
+                        Loading packages…
+                      </span>
+                    </div>
+                  </td>
                 </tr>
-              </thead>
-              <tbody className="bg-white divide-y divide-gray-200">
-                {loading ? (
-                  <tr>
-                    <td colSpan={12} className="text-center">
-                      <div className="inline-block animate-spin rounded-full h-4 w-4 border-t-2 border-gray-800 border-t-gray-800"></div>
-                    </td>
-                  </tr>
-                ) : allWarrantyPackagesList &&
-                  allWarrantyPackagesList?.length > 0 ? (
-                  allWarrantyPackagesList?.map((warranty, index) => (
+              ) : allWarrantyPackagesList?.length > 0 ? (
+                allWarrantyPackagesList.map((warranty, index) => {
+                  const isSelected = selectedWarrantysId.includes(warranty.id);
+                  const sn =
+                    page != null && results_per_page != null
+                      ? (page - 1) * results_per_page + index + 1
+                      : index + 1;
+
+                  return (
                     <tr
                       key={warranty.id}
-                      className="hover:bg-[#FFF0E5] hover:shadow-sm border-t border-b border-r border-l border-gray-300 cursor-pointer"
+                      className={`transition-colors duration-100 ${
+                        isSelected ? "bg-amber-50/60" : "hover:bg-gray-50/70"
+                      }`}
                     >
-                      <td className="px-4 py-2 font-gothamNarrow text-sm font-semibold text-black whitespace-nowrap border-gray-300 border-l border-r accent-red-500">
+                      <td className="px-4 py-2">
                         <input
                           type="checkbox"
-                          checked={selectedWarrantysId.includes(warranty.id)}
+                          className="w-3 h-3 cursor-pointer accent-amber-500"
+                          checked={isSelected}
                           onChange={(e) => handleSelectWarranty(e, warranty.id)}
                         />
                       </td>
-                      <td className="px-4 py-2 font-gothamNarrow text-sm text-black whitespace-nowrap">
-                        {page != null && results_per_page != null
-                          ? (page - 1) * results_per_page + index + 1
-                          : ""}
+
+                      <td className="px-4 py-2">
+                        <span className="text-xs font-medium text-gray-400">
+                          {sn}
+                        </span>
                       </td>
-                      <td className="px-4 py-2 font-gothamNarrow text-sm text-black whitespace-nowrap">
-                        {warranty?.subcategory_name}
+
+                      <td className="px-4 py-2 whitespace-nowrap">
+                        <span className="text-sm font-semibold text-gray-800">
+                          {warranty?.subcategory_name || "—"}
+                        </span>
                       </td>
-                      <td className="px-4 py-2 font-gothamNarrow text-sm text-black whitespace-nowrap">
-                        {warranty?.period}
+
+                      <td className="px-4 py-2 whitespace-nowrap">
+                        <span className="inline-flex items-center px-2 py-0.5 rounded-md bg-gray-100 border border-gray-200 text-xs font-semibold text-gray-600">
+                          {warranty?.period || "—"}
+                        </span>
                       </td>
-                      <td className="px-4 py-2 font-gothamNarrow text-sm text-black whitespace-nowrap">
-                        {warranty?.type}
+
+                      <td className="px-4 py-2 whitespace-nowrap">
+                        <span className="inline-flex items-center px-2 py-0.5 rounded-md bg-blue-50 border border-blue-100 text-xs font-semibold text-blue-600">
+                          {warranty?.type || "—"}
+                        </span>
                       </td>
-                      <td className="px-4 py-2 font-gothamNarrow text-sm text-black whitespace-nowrap">
-                        Rs {warranty?.amt}
+
+                      <td className="px-4 py-2 whitespace-nowrap">
+                        <span className="text-sm font-semibold text-gray-800">
+                          <span className="text-xs font-normal text-gray-400 mr-0.5">
+                            Rs
+                          </span>
+                          {warranty?.amt || "—"}
+                        </span>
                       </td>
-                      <td className="px-4 py-2 font-gothamNarrow text-sm text-black whitespace-nowrap">
-                        {warranty?.offers}
+
+                      <td className="px-4 py-2 whitespace-nowrap">
+                        {warranty?.offers ? (
+                          <span className="inline-flex items-center px-2 py-0.5 rounded-md bg-emerald-50 border border-emerald-100 text-xs font-semibold text-emerald-600">
+                            {warranty.offers}
+                          </span>
+                        ) : (
+                          <span className="text-xs text-gray-400">—</span>
+                        )}
                       </td>
-                      <td className="px-4 py-2 font-gothamNarrow text-sm text-black whitespace-nowrap">
-                        {moment(warranty.date_joined).format("DD MMM, YYYY")}
+
+                      <td className="px-4 py-2 whitespace-nowrap">
+                        <span className="text-xs text-gray-400">
+                          {moment(warranty.date_joined).format("D MMM YYYY")}
+                        </span>
                       </td>
-                      <td className="px-4 py-2 font-gothamNarrow text-sm text-black whitespace-nowrap">
-                        <Link
-                          to={`/baltra-admin-dashboard/edit/warranty-package/${warranty.id}`}
-                        >
-                          <button className="mr-2 text-green-600 hover:text-green-700">
-                            <FaPencilAlt />
+
+                      <td className="px-4 py-2 whitespace-nowrap">
+                        <div className="flex items-center gap-1.5">
+                          <Link
+                            to={`/baltra-admin-dashboard/edit/warranty-package/${warranty.id}`}
+                          >
+                            <button
+                              className="w-7 h-7 rounded-lg bg-emerald-50 border border-emerald-100 flex items-center justify-center hover:bg-emerald-100 transition-colors"
+                              title="Edit"
+                            >
+                              <HiOutlinePencilSquare
+                                size={13}
+                                className="text-emerald-500"
+                              />
+                            </button>
+                          </Link>
+
+                          <button
+                            onClick={() => handleOpenModal(warranty.id)}
+                            className="w-7 h-7 rounded-lg bg-red-50 border border-red-100 flex items-center justify-center hover:bg-red-100 transition-colors"
+                            title="Delete"
+                          >
+                            <HiOutlineTrash
+                              size={13}
+                              className="text-red-500"
+                            />
                           </button>
-                        </Link>
-                        <button
-                          onClick={() => handleOpenModal(warranty.id)}
-                          className="text-red-600 hover:text-red-700"
-                        >
-                          <FaTrash />
-                        </button>
+                        </div>
+
                         {selectedWarrantyId === warranty.id && (
                           <WarrantyDeletePopUp
                             isOpen={true}
@@ -292,41 +348,38 @@ const AllWarrantyPackageList = () => {
                         )}
                       </td>
                     </tr>
-                  ))
-                ) : (
-                  <tr>
-                    <td
-                      colSpan={12}
-                      className="text-center text-sm font-gothamNarrow"
-                    >
-                      No data available
-                    </td>
-                  </tr>
-                )}
-              </tbody>
-            </table>
-            {total_pages !== null && total_pages > 1 ? (
-              <div className="flex justify-end mt-0">
-                <WarrantyPagination
-                  currentPage={page}
-                  totalPages={total_pages}
-                  onPageChange={handlePageChange}
-                />
-              </div>
-            ) : (
-              ""
-            )}
-          </div>
-
-          {/* Pagination */}
-          {/* <WarrantyPagination
-            page={page}
-            totalPages={total_pages}
-            onPageChange={handlePageChange}
-          /> */}
+                  );
+                })
+              ) : (
+                <tr>
+                  <td colSpan={9} className="py-16 text-center">
+                    <div className="flex flex-col items-center gap-3">
+                      <div className="w-11 h-11 rounded-xl bg-amber-50 flex items-center justify-center">
+                        <HiOutlineShieldCheck
+                          size={22}
+                          className="text-amber-300"
+                        />
+                      </div>
+                      <p className="text-sm text-gray-400">No packages found</p>
+                    </div>
+                  </td>
+                </tr>
+              )}
+            </tbody>
+          </table>
         </div>
+
+        {total_pages != null && total_pages > 1 && (
+          <div className="flex justify-end px-4 py-3 border-t border-gray-100">
+            <WarrantyPagination
+              currentPage={page}
+              totalPages={total_pages}
+              onPageChange={handlePageChange}
+            />
+          </div>
+        )}
       </div>
-    </>
+    </div>
   );
 };
 
