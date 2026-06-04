@@ -2,6 +2,7 @@ import { enqueueSnackbar } from "notistack";
 import { useState } from "react";
 import {
   FaAngleDown,
+  FaChevronRight,
   FaExternalLinkAlt,
   FaSignOutAlt,
   FaUser,
@@ -10,14 +11,18 @@ import { HiOutlineUserCircle } from "react-icons/hi2";
 import { useDispatch, useSelector } from "react-redux";
 import { Link, Outlet, useNavigate } from "react-router-dom";
 import { setLogout } from "../../../redux/features/auth/authSlice";
+import LogoutPopUp from "../../layout/logoutPopUp/LogoutPopUp";
 
 const AdminHeader = ({ collapsed, toggleCollapsed }) => {
   const { customer } = useSelector((state) => state.auth);
   const dispatch = useDispatch();
   const navigate = useNavigate();
+
   const [dropdownOpen, setDropdownOpen] = useState(false);
+  const [showLogoutModal, setShowLogoutModal] = useState(false);
   const [timer, setTimer] = useState(null);
 
+  /* ── Dropdown hover logic ─────────────────────────────────────────── */
   const handleMouseEnter = () => {
     if (timer) {
       clearTimeout(timer);
@@ -27,16 +32,25 @@ const AdminHeader = ({ collapsed, toggleCollapsed }) => {
   };
 
   const handleMouseLeave = () => {
-    const newTimer = setTimeout(() => setDropdownOpen(false), 200);
-    setTimer(newTimer);
+    const t = setTimeout(() => setDropdownOpen(false), 200);
+    setTimer(t);
   };
 
+  /* ── Logout ───────────────────────────────────────────────────────── */
   const handleLogout = () => {
     dispatch(setLogout());
     localStorage.clear();
-    enqueueSnackbar("Logout Successfully", { variant: "success" });
+    enqueueSnackbar("Logged out successfully", { variant: "success" });
     navigate("/baltra-aboutUs-Page");
   };
+
+  /* Open modal; also close dropdown immediately so it doesn't linger */
+  const openLogoutModal = () => {
+    setDropdownOpen(false);
+    setShowLogoutModal(true);
+  };
+
+  const closeLogoutModal = () => setShowLogoutModal(false);
 
   const fullName = [customer?.firstname, customer?.lastname]
     .filter(Boolean)
@@ -106,52 +120,101 @@ const AdminHeader = ({ collapsed, toggleCollapsed }) => {
               </div>
 
               <FaAngleDown
-                className={`text-gray-400 text-xs transition-transform duration-200 ${dropdownOpen ? "rotate-180" : ""}`}
+                className={`text-gray-400 text-xs transition-transform duration-200 ${
+                  dropdownOpen ? "rotate-180" : ""
+                }`}
               />
             </button>
 
-            {/* Dropdown */}
+            {/* ── Dropdown ── */}
             {dropdownOpen && (
               <div
-                className="absolute right-0 top-full mt-1.5 w-44 bg-white border border-gray-200 rounded-lg shadow-lg z-50 overflow-hidden"
                 role="menu"
                 aria-orientation="vertical"
                 onMouseEnter={handleMouseEnter}
                 onMouseLeave={handleMouseLeave}
+                className="absolute right-0 top-full mt-2 w-56 bg-white border border-slate-200/80 rounded-2xl overflow-hidden z-50"
               >
-                {/* User info pill — visible on xs only */}
-                <div className="sm:hidden px-4 py-2.5 border-b border-gray-100">
-                  <p className="text-gray-800 text-sm font-medium truncate">
-                    {fullName || "Admin"}
-                  </p>
-                  <p className="text-gray-400 text-xs truncate">
-                    {customer?.email}
-                  </p>
+                {/* Identity header */}
+                <div className="flex items-center gap-3 px-4 py-3.5 border-b border-slate-100">
+                  <div className="w-9 h-9 rounded-full bg-red-50 flex items-center justify-center flex-shrink-0">
+                    <span className="text-[13px] font-semibold text-red-600 leading-none select-none">
+                      {fullName
+                        ? fullName
+                            .split(" ")
+                            .map((n) => n[0])
+                            .slice(0, 2)
+                            .join("")
+                            .toUpperCase()
+                        : "A"}
+                    </span>
+                  </div>
+                  <div className="min-w-0">
+                    <p className="text-[13px] font-semibold text-gray-800 truncate leading-tight">
+                      {fullName || "Admin"}
+                    </p>
+                    <p className="text-[11px] text-gray-400 truncate mt-0.5">
+                      {customer?.email}
+                    </p>
+                  </div>
                 </div>
 
-                <ul className="py-1" role="none">
+                {/* Menu items */}
+                <ul role="none" className="p-1.5 flex flex-col gap-0.5">
                   <li role="menuitem">
                     <Link
                       to="/baltra-admin-dashboard/admin-profile-information"
-                      className="flex items-center gap-2.5 px-4 py-2 text-sm text-gray-600 hover:bg-gray-50 hover:text-blue-600 transition-colors duration-150"
+                      className="flex items-center gap-3 px-3 py-2.5 rounded-xl text-gray-600 hover:bg-slate-50 hover:text-gray-900 transition-colors duration-100 group"
                     >
-                      <FaUser
-                        className="text-xs flex-shrink-0"
+                      <span className="w-7 h-7 rounded-lg bg-slate-100 flex items-center justify-center flex-shrink-0 group-hover:bg-slate-200 transition-colors">
+                        <FaUser
+                          size={11}
+                          className="text-slate-500"
+                          aria-hidden="true"
+                        />
+                      </span>
+                      <div className="flex-1 min-w-0">
+                        <p className="text-[13px] font-medium text-gray-700 leading-none">
+                          Profile
+                        </p>
+                        <p className="text-[11px] text-gray-400 mt-0.5">
+                          View &amp; edit details
+                        </p>
+                      </div>
+                      <FaChevronRight
+                        size={9}
+                        className="text-gray-300 flex-shrink-0"
                         aria-hidden="true"
                       />
-                      Profile
                     </Link>
                   </li>
+
+                  <li
+                    role="separator"
+                    className="h-px bg-slate-100 mx-1 my-0.5"
+                  />
+
+                  {/* Logout → opens modal instead of firing directly */}
                   <li role="menuitem">
                     <button
-                      onClick={handleLogout}
-                      className="w-full flex items-center gap-2.5 px-4 py-2 text-sm text-gray-600 hover:bg-red-50 hover:text-red-600 transition-colors duration-150"
+                      onClick={openLogoutModal}
+                      className="w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-gray-600 hover:bg-red-50 hover:text-red-700 transition-colors duration-100 group"
                     >
-                      <FaSignOutAlt
-                        className="text-xs flex-shrink-0"
-                        aria-hidden="true"
-                      />
-                      Logout
+                      <span className="w-7 h-7 rounded-lg bg-slate-100 flex items-center justify-center flex-shrink-0 group-hover:bg-red-100 transition-colors">
+                        <FaSignOutAlt
+                          size={11}
+                          className="text-slate-500 group-hover:text-red-500"
+                          aria-hidden="true"
+                        />
+                      </span>
+                      <div className="flex-1 min-w-0 text-left">
+                        <p className="text-[13px] font-medium leading-none">
+                          Log out
+                        </p>
+                        <p className="text-[11px] text-gray-400 mt-0.5 group-hover:text-red-400">
+                          End current session
+                        </p>
+                      </div>
                     </button>
                   </li>
                 </ul>
@@ -167,6 +230,11 @@ const AdminHeader = ({ collapsed, toggleCollapsed }) => {
       >
         <Outlet />
       </div>
+
+      {/* ── Logout confirmation modal ── */}
+      {showLogoutModal && (
+        <LogoutPopUp onClose={closeLogoutModal} handleLogout={handleLogout} />
+      )}
     </>
   );
 };

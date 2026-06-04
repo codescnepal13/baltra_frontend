@@ -1,51 +1,114 @@
-import React from "react";
+import { FaGlobe } from "react-icons/fa";
+import { HiDeviceMobile } from "react-icons/hi";
 
 const InfoLayoutModal = ({ setConfirmed }) => {
   const handleOptionClick = (option) => {
     if (option === "app") {
       window.open("https://play.google.com/store", "_blank");
-    } else if (option === "web") {
-      const userLocation = window.location.href;
     }
-
+    // "web" just stays on current page — no action needed
     setConfirmed(true);
   };
 
   return (
-    <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50">
-      <div className="bg-white/70 backdrop-blur-lg rounded-lg p-8 shadow-2xl transform transition-transform max-w-md mx-auto hover:scale-105">
-        <div className="text-center mb-6">
-          <h2
-            className="text-2xl font-bold text-gray-800 mb-3 font-gothamNarrow"
+    <div
+      className="fixed inset-0 z-50 flex items-center justify-center px-4"
+      style={{
+        backgroundColor: "rgba(0, 0, 0, 0.55)",
+        backdropFilter: "blur(10px)",
+        WebkitBackdropFilter: "blur(10px)",
+      }}
+    >
+      <div
+        className="relative w-full max-w-sm rounded-2xl px-8 py-9 text-center
+                   transition-transform duration-500 ease-out scale-100"
+        style={{
+          background: "rgba(255, 255, 255, 0.09)",
+          border: "1px solid rgba(255, 255, 255, 0.18)",
+          backdropFilter: "blur(28px)",
+          WebkitBackdropFilter: "blur(28px)",
+          boxShadow:
+            "0 32px 80px rgba(0,0,0,0.5), inset 0 1px 0 rgba(255,255,255,0.15)",
+        }}
+      >
+        {/* Icon badge */}
+        <div
+          className="mx-auto mb-5 w-14 h-14 rounded-full flex items-center justify-center"
+          style={{
+            background: "rgba(255,255,255,0.13)",
+            border: "1px solid rgba(255,255,255,0.22)",
+          }}
+        >
+          <span style={{ fontSize: 26 }}>⚡</span>
+        </div>
+
+        {/* Title */}
+        <h2
+          className="font-gothamNarrow font-bold text-white tracking-wide mb-2"
+          style={{ fontSize: "clamp(20px, 5vw, 26px)" }}
+        >
+          Explore Baltra
+        </h2>
+
+        {/* Description */}
+        <p
+          className="font-gothamNarrow text-sm leading-relaxed mb-7"
+          style={{ color: "rgba(255, 225, 215, 0.72)" }}
+        >
+          Choose how you'd like to experience our world of premium home
+          appliances.
+        </p>
+
+        {/* Buttons */}
+        <div className="flex flex-col gap-3">
+          {/* Primary — App */}
+          <button
+            onClick={() => handleOptionClick("app")}
+            className="
+    w-full py-3.5 rounded-full
+    font-gothamNarrow font-semibold text-sm tracking-wide
+    transition-all duration-200
+    hover:-translate-y-0.5 active:scale-95
+    flex items-center justify-center gap-2
+  "
             style={{
-              textShadow:
-                "2px 2px 4px rgba(0, 0, 0, 0.3), 4px 4px 8px rgba(0, 0, 0, 0.2)",
+              background: "white",
+              color: "#7A0A0A",
+              boxShadow: "0 8px 28px rgba(0,0,0,0.3)",
             }}
           >
-            Explore Baltra Website
-          </h2>
+            <HiDeviceMobile className="text-lg" />
+            <span>Launch in App</span>
+          </button>
 
-          <p className="text-gray-600 text-sm font-gothamNarrow">
-            Choose your preferred way to experience the website.
-          </p>
-        </div>
-        <div className="flex flex-col gap-4 md:flex-row md:justify-between">
+          {/* Secondary — Web */}
           <button
-            className="bg-gradient-to-r from-blue-500 to-indigo-600 text-white px-5 py-3 rounded-lg shadow-lg hover:shadow-xl transition-all font-gothamNarrow flex-1 md:mr-2 whitespace-nowrap cursor-pointer"
-            onClick={() => handleOptionClick("app")}
-          >
-            Launch in App
-          </button>
-          <button
-            className="bg-gradient-to-r from-red-500 to-pink-600 text-white px-5 py-3 rounded-lg shadow-lg hover:shadow-xl transition-all font-gothamNarrow flex-1 md:ml-2 whitespace-nowrap cursor-pointer"
             onClick={() => handleOptionClick("web")}
+            className="
+    w-full py-3.5 rounded-full
+    font-gothamNarrow text-sm tracking-wide
+    transition-all duration-200
+    hover:bg-white/20 active:scale-95
+    flex items-center justify-center gap-2
+  "
+            style={{
+              background: "rgba(255,255,255,0.08)",
+              color: "rgba(255,255,255,0.88)",
+              border: "1px solid rgba(255,255,255,0.2)",
+            }}
           >
-            Open in Web Browser
+            <FaGlobe className="text-sm" />
+            <span>Open in Web Browser</span>
           </button>
         </div>
-        <div className="mt-6 text-center text-gray-500 text-sm font-gothamNarrow">
-          Tip: The app offers an enhanced experience!
-        </div>
+
+        {/* Tip */}
+        <p
+          className="mt-5 font-gothamNarrow text-xs tracking-wide"
+          style={{ color: "rgba(255,190,170,0.45)" }}
+        >
+          ✦ The app unlocks full 3D product visualization
+        </p>
       </div>
     </div>
   );

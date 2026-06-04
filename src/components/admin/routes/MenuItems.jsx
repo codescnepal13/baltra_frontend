@@ -58,9 +58,9 @@ export const items = [
     ],
   },
   {
-    key: "User Profiles",
+    key: "Customer Profiles",
     icon: <HiOutlineUserGroup />,
-    label: "User Profiles",
+    label: "Customer Profiles",
     children: [
       {
         key: "all-customer-List",

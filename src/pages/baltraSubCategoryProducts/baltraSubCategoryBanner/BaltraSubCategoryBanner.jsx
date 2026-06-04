@@ -1,19 +1,19 @@
-import React, { useEffect } from "react";
+import { useEffect } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { useParams } from "react-router-dom";
-import BaltraSubCategorySlider from "../baltraSubCategorySlider/BaltraSubCategorySlider";
-import BaltraSubCategorySkeleton from "../baltraSubCategorySkeleton/BaltraSubCategorySkeleton";
+import ProductHeader from "../../../components/topHeader/productHeader/ProductHeader";
 import {
   baltraSubCategoryProducts,
   clearProductError,
 } from "../../../redux/features/product/productSlice";
-import BaltraSubCategoryHeader from "../baltraSubCategoryHeader/BaltraSubCategoryHeader";
+import BaltraSubCategorySkeleton from "../baltraSubCategorySkeleton/BaltraSubCategorySkeleton";
+import BaltraSubCategorySlider from "../baltraSubCategorySlider/BaltraSubCategorySlider";
 
 const BaltraSubCategoryBanner = () => {
   const { category_id } = useParams();
   const dispatch = useDispatch();
   const { loading, error, subCategoryProducts, categoryInfo } = useSelector(
-    (state) => state.product
+    (state) => state.product,
   );
 
   useEffect(() => {
@@ -38,7 +38,7 @@ const BaltraSubCategoryBanner = () => {
       >
         {/* Header Overlay */}
         <div className="absolute top-0 left-0 w-full z-10">
-          <BaltraSubCategoryHeader />
+          <ProductHeader />
         </div>
 
         {/* Category Information */}

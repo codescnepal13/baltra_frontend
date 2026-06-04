@@ -6,11 +6,11 @@ import { useDispatch, useSelector } from "react-redux";
 import { useNavigate } from "react-router-dom";
 import userAuthImg from "../../../assets/images/userAuthImg.png";
 import MetaData from "../../../components/layout/metaData/MetaData";
+import ProductHeader from "../../../components/topHeader/productHeader/ProductHeader";
 import {
   baltraRegister,
   clearAuthError,
 } from "../../../redux/features/auth/authSlice";
-import BaltraSubCategoryHeader from "../../baltraSubCategoryProducts/baltraSubCategoryHeader/BaltraSubCategoryHeader";
 
 const Register = () => {
   const { customer, loading, error } = useSelector((state) => state.auth);
@@ -72,7 +72,7 @@ const Register = () => {
           loading="lazy"
         />
         <div className="absolute top-0 left-0 w-full z-10">
-          <BaltraSubCategoryHeader />
+          <ProductHeader />
         </div>
         <div className="relative w-full mt-10 lg:mt-24 py-4 max-w-lg md:max-w-xl lg:max-w-2xl xl:max-w-3xl px-4 sm:px-10 pb-6 bg-white rounded-sm shadow-sm">
           <form

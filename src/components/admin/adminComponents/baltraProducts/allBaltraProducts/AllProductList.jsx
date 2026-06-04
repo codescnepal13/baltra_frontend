@@ -395,8 +395,11 @@ const AllProductList = () => {
           </div>
 
           {/* ── Pagination ── */}
-          {total_pages !== null && total_pages > 1 && (
-            <div className="flex justify-end px-5 py-4 border-t border-gray-100">
+          {total_pages > 1 && (
+            <div className="flex items-center justify-between px-5 py-4 border-t border-slate-100 bg-slate-50/50">
+              <p className="text-xs text-slate-400 font-medium">
+                Page {page} of {total_pages}
+              </p>
               <ProductPagination
                 currentPage={page}
                 totalPages={total_pages}

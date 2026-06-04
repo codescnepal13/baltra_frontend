@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import { useState } from "react";
 import ContactBg from "../../assets/images/contactBgImg.png";
 import MetaData from "../../components/layout/metaData/MetaData";
 import TopHeader from "../../components/topHeader/TopHeader";
@@ -22,42 +22,32 @@ const ContactUs = () => {
         ogImage="https://www.baltra.com/images/baltraAllProductsBanner.png"
         ogUrl="https://www.baltra.com/baltra-contact-us"
       />
+
       <div className="relative w-full min-h-screen bg-[#F6F8FA]">
-        {/* TopHeader positioned above the background image */}
+        {/* Header */}
         <div className="absolute top-0 left-0 w-full z-50">
           <TopHeader />
         </div>
-        {/* <div
-          className="absolute inset-0 z-10"
+
+        {/* Background image */}
+        <div
+          className="absolute inset-0 z-0 transition-opacity duration-500"
           style={{
-            backgroundImage: `url(${ContactBg})`,
+            backgroundImage: isLoaded ? `url(${ContactBg})` : "none",
             backgroundSize: "cover",
             backgroundPosition: "center",
+            opacity: isLoaded ? 1 : 0,
           }}
-        ></div> */}
-        <div className="absolute inset-0 z-10">
-          {/* Background Image */}
-          <div
-            style={{
-              backgroundImage: isLoaded ? `url(${ContactBg})` : `url("")`,
-              backgroundSize: "cover",
-              backgroundPosition: "center",
-              transition: "opacity 0.5s ease",
-              opacity: isLoaded ? 1 : 0.5,
-            }}
-            className="absolute inset-0 z-10"
-          ></div>
+        />
+        <img
+          src={ContactBg}
+          alt=""
+          className="hidden"
+          onLoad={() => setIsLoaded(true)}
+        />
 
-          <img
-            src={ContactBg}
-            alt="Preload Background"
-            style={{ display: "none" }}
-            onLoad={() => setIsLoaded(true)}
-          />
-        </div>
-
-        {/* Main content area */}
-        <div className="relative z-30 flex items-center justify-center min-h-screen p-4">
+        {/* Page content */}
+        <div className="relative z-10 flex items-center justify-center min-h-screen px-4 py-24 sm:py-28">
           <BaltraModal />
         </div>
       </div>

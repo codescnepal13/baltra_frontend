@@ -1,16 +1,16 @@
-import React, { useEffect } from "react";
-import { useParams } from "react-router-dom";
+import { useEffect } from "react";
 import { useDispatch, useSelector } from "react-redux";
-import ProductViewHeader from "./productViewHeader/ProductViewHeader";
-import ProductViewDetails from "./productViewDetails/ProductViewDetails";
+import { useParams } from "react-router-dom";
+import ProductHeader from "../../components/topHeader/productHeader/ProductHeader";
 import {
   clearProductError,
   singleProductView,
 } from "../../redux/features/product/productSlice";
+import ProductViewDetails from "./productViewDetails/ProductViewDetails";
 
 const BaltraProductView = () => {
   const { loading, error, singleProduct } = useSelector(
-    (state) => state.product
+    (state) => state.product,
   );
   const { isAuthenticated, customer } = useSelector((state) => state.auth);
 
@@ -36,7 +36,7 @@ const BaltraProductView = () => {
       className="relative bg-no-repeat bg-cover bg-center"
       style={{ backgroundColor: "#f6f8fa" }}
     >
-      <ProductViewHeader isAuthenticated={isAuthenticated} customer={customer} />
+      <ProductHeader isAuthenticated={isAuthenticated} customer={customer} />
       <ProductViewDetails singleProduct={singleProduct} loading={loading} />
     </div>
   );

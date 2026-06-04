@@ -1,13 +1,13 @@
 import React from "react";
 import FanImg from "../../../../assets/images/FanImg.png";
 import RiceCookerImg from "../../../../assets/images/RiceCookerImg.png";
-import UserProductHeader from "../../../userProductPage/userProductHeader/UserProductHeader";
+import TopHeader from "../../../../components/topHeader/TopHeader";
 
 const ProfileBanner = () => {
   return (
     <div className="w-full bg-gradient-to-r from-[#E91C1C] to-[#831010] bg-opacity-60 relative">
       <div className="absolute top-0 left-0 w-full z-10">
-        <UserProductHeader />
+        <TopHeader />
       </div>
       <div className="flex flex-col md:flex-row justify-between items-center h-auto md:h-[268px] px-4 sm:px-8 lg:px-16 2xl:px-24 pt-16">
         <img

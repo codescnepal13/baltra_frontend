@@ -11,9 +11,8 @@ import API from "../../api/api";
  * @property {string} message
  * @property {object | null} singleCustomer
  * @property {Array | null} allCustomers
- * @property {object | null} user
- * @property {Array | null} allUsers
- * @property {Array | null} allUsers
+ * @property {object | null} userRole
+ * @property {Array | null} userRoleList
  * @property {object | null} categoryProduct
  * @property {Array | null} allCategoryProducts
  * @property {object | null} subCategoryProduct
@@ -50,13 +49,13 @@ export const getAllUserList = createAsyncThunk(
       const response = await API.get(
         `/user/getallusers${
           queryParams.toString() ? `?${queryParams.toString()}` : ""
-        }`
+        }`,
       );
       return response.data;
     } catch (error) {
       return rejectWithValue({ message: getErrorMessage(error) });
     }
-  }
+  },
 );
 
 //get single View
@@ -69,7 +68,7 @@ export const getSingleUser = createAsyncThunk(
     } catch (error) {
       return rejectWithValue({ message: getErrorMessage(error) });
     }
-  }
+  },
 );
 
 //updateUserRole
@@ -87,7 +86,7 @@ export const updateUserRole = createAsyncThunk(
     } catch (error) {
       return rejectWithValue({ message: getErrorMessage(error) });
     }
-  }
+  },
 );
 
 //delete UserRole
@@ -104,7 +103,7 @@ export const deleteUserRole = createAsyncThunk(
     } catch (error) {
       return rejectWithValue({ message: getErrorMessage(error) });
     }
-  }
+  },
 );
 
 //deleteMultipleUserRole
@@ -124,30 +123,8 @@ export const deleteMultipleUsersRole = createAsyncThunk(
     } catch (error) {
       return rejectWithValue({ message: getErrorMessage(error) });
     }
-  }
+  },
 );
-//get all Customers List
-
-//Previous
-// export const getAllCustomerList = createAsyncThunk(
-//   "admin/allAdminCustomerList",
-//   async ({ firstname, gender, page } = {}, { rejectWithValue }) => {
-//     try {
-//       let queryParams = new URLSearchParams();
-//       if (firstname) queryParams.append("firstname", firstname);
-//       if (gender) queryParams.append("gender", gender);
-//       if (page) queryParams.append("page", page);
-//       const response = await API.get(
-//         `/user/getallcustomers${
-//           queryParams.toString() ? `?${queryParams.toString()}` : ""
-//         }`
-//       );
-//       return response.data;
-//     } catch (error) {
-//       return rejectWithValue({ message: getErrorMessage(error) });
-//     }
-//   }
-// );
 
 //new With Tier
 export const getAllCustomerList = createAsyncThunk(
@@ -163,13 +140,13 @@ export const getAllCustomerList = createAsyncThunk(
       const response = await API.get(
         `/user/getallcustomers${
           queryParams.toString() ? `?${queryParams.toString()}` : ""
-        }`
+        }`,
       );
       return response.data;
     } catch (error) {
       return rejectWithValue({ message: getErrorMessage(error) });
     }
-  }
+  },
 );
 
 //get all single List
@@ -182,7 +159,7 @@ export const getSingleCustomer = createAsyncThunk(
     } catch (error) {
       return rejectWithValue({ message: getErrorMessage(error) });
     }
-  }
+  },
 );
 
 //updateCustomerRole
@@ -199,7 +176,7 @@ export const updateCustomerRole = createAsyncThunk(
     } catch (error) {
       return rejectWithValue({ message: getErrorMessage(error) });
     }
-  }
+  },
 );
 
 //delete User Role
@@ -212,13 +189,13 @@ export const deleteCustomerRole = createAsyncThunk(
         response.data.message || "customer deleted successFully!",
         {
           variant: "success",
-        }
+        },
       );
       return response.data;
     } catch (error) {
       return rejectWithValue({ message: getErrorMessage(error) });
     }
-  }
+  },
 );
 
 // deleteMultipleCustomersRole;
@@ -234,13 +211,13 @@ export const deleteMultipleCustomersRole = createAsyncThunk(
         response.data.message || "customer deleted successFully!",
         {
           variant: "success",
-        }
+        },
       );
       return response.data;
     } catch (error) {
       return rejectWithValue({ message: getErrorMessage(error) });
     }
-  }
+  },
 );
 
 //add Category Product Section
@@ -258,7 +235,7 @@ export const addCategory = createAsyncThunk(
     } catch (error) {
       return rejectWithValue({ message: getErrorMessage(error) });
     }
-  }
+  },
 );
 
 //allCategoryProducts
@@ -272,14 +249,14 @@ export const categoryProductsList = createAsyncThunk(
       const response = await API.get(
         `/products/getcategory${
           queryParams.toString() ? `?${queryParams.toString()}` : ""
-        }`
+        }`,
       );
 
       return response.data;
     } catch (error) {
       return rejectWithValue({ message: getErrorMessage(error) });
     }
-  }
+  },
 );
 
 //singleCategoryProductId
@@ -288,13 +265,13 @@ export const categoryProductById = createAsyncThunk(
   async (category_id, { rejectWithValue }) => {
     try {
       const response = await API.get(
-        `/products/getcategorybyid/${category_id}`
+        `/products/getcategorybyid/${category_id}`,
       );
       return response.data;
     } catch (error) {
       return rejectWithValue({ message: getErrorMessage(error) });
     }
-  }
+  },
 );
 
 //deleteCategory
@@ -303,7 +280,7 @@ export const deleteCategory = createAsyncThunk(
   async ({ category_id, enqueueSnackbar }, { rejectWithValue }) => {
     try {
       const response = await API.delete(
-        `/products/deletecategory/${category_id}`
+        `/products/deletecategory/${category_id}`,
       );
 
       enqueueSnackbar(response.data.message || "category delete success!", {
@@ -313,7 +290,7 @@ export const deleteCategory = createAsyncThunk(
     } catch (error) {
       return rejectWithValue({ message: getErrorMessage(error) });
     }
-  }
+  },
 );
 
 //editCategory
@@ -323,7 +300,7 @@ export const editCategory = createAsyncThunk(
     try {
       const response = await API.put(
         `/products/updatecategory/${category_id}`,
-        formData
+        formData,
       );
       enqueueSnackbar(response.data.message || "category update success!", {
         variant: "success",
@@ -333,7 +310,7 @@ export const editCategory = createAsyncThunk(
     } catch (error) {
       return rejectWithValue({ message: getErrorMessage(error) });
     }
-  }
+  },
 );
 
 //Add Sub Category
@@ -346,14 +323,14 @@ export const addSubCategory = createAsyncThunk(
         response.data.message || "subcategory added successFully!",
         {
           variant: "success",
-        }
+        },
       );
       navigate("/baltra-admin-dashboard/all-sub-category-List");
       return response.data;
     } catch (error) {
       return rejectWithValue({ message: getErrorMessage(error) });
     }
-  }
+  },
 );
 
 //AllSubCategoryProducts
@@ -368,14 +345,14 @@ export const subCategoryProductsList = createAsyncThunk(
       const response = await API.get(
         `/products/getsubcategory${
           queryParams.toString() ? `?${queryParams.toString()}` : ""
-        }`
+        }`,
       );
 
       return response.data;
     } catch (error) {
       return rejectWithValue({ message: getErrorMessage(error) });
     }
-  }
+  },
 );
 
 //singleCategory
@@ -388,7 +365,7 @@ export const dropdownCategory = createAsyncThunk(
     } catch (error) {
       return rejectWithValue({ message: getErrorMessage(error) });
     }
-  }
+  },
 );
 
 export const dropdownSubCategory = createAsyncThunk(
@@ -396,13 +373,13 @@ export const dropdownSubCategory = createAsyncThunk(
   async (category_id, { rejectWithValue }) => {
     try {
       const response = await API.get(
-        `/products/getsubcategorylist/${category_id}`
+        `/products/getsubcategorylist/${category_id}`,
       );
       return response.data;
     } catch (error) {
       return rejectWithValue({ message: getErrorMessage(error) });
     }
-  }
+  },
 );
 
 //subCategoryDropDownList
@@ -415,7 +392,7 @@ export const dropdownSubCategoryList = createAsyncThunk(
     } catch (error) {
       return rejectWithValue({ message: getErrorMessage(error) });
     }
-  }
+  },
 );
 
 //deleteSubCategory
@@ -424,7 +401,7 @@ export const deleteSubCategory = createAsyncThunk(
   async ({ subcategory_id, enqueueSnackbar }, { rejectWithValue }) => {
     try {
       const response = await API.delete(
-        `/products/deletesubcategory/${subcategory_id}`
+        `/products/deletesubcategory/${subcategory_id}`,
       );
 
       enqueueSnackbar(response.data.message || "subCategory deleted success!", {
@@ -434,7 +411,7 @@ export const deleteSubCategory = createAsyncThunk(
     } catch (error) {
       return rejectWithValue({ message: getErrorMessage(error) });
     }
-  }
+  },
 );
 
 //SubCategoryEdit
@@ -444,19 +421,19 @@ export const editSubCategory = createAsyncThunk(
     try {
       const response = await API.put(
         `/products/updatesubcategory/${id}`,
-        formData
+        formData,
       );
       enqueueSnackbar(
         response.data.message || "subcategory updated successFully!",
         {
           variant: "success",
-        }
+        },
       );
       return response.data;
     } catch (error) {
       return rejectWithValue({ message: getErrorMessage(error) });
     }
-  }
+  },
 );
 
 //subCategoryID
@@ -469,7 +446,7 @@ export const subCategoryById = createAsyncThunk(
     } catch (error) {
       return rejectWithValue({ message: getErrorMessage(error) });
     }
-  }
+  },
 );
 
 //addProductByAmin
@@ -486,7 +463,7 @@ export const addBaltraProduct = createAsyncThunk(
     } catch (error) {
       return rejectWithValue({ message: getErrorMessage(error) });
     }
-  }
+  },
 );
 
 //getAllProductsByAmdmin
@@ -500,14 +477,14 @@ export const allBaltraProducts = createAsyncThunk(
       const response = await API.get(
         `/products/getdata${
           queryParams.toString() ? `?${queryParams.toString()}` : ""
-        }`
+        }`,
       );
 
       return response.data;
     } catch (error) {
       return rejectWithValue({ message: getErrorMessage(error) });
     }
-  }
+  },
 );
 
 //singleProductView
@@ -520,7 +497,7 @@ export const singleProductView = createAsyncThunk(
     } catch (error) {
       return rejectWithValue({ message: getErrorMessage(error) });
     }
-  }
+  },
 );
 
 //deleteBaltraProductsByAdmin
@@ -529,7 +506,7 @@ export const deleteBaltraProduct = createAsyncThunk(
   async ({ product_id, enqueueSnackbar }, { rejectWithValue }) => {
     try {
       const response = await API.delete(
-        `/products/deleteproducts/${product_id}`
+        `/products/deleteproducts/${product_id}`,
       );
 
       enqueueSnackbar(response.data.message || "product delete SuccessFully!", {
@@ -539,7 +516,7 @@ export const deleteBaltraProduct = createAsyncThunk(
     } catch (error) {
       return rejectWithValue({ message: getErrorMessage(error) });
     }
-  }
+  },
 );
 
 //getSingleProductById
@@ -552,7 +529,7 @@ export const singleProductById = createAsyncThunk(
     } catch (error) {
       return rejectWithValue({ message: getErrorMessage(error) });
     }
-  }
+  },
 );
 
 //edit Product
@@ -562,7 +539,7 @@ export const editProduct = createAsyncThunk(
     try {
       const response = await API.put(
         `/products/updateproduct/${product_id}`,
-        formData
+        formData,
       );
       enqueueSnackbar(response.data.message || "product edited successFully", {
         variant: "success",
@@ -572,7 +549,7 @@ export const editProduct = createAsyncThunk(
     } catch (error) {
       return rejectWithValue({ message: getErrorMessage(error) });
     }
-  }
+  },
 );
 
 //addBulkImport
@@ -589,7 +566,7 @@ export const addBulkImport = createAsyncThunk(
     } catch (error) {
       return rejectWithValue({ message: getErrorMessage(error) });
     }
-  }
+  },
 );
 
 //deleteQrProduct
@@ -598,7 +575,7 @@ export const deleteBaltraQrProduct = createAsyncThunk(
   async ({ product_id, enqueueSnackbar }, { rejectWithValue }) => {
     try {
       const response = await API.delete(
-        `/products/deleteqrproduct/${product_id}`
+        `/products/deleteqrproduct/${product_id}`,
       );
 
       enqueueSnackbar(response.data.message || "qr deleted SuccessFully!", {
@@ -609,7 +586,7 @@ export const deleteBaltraQrProduct = createAsyncThunk(
     } catch (error) {
       return rejectWithValue({ message: getErrorMessage(error) });
     }
-  }
+  },
 );
 
 //deleteMultipleQrProduct
@@ -628,7 +605,7 @@ export const deleteMultipleQrProduct = createAsyncThunk(
     } catch (error) {
       return rejectWithValue({ message: getErrorMessage(error) });
     }
-  }
+  },
 );
 
 //deleteMultipleCategoryOnce(deleteMultipleCategoryProduct)
@@ -644,13 +621,13 @@ export const deleteMultipleCategoryProduct = createAsyncThunk(
         response.data.message || "category remove successfully!",
         {
           variant: "success",
-        }
+        },
       );
       return response.data;
     } catch (error) {
       return rejectWithValue({ message: getErrorMessage(error) });
     }
-  }
+  },
 );
 
 //deleteMultipleSubCategoryProduct
@@ -665,13 +642,13 @@ export const deleteMultipleSubCategoryProduct = createAsyncThunk(
         response.data.message || "SubCategory remove successfully!",
         {
           variant: "success",
-        }
+        },
       );
       return response.data;
     } catch (error) {
       return rejectWithValue({ message: getErrorMessage(error) });
     }
-  }
+  },
 );
 
 //deleteMultipleProduct
@@ -690,7 +667,7 @@ export const deleteMultipleProduct = createAsyncThunk(
     } catch (error) {
       return rejectWithValue({ message: getErrorMessage(error) });
     }
-  }
+  },
 );
 
 //AddQRProduct
@@ -707,7 +684,7 @@ export const addQrProduct = createAsyncThunk(
     } catch (error) {
       return rejectWithValue({ message: getErrorMessage(error) });
     }
-  }
+  },
 );
 
 //get All QrList
@@ -721,14 +698,14 @@ export const getAllQrList = createAsyncThunk(
       const response = await API.get(
         `/products/getproductqr${
           queryParams.toString() ? `?${queryParams.toString()}` : ""
-        }`
+        }`,
       );
 
       return response.data;
     } catch (error) {
       return rejectWithValue({ message: getErrorMessage(error) });
     }
-  }
+  },
 );
 // Redux Thunk for downloading ZIP
 export const downloadAllQrInPDF = createAsyncThunk(
@@ -742,26 +719,8 @@ export const downloadAllQrInPDF = createAsyncThunk(
     } catch (error) {
       return rejectWithValue({ message: error.message });
     }
-  }
+  },
 );
-
-//downloadSelectQrInPDF
-
-// export const downloadSelectQrInPDF = createAsyncThunk(
-//   "admin/downloadSelectQrInPDF",
-//   async (selectedProductsId, { rejectWithValue }) => {
-//     try {
-//       const response = await API.get(
-//         "/products/exportproductqrbyid",
-//         { ids: selectedProductsId },
-//         { responseType: "blob" }
-//       );
-//       return response.data;
-//     } catch (error) {
-//       return rejectWithValue({ message: error.message });
-//     }
-//   }
-// );
 
 export const downloadSelectQrInPDF = createAsyncThunk(
   "admin/downloadSelectQrInPDF",
@@ -775,30 +734,15 @@ export const downloadSelectQrInPDF = createAsyncThunk(
         `/products/exportproductqrbyid?ids=${idsQuery}`,
         {
           responseType: "blob",
-        }
+        },
       );
 
       return response.data;
     } catch (error) {
       return rejectWithValue({ message: error.message });
     }
-  }
+  },
 );
-
-// //downloadAllQrInPDF
-// export const downloadAllQrInPDF = createAsyncThunk(
-//   "admin/downloadAllQrInPDF",
-//   async (_, { rejectWithValue }) => {
-//     try {
-//       const response = await API.get("/products/exportproductqr", {
-//         responseType: "blob",
-//       });
-//       return response.data;
-//     } catch (error) {
-//       return rejectWithValue({ message: error.message });
-//     }
-//   }
-// );
 
 //addWarrantyPackage
 export const addWarrantyPackage = createAsyncThunk(
@@ -807,7 +751,7 @@ export const addWarrantyPackage = createAsyncThunk(
     try {
       const response = await API.post(
         `/products/extendwarrantyform`,
-        warrantyValue
+        warrantyValue,
       );
       enqueueSnackbar(response.data.message || "warranty added successFully!", {
         variant: "success",
@@ -817,7 +761,7 @@ export const addWarrantyPackage = createAsyncThunk(
     } catch (error) {
       return rejectWithValue({ message: error.message });
     }
-  }
+  },
 );
 
 //get SingleWarrantyById
@@ -826,13 +770,13 @@ export const singleWarrantyProduct = createAsyncThunk(
   async ({ form_id }, { rejectWithValue }) => {
     try {
       const response = await API.get(
-        `/products/getwarrantyformbyid/${form_id}`
+        `/products/getwarrantyformbyid/${form_id}`,
       );
       return response.data;
     } catch (error) {
       return rejectWithValue({ message: error.message });
     }
-  }
+  },
 );
 
 //editWarrantyProduct
@@ -841,12 +785,12 @@ export const editWarrantyForm = createAsyncThunk(
   "admin/editWarrantyForm",
   async (
     { form_id, warrantyValue, enqueueSnackbar, navigate },
-    { rejectWithValue }
+    { rejectWithValue },
   ) => {
     try {
       const response = await API.put(
         `/products/updatewarrantyform/${form_id}`,
-        warrantyValue
+        warrantyValue,
       );
       enqueueSnackbar(response.data.message || "warranty package updated", {
         variant: "success",
@@ -856,7 +800,7 @@ export const editWarrantyForm = createAsyncThunk(
     } catch (error) {
       return rejectWithValue({ message: error.message });
     }
-  }
+  },
 );
 
 //getAllWarrantyPackages
@@ -871,14 +815,14 @@ export const getAllWarrantyPackages = createAsyncThunk(
       const response = await API.get(
         `/products/getextendwarrantyforms${
           queryParams.toString() ? `?${queryParams.toString()}` : ""
-        }`
+        }`,
       );
 
       return response.data;
     } catch (error) {
       return rejectWithValue({ message: getErrorMessage(error) });
     }
-  }
+  },
 );
 
 //deleteSingleWarranty
@@ -888,19 +832,19 @@ export const deleteWarrantyCard = createAsyncThunk(
   async ({ form_id, enqueueSnackbar }, { rejectWithValue }) => {
     try {
       const response = await API.delete(
-        `/products/deleteextendwarrantyform/${form_id}`
+        `/products/deleteextendwarrantyform/${form_id}`,
       );
       enqueueSnackbar(
         response.data.message || "warranty deleted successFully!",
         {
           variant: "success",
-        }
+        },
       );
       return response.data;
     } catch (error) {
       return rejectWithValue({ message: error.message });
     }
-  }
+  },
 );
 
 //deleteMultipleWarrantyPackage
@@ -913,7 +857,7 @@ export const deleteMultipleWarrantyPackage = createAsyncThunk(
         `/products/multipledeleteextendwarrantyform`,
         {
           data: { form_ids },
-        }
+        },
       );
 
       enqueueSnackbar(response.data.message || "item deleted successFully!", {
@@ -923,7 +867,7 @@ export const deleteMultipleWarrantyPackage = createAsyncThunk(
     } catch (error) {
       return rejectWithValue({ message: getErrorMessage(error) });
     }
-  }
+  },
 );
 
 //Add Product Catalog
@@ -941,7 +885,7 @@ export const addProductCatalog = createAsyncThunk(
     } catch (error) {
       return rejectWithValue({ message: getErrorMessage(error) });
     }
-  }
+  },
 );
 
 //gell All Product catalog
@@ -954,7 +898,7 @@ export const allProductCatalog = createAsyncThunk(
     } catch (error) {
       return rejectWithValue({ message: getErrorMessage(error) });
     }
-  }
+  },
 );
 
 //delete Product Catalog
@@ -967,13 +911,13 @@ export const deleteProductCatalog = createAsyncThunk(
         response.data.message || "product catalog deleted successFully",
         {
           variant: "success",
-        }
+        },
       );
       return response.data;
     } catch (error) {
       return rejectWithValue({ message: getErrorMessage(error) });
     }
-  }
+  },
 );
 
 //get all Customized Products
@@ -987,14 +931,14 @@ export const allCustomizedPersonalization = createAsyncThunk(
       const response = await API.get(
         `/customer/getpersonalizedata${
           queryParams.toString() ? `?${queryParams.toString()}` : ""
-        }`
+        }`,
       );
 
       return response.data;
     } catch (error) {
       return rejectWithValue({ message: getErrorMessage(error) });
     }
-  }
+  },
 );
 
 //single PersonalizationView
@@ -1003,14 +947,14 @@ export const singlePersonalizationView = createAsyncThunk(
   async ({ personalization_id }, { rejectWithValue }) => {
     try {
       const response = await API.get(
-        `/customer/getpersonalizationbyid/${personalization_id}`
+        `/customer/getpersonalizationbyid/${personalization_id}`,
       );
 
       return response.data;
     } catch (error) {
       return rejectWithValue({ message: getErrorMessage(error) });
     }
-  }
+  },
 );
 
 //deletecustomizedProduct(deleteCustomizedProduct)
@@ -1019,7 +963,7 @@ export const deleteCustomizedProduct = createAsyncThunk(
   async ({ personalization_id, enqueueSnackbar }, { rejectWithValue }) => {
     try {
       const response = await API.delete(
-        `/customer/deletepersonalization/${personalization_id}`
+        `/customer/deletepersonalization/${personalization_id}`,
       );
 
       enqueueSnackbar(response.data.message || "customize product deleted", {
@@ -1029,7 +973,7 @@ export const deleteCustomizedProduct = createAsyncThunk(
     } catch (error) {
       return rejectWithValue({ message: getErrorMessage(error) });
     }
-  }
+  },
 );
 
 //verifiedCustomizedProduct
@@ -1046,7 +990,7 @@ export const verifiedCustomizedProduct = createAsyncThunk(
     } catch (error) {
       return rejectWithValue({ message: getErrorMessage(error) });
     }
-  }
+  },
 );
 
 //allBulkQuoteProducts
@@ -1060,14 +1004,14 @@ export const allBulkQuoteProducts = createAsyncThunk(
       const response = await API.get(
         `/products/getallquotation${
           queryParams.toString() ? `?${queryParams.toString()}` : ""
-        }`
+        }`,
       );
 
       return response.data;
     } catch (error) {
       return rejectWithValue({ message: getErrorMessage(error) });
     }
-  }
+  },
 );
 
 //singleBulkQuote
@@ -1080,7 +1024,7 @@ export const singleBulkQuote = createAsyncThunk(
     } catch (error) {
       return rejectWithValue({ message: getErrorMessage(error) });
     }
-  }
+  },
 );
 
 //deleteBulkQuoteProduct
@@ -1089,7 +1033,7 @@ export const deleteBulkQuoteProduct = createAsyncThunk(
   async ({ quote_id, enqueueSnackbar }, { rejectWithValue }) => {
     try {
       const response = await API.delete(
-        `/products/deletequotation/${quote_id}`
+        `/products/deletequotation/${quote_id}`,
       );
 
       enqueueSnackbar(response.data.message || "item deleted successFully!", {
@@ -1100,7 +1044,7 @@ export const deleteBulkQuoteProduct = createAsyncThunk(
     } catch (error) {
       return rejectWithValue({ message: getErrorMessage(error) });
     }
-  }
+  },
 );
 
 //verifiedBulkQuoteProduct
@@ -1108,25 +1052,25 @@ export const verifiedBulkQuoteProduct = createAsyncThunk(
   "/admin/verifiedBulkQuoteProduct",
   async (
     { quote_id, data, enqueueSnackbar },
-    { rejectWithValue, dispatch }
+    { rejectWithValue, dispatch },
   ) => {
     try {
       const response = await API.put(
         `/products/approvequotation/${quote_id}`,
-        data
+        data,
       );
       enqueueSnackbar(
         response.data.message || "Bulk Quote verified successFully!",
         {
           variant: "success",
-        }
+        },
       );
       dispatch(allBulkQuoteProducts());
       return response.data;
     } catch (error) {
       return rejectWithValue({ message: getErrorMessage(error) });
     }
-  }
+  },
 );
 
 //trackingStatus
@@ -1141,14 +1085,31 @@ export const trackingComplaintStatus = createAsyncThunk(
       const response = await API.get(
         `/stocks/warrantytable${
           queryParams.toString() ? `?${queryParams.toString()}` : ""
-        }`
+        }`,
       );
 
       return response.data;
     } catch (error) {
       return rejectWithValue({ message: getErrorMessage(error) });
     }
-  }
+  },
+);
+
+//assignRoleByAdmin(add)
+export const assignRoleByAdmin = createAsyncThunk(
+  "/admin/assign-role",
+  async ({ formData, enqueueSnackbar, navigate }, { rejectWithValue }) => {
+    try {
+      const response = await API.post(`/users/assign-role`, formData);
+      enqueueSnackbar(response.data.message || "role assigned successFully!", {
+        variant: "success",
+      });
+      navigate("/baltra-admin-dashboard/all/manage-roles");
+      return response.data;
+    } catch (error) {
+      return rejectWithValue({ message: getErrorMessage(error) });
+    }
+  },
 );
 
 const initialState = {
@@ -1160,8 +1121,8 @@ const initialState = {
   message: "",
   singleCustomer: null,
   allCustomers: [],
-  user: null,
-  allUsers: [],
+  userRole: null,
+  userRoleList: [],
   dropdownCategories: [],
   dropdownSubCategories: [],
   categoryProduct: null,
@@ -1227,10 +1188,15 @@ const initialState = {
     total_pages: null,
     results_per_page: null,
   },
+  userRolePagination: {
+    page: null,
+    total_pages: null,
+    results_per_page: null,
+  },
 };
 
 const adminSlice = createSlice({
-  name: "contact",
+  name: "admin",
   initialState,
   reducers: {
     clearAdminError: (state) => {
@@ -1240,6 +1206,17 @@ const adminSlice = createSlice({
   },
   extraReducers: (builder) => {
     builder
+      .addCase(assignRoleByAdmin.pending, (state) => {
+        state.loading = true;
+      })
+      .addCase(assignRoleByAdmin.fulfilled, (state, action) => {
+        state.loading = false;
+        state.userRole = action.payload;
+      })
+      .addCase(assignRoleByAdmin.rejected, (state, action) => {
+        state.loading = false;
+        state.error = action.payload.message;
+      })
 
       .addCase(getAllCustomerList.pending, (state) => {
         state.loading = true;
@@ -1274,7 +1251,7 @@ const adminSlice = createSlice({
         } = action.meta;
         if (customer_id) {
           state.allCustomers = state.allCustomers.filter(
-            (item) => item.id !== customer_id
+            (item) => item.id !== customer_id,
           );
         }
       })
@@ -1293,7 +1270,7 @@ const adminSlice = createSlice({
         } = action.meta;
         if (Array.isArray(customer_ids) && customer_ids.length > 0) {
           state.allCustomers = state.allCustomers.filter(
-            (item) => !customer_ids.includes(item.customer_id)
+            (item) => !customer_ids.includes(item.customer_id),
           );
         }
       })
@@ -1311,7 +1288,7 @@ const adminSlice = createSlice({
         } = action.meta;
         if (id) {
           state.allCustomers = state.allCustomers.map((item) =>
-            item.id === id ? action.payload : item
+            item.id === id ? action.payload : item,
           );
         }
       })
@@ -1319,18 +1296,7 @@ const adminSlice = createSlice({
         state.isLoading = false;
         state.error = action.payload.message;
       })
-      .addCase(getAllUserList.pending, (state) => {
-        state.loading = true;
-      })
-      .addCase(getAllUserList.fulfilled, (state, action) => {
-        state.loading = false;
-        state.allUsers = action.payload.data;
-        state.userPagination = action.payload.categoryPagination;
-      })
-      .addCase(getAllUserList.rejected, (state, action) => {
-        state.loading = false;
-        state.error = action.payload.message;
-      })
+
       .addCase(deleteUserRole.pending, (state) => {
         state.isLoading = true;
       })
@@ -1357,7 +1323,7 @@ const adminSlice = createSlice({
         } = action.meta;
         if (Array.isArray(user_ids) && user_ids.length > 0) {
           state.allCustomers = state.allCustomers.filter(
-            (item) => !user_ids.includes(item.user_id)
+            (item) => !user_ids.includes(item.user_id),
           );
         }
       })
@@ -1386,7 +1352,7 @@ const adminSlice = createSlice({
         } = action.meta;
         if (id) {
           state.allUsers = state.allUsers.map((item) =>
-            item.id === id ? action.payload : item
+            item.id === id ? action.payload : item,
           );
         }
       })
@@ -1438,7 +1404,7 @@ const adminSlice = createSlice({
         } = action.meta;
         if (category_id) {
           state.allCategoryProducts = state.allCategoryProducts.map((item) =>
-            item.id === category_id ? action.payload.data : item
+            item.id === category_id ? action.payload.data : item,
           );
         }
       })
@@ -1468,7 +1434,7 @@ const adminSlice = createSlice({
         } = action.meta;
         if (category_id) {
           state.allCategoryProducts = state.allCategoryProducts.filter(
-            (item) => item.id !== category_id
+            (item) => item.id !== category_id,
           );
         }
       })
@@ -1531,7 +1497,7 @@ const adminSlice = createSlice({
         } = action.meta;
         if (subcategory_id) {
           state.allSubCategoryProducts = state.allSubCategoryProducts.filter(
-            (item) => item.id !== subcategory_id
+            (item) => item.id !== subcategory_id,
           );
         }
       })
@@ -1560,7 +1526,7 @@ const adminSlice = createSlice({
         } = action.meta;
         if (id) {
           state.allSubCategoryProducts = state.allSubCategoryProducts.map(
-            (item) => (item.id === id ? action.payload.data : item)
+            (item) => (item.id === id ? action.payload.data : item),
           );
         }
       })
@@ -1623,7 +1589,7 @@ const adminSlice = createSlice({
         } = action.meta;
         if (product_id) {
           state.allProducts = state.allProducts.map((item) =>
-            item.id === product_id ? action.payload.data : item
+            item.id === product_id ? action.payload.data : item,
           );
         }
       })
@@ -1641,7 +1607,7 @@ const adminSlice = createSlice({
         } = action.meta;
         if (product_id) {
           state.allProducts = state.allProducts.filter(
-            (item) => item.id !== product_id
+            (item) => item.id !== product_id,
           );
         }
       })
@@ -1694,7 +1660,7 @@ const adminSlice = createSlice({
         } = action.meta;
         if (product_id) {
           state.allQrList = state.allQrList.filter(
-            (item) => item.product_id !== product_id
+            (item) => item.product_id !== product_id,
           );
         }
       })
@@ -1712,7 +1678,7 @@ const adminSlice = createSlice({
         } = action.meta;
         if (Array.isArray(product_ids) && product_ids.length > 0) {
           state.allQrList = state.allQrList.filter(
-            (item) => !product_ids.includes(item.product_id)
+            (item) => !product_ids.includes(item.product_id),
           );
 
           // if (
@@ -1740,7 +1706,7 @@ const adminSlice = createSlice({
         } = action.meta;
         if (Array.isArray(category_ids) && category_ids.length > 0) {
           state.allCategoryProducts = state.allCategoryProducts.filter(
-            (item) => !category_ids.includes(item.product_id)
+            (item) => !category_ids.includes(item.product_id),
           );
         }
       })
@@ -1759,7 +1725,7 @@ const adminSlice = createSlice({
         } = action.meta;
         if (Array.isArray(subcategory_ids) && subcategory_ids.length > 0) {
           state.allSubCategoryProducts = state.allSubCategoryProducts.filter(
-            (item) => !subcategory_ids.includes(item.product_id)
+            (item) => !subcategory_ids.includes(item.product_id),
           );
         }
       })
@@ -1777,7 +1743,7 @@ const adminSlice = createSlice({
         } = action.meta;
         if (Array.isArray(product_ids) && product_ids.length > 0) {
           state.allSubCategoryProducts = state.allSubCategoryProducts.filter(
-            (item) => !product_ids.includes(item.product_id)
+            (item) => !product_ids.includes(item.product_id),
           );
         }
       })
@@ -1831,7 +1797,7 @@ const adminSlice = createSlice({
         } = action.meta;
         if (form_id) {
           state.allWarrantyPackagesList = state.allWarrantyPackagesList.map(
-            (item) => (item.id === form_id ? action.payload.data : item)
+            (item) => (item.id === form_id ? action.payload.data : item),
           );
         }
       })
@@ -1849,7 +1815,7 @@ const adminSlice = createSlice({
         } = action.meta;
         if (form_id) {
           state.allWarrantyPackagesList = state.allWarrantyPackagesList.filter(
-            (item) => item.id !== form_id
+            (item) => item.id !== form_id,
           );
         }
       })
@@ -1867,7 +1833,7 @@ const adminSlice = createSlice({
         } = action.meta;
         if (Array.isArray(form_ids) && form_ids.length > 0) {
           state.allWarrantyPackagesList = state.allWarrantyPackagesList.filter(
-            (item) => !form_ids.includes(item.warranty_id)
+            (item) => !form_ids.includes(item.warranty_id),
           );
         }
       })
@@ -1906,7 +1872,7 @@ const adminSlice = createSlice({
           arg: { id },
         } = action.meta;
         state.allProductCatalogList = state.allProductCatalogList.filter(
-          (item) => item.id !== id
+          (item) => item.id !== id,
         );
       })
       .addCase(deleteProductCatalog.rejected, (state, action) => {
@@ -1934,7 +1900,7 @@ const adminSlice = createSlice({
         } = action.meta;
         if (personalization_id) {
           state.allCustomizedProducts = state.allCustomizedProducts.filter(
-            (item) => item.id !== personalization_id
+            (item) => item.id !== personalization_id,
           );
         }
       })
@@ -1952,7 +1918,9 @@ const adminSlice = createSlice({
         state.isLoading = false;
 
         state.allCustomizedProducts = state.allCustomizedProducts.map((item) =>
-          item.personalization_id === personalization_id ? updatedProduct : item
+          item.personalization_id === personalization_id
+            ? updatedProduct
+            : item,
         );
       })
 
@@ -1992,7 +1960,7 @@ const adminSlice = createSlice({
         const { quote_id } = action.meta.arg;
         if (quote_id) {
           state.bulkQuoteProducts = state.bulkQuoteProducts.filter(
-            (item) => item.quote_id !== quote_id
+            (item) => item.quote_id !== quote_id,
           );
         }
       })
@@ -2008,7 +1976,7 @@ const adminSlice = createSlice({
         const { quote_id } = action.meta.arg;
         if (quote_id) {
           state.bulkQuoteProducts = state.bulkQuoteProducts.map((item) =>
-            item.quote_id === quote_id ? action.payload.data : item
+            item.quote_id === quote_id ? action.payload.data : item,
           );
         }
       })

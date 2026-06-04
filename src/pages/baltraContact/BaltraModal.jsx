@@ -1,8 +1,7 @@
 import { enqueueSnackbar } from "notistack";
 import { useEffect } from "react";
 import { useForm } from "react-hook-form";
-import { FaArrowRight } from "react-icons/fa";
-import { HiOutlineMail, HiOutlinePhone } from "react-icons/hi";
+import { FiArrowRight, FiMail, FiPhone } from "react-icons/fi";
 import { useDispatch, useSelector } from "react-redux";
 import ContactImg from "../../assets/images/ContactImg.png";
 import {
@@ -10,199 +9,254 @@ import {
   clearContactError,
 } from "../../redux/features/contact/contactSlice";
 
+const InputField = ({ label, id, error, children }) => (
+  <div className="flex flex-col gap-1">
+    <label
+      htmlFor={id}
+      className="text-xs font-semibold uppercase tracking-wider text-gray-500 font-gothamNarrow"
+    >
+      {label}
+    </label>
+    {children}
+    {error && (
+      <p className="text-red-500 text-xs font-gothamNarrow mt-0.5">{error}</p>
+    )}
+  </div>
+);
+
 const BaltraModal = () => {
   const { loading, error } = useSelector((state) => state.contact);
   const dispatch = useDispatch();
+
   const {
     register,
     handleSubmit,
-    watch,
     reset,
     formState: { errors },
   } = useForm();
 
   const onSubmit = (contactData) => {
-    if (Object.entries(errors).length === 0) {
-      dispatch(addContact({ contactData, enqueueSnackbar }));
-      reset();
-    }
+    dispatch(addContact({ contactData, enqueueSnackbar }));
+    reset();
   };
 
   useEffect(() => {
     if (error) {
-      enqueueSnackbar(error, {
-        variant: "error",
-      });
+      enqueueSnackbar(error, { variant: "error" });
       dispatch(clearContactError());
     }
   }, [dispatch, error]);
+
+  const inputClass = `
+  w-full px-4 py-3 bg-white border border-gray-200
+  appearance-none outline-none
+  focus:outline-none focus-visible:outline-none
+  focus:border-red-500 focus:ring-0 focus:shadow-none
+  rounded-lg text-sm text-gray-900
+  font-gothamNarrow
+  placeholder:text-gray-300
+  transition-all duration-200
+`;
+
   return (
-    <div className="font-gothamNarrow px-5 lg:px-14 mt-24 py-8 bg-white shadow-md flex flex-col lg:flex-row lg:items-start lg:gap-x-20 relative max-w-6xl xl:max-w-7xl 2xl:max-w-8xl mx-auto overflow-hidden">
-      <div className="flex flex-col justify-start items-start w-full lg:w-1/2">
-        <div className="flex flex-col justify-start items-start gap-2 font-gothamNarrow">
-          <div className="text-gray-900 text-2xl lg:text-3xl font-semibold leading-10">
-            Get in Touch with Us!
-          </div>
-          <div className="text-gray-700 text-base lg:text-sm leading-6 font-gothamNarrow">
-            Reach Out for Support, Inquiries, or Collaborations.
-          </div>
-        </div>
-
-        <form
-          className="flex flex-col gap-6 my-5 w-full"
-          onSubmit={handleSubmit(onSubmit)}
-        >
-          <div className="flex flex-col font-gothamNarrow">
-            <label htmlFor="name" className="text-[#4F4F4F] font-normal">
-              Name
-            </label>
-            <input
-              type="text"
-              id="name"
-              name="name"
-              className="w-full px-4 py-3 bg-[#FAFAFA] border border-gray-300 focus:outline-none focus:border-red-600 rounded-sm text-sm"
-              placeholder="Full Name"
-              {...register("name", {
-                required: true,
-              })}
-            />
-            {errors.name && (
-              <p className="text-red-600 text-xs font-gothamNarrow">
-                fullName is required
-              </p>
-            )}
-          </div>
-          <div className="flex flex-col font-gothamNarrow">
-            <label htmlFor="email" className="text-[#4F4F4F] font-normal">
-              Email
-            </label>
-            <input
-              type="email"
-              id="email"
-              name="email"
-              className="w-full px-4 py-3 bg-[#FAFAFA] border border-gray-300 focus:outline-none focus:border-red-600 rounded-sm text-sm"
-              placeholder="abc123@gmail.com"
-              {...register("email", {
-                required: true,
-                pattern: /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,4}$/,
-              })}
-            />
-            {errors.phone && (
-              <p className="text-red-600 text-xs font-gothamNarrow">
-                Email is required and must be valid format
-              </p>
-            )}
-          </div>
-          <div className="flex flex-col font-gothamNarrow">
-            <label htmlFor="phone" className="text-[#4F4F4F] font-normal">
-              Phone
-            </label>
-            <input
-              type="tel"
-              id="phone"
-              name="phone"
-              className="w-full px-4 py-3 bg-[#FAFAFA] border border-gray-300 focus:outline-none focus:border-red-600 rounded-sm text-sm"
-              placeholder="+977 - 9861490173"
-              {...register("phone", {
-                required: true,
-                pattern: /^\d{10}$/,
-              })}
-            />
-            {errors.phone && (
-              <p className="text-red-600 text-xs font-gothamNarrow">
-                Mobile number is required and must be 10 digits
-              </p>
-            )}
-          </div>
-
-          <div className="flex flex-col font-gothamNarrow">
-            <label htmlFor="note" className="text-[#4F4F4F] font-normal">
-              Note
-            </label>
-            <textarea
-              id="note"
-              name="note"
-              rows="4"
-              className="w-full px-4 py-3 bg-[#FAFAFA] border border-gray-300 focus:outline-none focus:border-red-600 rounded-sm text-sm"
-              placeholder="Your message"
-              {...register("note", {
-                required: true,
-              })}
-            ></textarea>
-            {errors.note && (
-              <p className="text-red-600 text-xs font-gothamNarrow">
-                Enter your some message
-              </p>
-            )}
-          </div>
-          <div className="w-full py-4 bg-red-600 hover:bg-[#ED1C24] flex justify-center items-center gap-4 rounded-sm text-sm cursor-pointer">
-            <button
-              className="text-white font-normal font-gothamNarrow flex items-center gap-2 relative"
-              type="submit"
-              disabled={loading}
-            >
-              {loading && (
-                <span className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2">
-                  <div className="animate-spin rounded-full h-4 w-4 border-t-2 border-b-2 border-white"></div>
-                </span>
-              )}
-              Send message
-              <FaArrowRight />
-            </button>
-          </div>
-        </form>
-      </div>
-
-      <div className="relative w-full lg:w-1/2 font-gothamNarrow mt-10 lg:mt-0 flex flex-col items-start">
-        <div className="text-gray-900 text-2xl lg:text-3xl font-semibold leading-10 mb-4">
-          Contact Info
-        </div>
-
-        <div className="flex flex-col gap-4 text-gray-800">
-          <div className="flex items-center gap-4">
-            <HiOutlineMail className="text-xl lg:text-2xl" />
-            <a
-              href="mailto:info@balajeenp.com"
-              className="text-lg lg:text-xl font-normal underline"
-            >
-              info@balajeenp.com
-            </a>
-          </div>
-
-          <div className="flex flex-col gap-2">
-            <div className="flex justify-between items-center">
-              <div className="text-lg lg:text-xl font-normal">
-                Sales Queries
+    <div className="w-full max-w-5xl mx-auto">
+      {/* Card */}
+      <div className="bg-white/95 backdrop-blur-sm rounded-2xl shadow-2xl shadow-black/10 overflow-hidden">
+        <div className="flex flex-col lg:flex-row">
+          {/* ── Left: Form ── */}
+          <div className="flex-1 px-6 sm:px-10 py-10 lg:py-12">
+            {/* Heading */}
+            <div className="mb-8">
+              <div className="inline-flex items-center gap-2 bg-red-50 text-red-600 text-xs font-semibold font-gothamNarrow uppercase tracking-widest px-3 py-1.5 rounded-full mb-3">
+                <span className="w-1.5 h-1.5 rounded-full bg-red-500 inline-block" />
+                Contact Us
               </div>
-              <div className="text-lg lg:text-xl font-normal">
-                Service Queries
-              </div>
+              <h2 className="text-2xl sm:text-3xl font-semibold text-gray-900 font-gothamNarrow leading-tight">
+                Get in Touch with Us
+              </h2>
+              <p className="text-sm text-gray-500 font-gothamNarrow mt-2">
+                Reach out for support, inquiries, or collaborations.
+              </p>
             </div>
 
-            <div className="flex justify-between items-center gap-4">
-              <div className="flex items-center gap-2">
-                <HiOutlinePhone className="text-lg lg:text-xl" />
-                <div className="text-lg lg:text-xl font-normal">
-                  +977 980-1200501
+            {/* Form */}
+            <form
+              className="flex flex-col gap-5"
+              onSubmit={handleSubmit(onSubmit)}
+            >
+              {/* Name + Phone — side by side on sm+ */}
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
+                <InputField
+                  label="Full Name"
+                  id="name"
+                  error={errors.name && "Full name is required"}
+                >
+                  <input
+                    type="text"
+                    id="name"
+                    className={inputClass}
+                    placeholder="John Doe"
+                    {...register("name", { required: true })}
+                  />
+                </InputField>
+
+                <InputField
+                  label="Phone"
+                  id="phone"
+                  error={errors.phone && "Enter a valid 10-digit number"}
+                >
+                  <input
+                    type="tel"
+                    id="phone"
+                    className={inputClass}
+                    placeholder="98XXXXXXXX"
+                    {...register("phone", {
+                      required: true,
+                      pattern: /^\d{10}$/,
+                    })}
+                  />
+                </InputField>
+              </div>
+
+              <InputField
+                label="Email"
+                id="email"
+                error={errors.email && "Enter a valid email address"}
+              >
+                <input
+                  type="email"
+                  id="email"
+                  className={inputClass}
+                  placeholder="you@example.com"
+                  {...register("email", {
+                    required: true,
+                    pattern:
+                      /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,4}$/,
+                  })}
+                />
+              </InputField>
+
+              <InputField
+                label="Message"
+                id="note"
+                error={errors.note && "Please enter your message"}
+              >
+                <textarea
+                  id="note"
+                  rows={4}
+                  className={`${inputClass} resize-none`}
+                  placeholder="How can we help you?"
+                  {...register("note", { required: true })}
+                />
+              </InputField>
+
+              {/* Submit */}
+              <button
+                type="submit"
+                disabled={loading}
+                className="w-full py-3.5 bg-red-600 hover:bg-red-700 active:bg-red-800 disabled:opacity-70 disabled:cursor-not-allowed text-white text-sm font-semibold font-gothamNarrow rounded-lg flex items-center justify-center gap-2.5 transition-all duration-200 group mt-1"
+              >
+                {loading ? (
+                  <>
+                    <span className="w-4 h-4 border-2 border-white/40 border-t-white rounded-full animate-spin" />
+                    Sending...
+                  </>
+                ) : (
+                  <>
+                    Send Message
+                    <FiArrowRight
+                      size={16}
+                      className="group-hover:translate-x-1 transition-transform duration-200"
+                    />
+                  </>
+                )}
+              </button>
+            </form>
+          </div>
+
+          {/* ── Right: Contact info panel ── */}
+          <div className="lg:w-[380px] bg-gradient-to-br from-[#E91C1C] to-[#8B1010] px-6 sm:px-10 py-10 lg:py-12 flex flex-col text-white">
+            <h3 className="text-xl sm:text-2xl font-semibold font-gothamNarrow mb-2">
+              Contact Info
+            </h3>
+            <p className="text-sm text-white/70 font-gothamNarrow mb-8">
+              We're here to help, any time.
+            </p>
+
+            {/* Contact details */}
+            <div className="flex flex-col gap-6 flex-1">
+              {/* Email */}
+              <div className="flex items-start gap-4">
+                <div className="w-9 h-9 rounded-xl bg-white/15 flex items-center justify-center flex-shrink-0 mt-0.5">
+                  <FiMail size={16} className="text-white" />
+                </div>
+                <div>
+                  <p className="text-[11px] font-semibold uppercase tracking-widest text-white/60 font-gothamNarrow mb-0.5">
+                    Email
+                  </p>
+                  <a
+                    href="mailto:info@balajeenp.com"
+                    className="text-sm text-white font-gothamNarrow hover:text-white/80 transition-colors underline underline-offset-2 decoration-white/30"
+                  >
+                    info@balajeenp.com
+                  </a>
                 </div>
               </div>
-              <div className="border-r h-8"></div>
 
-              <div className="flex items-center gap-2">
-                <HiOutlinePhone className="text-lg lg:text-xl" />
-                <div className="text-lg lg:text-xl font-normal">
-                  +977 980-1200505
+              {/* Sales */}
+              <div className="flex items-start gap-4">
+                <div className="w-9 h-9 rounded-xl bg-white/15 flex items-center justify-center flex-shrink-0 mt-0.5">
+                  <FiPhone size={16} className="text-white" />
                 </div>
+                <div>
+                  <p className="text-[11px] font-semibold uppercase tracking-widest text-white/60 font-gothamNarrow mb-0.5">
+                    Sales Queries
+                  </p>
+                  <a
+                    href="tel:+9779801200501"
+                    className="text-sm text-white font-gothamNarrow hover:text-white/80 transition-colors"
+                  >
+                    +977 980-1200501
+                  </a>
+                </div>
+              </div>
+
+              {/* Service */}
+              <div className="flex items-start gap-4">
+                <div className="w-9 h-9 rounded-xl bg-white/15 flex items-center justify-center flex-shrink-0 mt-0.5">
+                  <FiPhone size={16} className="text-white" />
+                </div>
+                <div>
+                  <p className="text-[11px] font-semibold uppercase tracking-widest text-white/60 font-gothamNarrow mb-0.5">
+                    Service Queries
+                  </p>
+                  <a
+                    href="tel:+9779801200505"
+                    className="text-sm text-white font-gothamNarrow hover:text-white/80 transition-colors"
+                  >
+                    +977 980-1200505
+                  </a>
+                </div>
+              </div>
+
+              {/* Divider */}
+              <div className="border-t border-white/20 my-2" />
+
+              {/* Decorative circles */}
+              <div className="relative flex-1 flex items-end justify-center overflow-hidden min-h-[160px]">
+                {/* Background rings */}
+                <div className="absolute bottom-0 right-0 w-48 h-48 rounded-full border border-white/10 translate-x-16 translate-y-16" />
+                <div className="absolute bottom-0 right-0 w-32 h-32 rounded-full border border-white/10 translate-x-10 translate-y-10" />
+
+                {/* Illustration */}
+                <img
+                  src={ContactImg}
+                  alt="Contact illustration"
+                  className="relative z-10 w-full max-w-[220px] h-auto object-contain drop-shadow-lg"
+                />
               </div>
             </div>
           </div>
-        </div>
-        <div className="mt-16">
-          <img
-            src={ContactImg}
-            alt="Contact Illustration"
-            className="w-full h-auto"
-          />
         </div>
       </div>
     </div>

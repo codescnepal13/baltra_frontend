@@ -6,11 +6,11 @@ import { useDispatch, useSelector } from "react-redux";
 import { useNavigate } from "react-router-dom";
 import userAuthImg from "../../../assets/images/userAuthImg.png";
 import MetaData from "../../../components/layout/metaData/MetaData";
+import ProductHeader from "../../../components/topHeader/productHeader/ProductHeader";
 import {
   clearAuthError,
   verifyOTP,
 } from "../../../redux/features/auth/authSlice";
-import BaltraSubCategoryHeader from "../../baltraSubCategoryProducts/baltraSubCategoryHeader/BaltraSubCategoryHeader";
 
 const VerifyOTP = () => {
   const { loading, error, customer } = useSelector((state) => state.auth);
@@ -110,7 +110,7 @@ const VerifyOTP = () => {
           loading="lazy"
         />
         <div className="absolute top-0 left-0 w-full z-10">
-          <BaltraSubCategoryHeader />
+          <ProductHeader />
         </div>
         {/* Form Container */}
         <div className="relative w-full mt-24 max-w-lg md:max-w-xl lg:max-w-2xl xl:max-w-3xl px-4 sm:px-10 py-6 bg-white rounded-sm shadow-sm">

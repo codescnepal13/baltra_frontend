@@ -1,38 +1,544 @@
-/* @keyframes scrollUp {
+/* ═══════════════════════════════════════════════
+   BALTRA LANDING PAGE  —  LandingPage.css
+   Add to index.html / _document.tsx:
+   <link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@400;600;700;800;900&family=Barlow:wght@400;500&display=swap" rel="stylesheet">
+   ═══════════════════════════════════════════════ */
+
+/* ── PAGE WRAPPER ── */
+.baltra-page {
+  position: relative;
+  width: 100%;
+  min-height: 100vh;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  background: linear-gradient(
+    150deg,
+    #e5201f 0%,
+    #c01414 30%,
+    #8c0c0c 65%,
+    #580707 100%
+  );
+}
+
+/* ── EXIT ANIMATION (slow, smooth upward) ── */
+@keyframes baltraExitUp {
   0% {
     transform: translateY(0);
     opacity: 1;
   }
+  20% {
+    transform: translateY(-12px);
+    opacity: 1;
+  }
   100% {
-    transform: translateY(-100%);
+    transform: translateY(-100vh);
     opacity: 0;
   }
 }
-.scroll-up {
-  animation: scrollUp 1s forwards;
-} */
-
-/* LandingPage.css */
-.animate-scroll {
-  opacity: 1;
-  transform: translateY(0);
-  transition: transform 1s cubic-bezier(0.25, 0.1, 0.25, 1),
-    opacity 1s ease-in-out;
+.baltra-exiting {
+  animation: baltraExitUp 1.4s cubic-bezier(0.76, 0, 0.24, 1) forwards !important;
+  pointer-events: none;
 }
 
-.scroll-up {
-  transform: translateY(-100%);
-  transition: transform 2s cubic-bezier(0.25, 0.1, 0.25, 1);
+/* ── AMBIENT LAYERS ── */
+.baltra-particles {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  z-index: 0;
+}
+.baltra-grain {
+  position: absolute;
+  inset: 0;
+  opacity: 0.035;
+  pointer-events: none;
+  z-index: 1;
+  background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.85' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+  background-size: 128px 128px;
+}
+.baltra-radial {
+  position: absolute;
+  top: -8%;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 78vw;
+  height: 55vh;
+  background: radial-gradient(
+    ellipse at center,
+    rgba(255, 130, 80, 0.18) 0%,
+    transparent 68%
+  );
+  pointer-events: none;
+  z-index: 1;
 }
 
-.translate-y-10 {
-  transform: translateY(10%);
+/* ── BADGE STRIP ── */
+.baltra-badge {
+  position: absolute;
+  top: 20px;
+  left: 0;
+  z-index: 10;
+  background: rgba(255, 255, 255, 0.1);
+  border: 1px solid rgba(255, 255, 255, 0.18);
+  backdrop-filter: blur(8px);
+  color: rgba(255, 255, 255, 0.65);
+  font-family: "Barlow Condensed", sans-serif;
+  font-size: 10px;
+  letter-spacing: 0.22em;
+  text-transform: uppercase;
+  padding: 5px 20px 5px 14px;
+  border-radius: 0 20px 20px 0;
 }
 
-.opacity-0 {
+/* ── HERO SECTION ── */
+.baltra-hero {
+  position: relative;
+  z-index: 2;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  padding: clamp(56px, 12vh, 96px) 24px 0;
+  width: 100%;
+}
+
+/* ── EYEBROW ── */
+.baltra-eyebrow {
+  font-family: "Barlow Condensed", sans-serif;
+  font-size: 11px;
+  letter-spacing: 0.28em;
+  text-transform: uppercase;
+  color: rgba(255, 255, 255, 0.42);
+  margin-bottom: 14px;
   opacity: 0;
 }
 
-.opacity-100 {
-  opacity: 1;
+/* ── "WELCOME TO" — big, bold, original feel ── */
+.baltra-welcome {
+  font-family: "Barlow Condensed", sans-serif;
+  font-weight: 800;
+  font-size: clamp(50px, 9vw, 108px);
+  line-height: 0.92;
+  letter-spacing: -0.01em;
+  text-transform: uppercase;
+  color: #fff;
+  text-shadow:
+    0 2px 0 rgba(0, 0, 0, 0.28),
+    0 6px 24px rgba(0, 0, 0, 0.22);
+  opacity: 0;
+}
+
+/* ── BALTRA 3D NAME ── */
+.baltra-name {
+  font-family: "Barlow Condensed", sans-serif;
+  font-weight: 900;
+  font-size: clamp(80px, 16vw, 172px);
+  line-height: 0.86;
+  letter-spacing: -0.02em;
+  text-transform: uppercase;
+  color: #fff;
+  /* Multi-layer 3D depth shadow */
+  text-shadow:
+    1px 1px 0 rgba(155, 18, 18, 0.9),
+    2px 2px 0 rgba(135, 13, 13, 0.85),
+    3px 3px 0 rgba(115, 9, 9, 0.8),
+    4px 4px 0 rgba(95, 6, 6, 0.75),
+    5px 5px 0 rgba(75, 4, 4, 0.68),
+    6px 6px 0 rgba(55, 3, 3, 0.55),
+    7px 7px 0 rgba(35, 2, 2, 0.38),
+    0 18px 44px rgba(0, 0, 0, 0.48);
+  position: relative;
+  opacity: 0;
+  /* Shimmer via pseudo – handled in animation classes */
+}
+
+/* Shimmer sweep across BALTRA */
+.baltra-name::after {
+  content: "BALTRA";
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(
+    105deg,
+    transparent 28%,
+    rgba(255, 210, 175, 0.55) 46%,
+    rgba(255, 255, 255, 0.32) 52%,
+    transparent 70%
+  );
+  background-size: 260% 100%;
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  animation: baltraShimmer 3.8s linear 1.5s infinite;
+}
+
+/* ── DIVIDER ── */
+.baltra-divider {
+  width: 0;
+  height: 1.5px;
+  background: rgba(255, 255, 255, 0.28);
+  margin: 20px auto;
+  transition: width 1.3s cubic-bezier(0.16, 1, 0.3, 1);
+}
+.baltra-divider--on {
+  width: min(400px, 62%);
+}
+
+/* ── SUBTITLE (3D bold) ── */
+.baltra-subtitle {
+  font-family: "Barlow Condensed", sans-serif;
+  font-weight: 700;
+  font-size: clamp(18px, 3vw, 32px);
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: #fff;
+  text-shadow:
+    1px 1px 0 rgba(120, 10, 10, 0.7),
+    2px 2px 0 rgba(80, 5, 5, 0.5),
+    3px 3px 0 rgba(40, 2, 2, 0.28),
+    0 6px 16px rgba(0, 0, 0, 0.28);
+  opacity: 0;
+}
+
+/* ── BODY TEXT ── */
+.baltra-body {
+  font-family: "Barlow", sans-serif;
+  font-size: clamp(12px, 1.4vw, 14px);
+  line-height: 1.75;
+  color: rgba(255, 255, 255, 0.54);
+  max-width: 500px;
+  margin-top: 12px;
+  opacity: 0;
+}
+
+/* ── STAT PILLS ── */
+.baltra-pills {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 10px;
+  margin-top: 18px;
+  opacity: 0;
+}
+.baltra-pill {
+  background: rgba(255, 255, 255, 0.09);
+  border: 1px solid rgba(255, 255, 255, 0.16);
+  backdrop-filter: blur(8px);
+  border-radius: 100px;
+  padding: 6px 16px;
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  color: #fff;
+  font-family: "Barlow Condensed", sans-serif;
+  font-size: 12px;
+  letter-spacing: 0.04em;
+  white-space: nowrap;
+}
+.baltra-pill strong {
+  font-size: 15px;
+  font-weight: 700;
+}
+
+/* ── PRODUCT IMAGES ── */
+.baltra-imgs {
+  position: relative;
+  z-index: 2;
+  width: 100%;
+  max-width: 640px;
+  padding: 24px 24px 0;
+  opacity: 0;
+}
+.baltra-imgs__row {
+  display: flex;
+  flex-direction: row;
+  justify-content: center;
+  align-items: flex-end;
+  gap: clamp(12px, 3vw, 32px);
+}
+.baltra-img {
+  height: auto;
+  filter: drop-shadow(0 22px 42px rgba(0, 0, 0, 0.5));
+  transition: filter 0.4s ease;
+}
+.baltra-img:hover {
+  filter: drop-shadow(0 28px 56px rgba(0, 0, 0, 0.6)) brightness(1.06);
+}
+.baltra-img--left {
+  width: clamp(72px, 10vw, 108px);
+  transform: rotate(-8deg);
+  transform-origin: bottom center;
+}
+.baltra-img--center {
+  width: clamp(120px, 18vw, 200px);
+}
+.baltra-img--right {
+  width: clamp(95px, 14vw, 156px);
+  transform: rotate(5deg);
+  transform-origin: bottom center;
+}
+
+/* Float animations */
+.baltra-float-a {
+  animation: baltraFloatA 4.2s ease-in-out infinite;
+}
+.baltra-float-b {
+  animation: baltraFloatB 4.2s ease-in-out 0.85s infinite;
+}
+.baltra-float-c {
+  animation: baltraFloatC 4.2s ease-in-out 1.7s infinite;
+}
+
+/* Stage shadow */
+.baltra-stage {
+  width: min(440px, 72%);
+  height: 32px;
+  margin: -12px auto 0;
+  background: radial-gradient(ellipse, rgba(0, 0, 0, 0.32) 0%, transparent 72%);
+}
+
+/* ── CTA ── */
+.baltra-cta {
+  position: relative;
+  z-index: 2;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 20px 0 clamp(56px, 10vh, 80px);
+  opacity: 0;
+}
+.baltra-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 12px;
+  font-family: "Barlow Condensed", sans-serif;
+  font-weight: 700;
+  font-size: clamp(14px, 2vw, 19px);
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: #c01414;
+  background: #fff;
+  border: none;
+  border-radius: 100px;
+  padding: 15px 42px;
+  cursor: pointer;
+  box-shadow:
+    0 8px 28px rgba(0, 0, 0, 0.28),
+    inset 0 1px 0 rgba(255, 255, 255, 0.55);
+  transition:
+    transform 0.28s ease,
+    box-shadow 0.28s ease;
+  position: relative;
+  overflow: hidden;
+}
+.baltra-btn:hover {
+  transform: translateY(-3px) scale(1.025);
+  box-shadow: 0 16px 44px rgba(0, 0, 0, 0.38);
+}
+.baltra-btn:active {
+  transform: scale(0.98);
+}
+.baltra-btn__arrow {
+  width: 30px;
+  height: 30px;
+  background: rgba(192, 20, 20, 0.1);
+  border-radius: 50%;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  transition:
+    transform 0.25s ease,
+    background 0.25s ease;
+  flex-shrink: 0;
+}
+.baltra-btn:hover .baltra-btn__arrow {
+  transform: translateX(4px);
+  background: rgba(192, 20, 20, 0.18);
+}
+.baltra-cta__hint {
+  font-family: "Barlow Condensed", sans-serif;
+  font-size: 10px;
+  letter-spacing: 0.16em;
+  color: rgba(255, 255, 255, 0.28);
+  text-transform: uppercase;
+  margin-top: 12px;
+}
+
+/* ── SCROLL INDICATOR ── */
+.baltra-scroll-ind {
+  position: absolute;
+  bottom: 20px;
+  left: 50%;
+  transform: translateX(-50%);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 5px;
+  z-index: 5;
+  opacity: 0;
+  animation: baltraFadeIn 1s ease 2s forwards;
+}
+.baltra-scroll-ind span {
+  font-family: "Barlow Condensed", sans-serif;
+  font-size: 9px;
+  letter-spacing: 0.25em;
+  text-transform: uppercase;
+  color: rgba(255, 255, 255, 0.32);
+}
+.baltra-scroll-line {
+  width: 1px;
+  height: 34px;
+  background: linear-gradient(
+    to bottom,
+    rgba(255, 255, 255, 0.42),
+    transparent
+  );
+  animation: baltraScrollPulse 2.2s ease-in-out infinite 2s;
+}
+
+/* ═══════════════════════════════════════════════
+   KEYFRAMES
+   ═══════════════════════════════════════════════ */
+
+@keyframes baltraFadeIn {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+@keyframes baltraFadeUp {
+  from {
+    opacity: 0;
+    transform: translateY(32px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes baltraRiseUp {
+  from {
+    opacity: 0;
+    transform: translateY(60px) scale(0.96);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+@keyframes baltraShimmer {
+  0% {
+    background-position: -160% 0;
+  }
+  55%,
+  100% {
+    background-position: 260% 0;
+  }
+}
+
+@keyframes baltraFloatA {
+  0%,
+  100% {
+    transform: rotate(-8deg) translateY(0);
+  }
+  50% {
+    transform: rotate(-8deg) translateY(-10px);
+  }
+}
+@keyframes baltraFloatB {
+  0%,
+  100% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(-13px);
+  }
+}
+@keyframes baltraFloatC {
+  0%,
+  100% {
+    transform: rotate(5deg) translateY(0);
+  }
+  50% {
+    transform: rotate(5deg) translateY(-10px);
+  }
+}
+
+@keyframes baltraScrollPulse {
+  0%,
+  100% {
+    opacity: 0.45;
+  }
+  50% {
+    opacity: 1;
+  }
+}
+
+/* Exit — long, slow, cinematic upward slide */
+@keyframes baltraExitUp {
+  0% {
+    transform: translateY(0);
+    opacity: 1;
+  }
+  20% {
+    transform: translateY(-14px);
+    opacity: 1;
+  }
+  100% {
+    transform: translateY(-100vh);
+    opacity: 0;
+  }
+}
+
+/* ═══════════════════════════════════════════════
+   ANIMATION UTILITY CLASSES
+   ═══════════════════════════════════════════════ */
+
+.anim-fadein {
+  animation: baltraFadeIn 0.7s ease 0.1s forwards;
+}
+.anim-riseup {
+  animation: baltraRiseUp 1s cubic-bezier(0.16, 1, 0.3, 1) 0.2s forwards;
+}
+.anim-riseup-delay {
+  animation: baltraRiseUp 1.1s cubic-bezier(0.16, 1, 0.3, 1) 0.35s forwards;
+}
+.anim-fadeup-d2 {
+  animation: baltraFadeUp 0.9s ease 0.6s forwards;
+}
+.anim-fadeup-d3 {
+  animation: baltraFadeUp 0.9s ease 0.8s forwards;
+}
+.anim-fadeup-d4 {
+  animation: baltraFadeUp 0.8s ease 1s forwards;
+}
+.anim-fadeup-d5 {
+  animation: baltraFadeUp 0.8s ease 1.15s forwards;
+}
+.anim-fadein-d1 {
+  animation: baltraFadeIn 1s ease 0.95s forwards;
+}
+
+/* ═══════════════════════════════════════════════
+   RESPONSIVE
+   ═══════════════════════════════════════════════ */
+
+@media (max-width: 480px) {
+  .baltra-badge {
+    font-size: 9px;
+    top: 16px;
+  }
+  .baltra-pill {
+    font-size: 11px;
+    padding: 5px 12px;
+  }
+  .baltra-btn {
+    padding: 13px 30px;
+  }
 }

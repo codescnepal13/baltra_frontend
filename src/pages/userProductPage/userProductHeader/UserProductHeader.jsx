@@ -2,7 +2,6 @@ import { jwtDecode } from "jwt-decode";
 import { enqueueSnackbar } from "notistack";
 import { useCallback, useMemo, useState } from "react";
 import { AiOutlineProduct } from "react-icons/ai";
-import { CiTrophy } from "react-icons/ci";
 import { FaBookOpen, FaHome } from "react-icons/fa";
 import { GoSignOut, GoStack } from "react-icons/go";
 import { HiOutlineUser, HiOutlineUserCircle, HiSearch } from "react-icons/hi";
@@ -16,6 +15,7 @@ import { RiCustomerService2Line } from "react-icons/ri";
 import { useDispatch, useSelector } from "react-redux";
 import { NavLink, useNavigate } from "react-router-dom";
 import userHeaderImg from "../../../assets/images/UserProductHeader.png";
+import LogoutPopUp from "../../../components/layout/logoutPopUp/LogoutPopUp";
 import SideBarLayout from "../../../components/layout/sideBarLayout/SideBarLayout";
 import { setLogout } from "../../../redux/features/auth/authSlice";
 import { baltraSearchProducts } from "../../../redux/features/product/productSlice";
@@ -27,6 +27,8 @@ const UserProductHeader = () => {
   const navigate = useNavigate();
 
   const [isShownDropDown, setIsShownDropDown] = useState(false);
+  const [showLogoutModal, setShowLogoutModal] = useState(false);
+
   const [product_name, setProductName] = useState("");
   const [showSidebar, setShowSidebar] = useState(false);
 
@@ -69,11 +71,20 @@ const UserProductHeader = () => {
 
   const handleLogout = () => {
     dispatch(setLogout());
+    localStorage.clear();
     enqueueSnackbar("Logout SuccessFully", {
       variant: "success",
     });
     navigate("/baltra-allProducts");
   };
+
+  /* Open modal; also close dropdown immediately so it doesn't linger */
+  const openLogoutModal = () => {
+    setIsShownDropDown(false);
+    setShowLogoutModal(true);
+  };
+
+  const closeLogoutModal = () => setShowLogoutModal(false);
 
   if (authToken) {
     try {
@@ -200,76 +211,180 @@ const UserProductHeader = () => {
                   </span>
                 </button>
                 {isShownDropDown && (
-                  <div className="absolute right-0 top-full mt-4 w-48 bg-white shadow-sm rounded-sm z-50">
-                    <ul className="py-2 tracking-wider font-gothamNarrow">
-                      <li className="flex items-center px-4 py-2 text-gray-500 text-sm">
+                  <div
+                    role="menu"
+                    aria-orientation="vertical"
+                    className="
+                    absolute right-0 top-full mt-4 w-[230px]
+                    bg-white border border-slate-200/80
+                    rounded-2xl overflow-hidden z-50
+                                 "
+                  >
+                    {/* ── Identity header ── */}
+                    <div className="flex items-center gap-3 px-4 py-3.5 border-b border-slate-100">
+                      <div className="w-9 h-9 rounded-full bg-red-50 flex items-center justify-center flex-shrink-0">
+                        <span className="text-[13px] font-semibold text-red-600 leading-none select-none">
+                          {customer
+                            ? [customer.firstname, customer.lastname]
+                                .filter(Boolean)
+                                .map((n) => n[0])
+                                .slice(0, 2)
+                                .join("")
+                                .toUpperCase()
+                            : "U"}
+                        </span>
+                      </div>
+                      <div className="min-w-0">
+                        <p className="text-[13px] font-semibold text-gray-800 truncate leading-tight">
+                          {[customer?.firstname, customer?.lastname]
+                            .filter(Boolean)
+                            .join(" ") || "My Account"}
+                        </p>
+                        <p className="text-[11px] text-gray-400 truncate mt-0.5">
+                          {customer?.email}
+                        </p>
+                      </div>
+                    </div>
+
+                    {/* ── Menu items ── */}
+                    <ul role="none" className="p-1.5 flex flex-col gap-0.5">
+                      {/* My Account */}
+                      <li role="menuitem">
                         <NavLink
                           to="/baltra-profileInformation"
                           onClick={handleDropdownClose}
-                          className="text-gray-800 hover:text-red-600 hover:border-red-700 transition duration-300 font-gothamNarrow"
+                          className="flex items-center gap-2.5 px-3 py-2.5 rounded-xl text-gray-600 hover:bg-slate-50 hover:text-gray-900 transition-colors duration-100 group"
                         >
-                          <HiOutlineUserCircle className="inline-block mr-2" />{" "}
-                          My Account
-                        </NavLink>
-                      </li>
-                      <li className="flex items-center px-4 py-2 text-gray-500 text-sm">
-                        <NavLink
-                          to="/baltra-user-ProductPage"
-                          onClick={handleDropdownClose}
-                          className="text-gray-800 hover:text-red-600 hover:border-red-700 transition duration-300 font-gothamNarrow"
-                        >
-                          <AiOutlineProduct className="inline-block mr-2" /> My
-                          Products
-                        </NavLink>
-                      </li>
-                      <li className="flex items-center px-4 py-2 text-gray-500 text-sm">
-                        <NavLink
-                          to="/baltra-reward-point"
-                          onClick={handleDropdownClose}
-                          className="text-gray-800 hover:text-red-600 hover:border-red-700 transition duration-300 font-gothamNarrow"
-                        >
-                          <CiTrophy className="inline-block mr-2" /> Reward
-                          Points
-                        </NavLink>
-                      </li>
-                      <li className="flex items-center px-4 py-2 text-gray-500 text-sm">
-                        <NavLink
-                          to="/baltra-trackingProducts"
-                          onClick={handleDropdownClose}
-                          className="text-gray-800 hover:text-red-600 hover:border-red-700 transition duration-300 font-gothamNarrow"
-                        >
-                          <MdOutlineMedicalServices className="inline-block mr-2" />{" "}
-                          Service Ticket
-                        </NavLink>
-                      </li>
-                      <li className="flex items-center px-4 py-2 text-gray-500 text-sm">
-                        <NavLink
-                          to="/baltra-bulk-quote"
-                          onClick={handleDropdownClose}
-                          className="text-gray-800 hover:text-red-600 hover:border-red-700 transition duration-300 font-gothamNarrow"
-                        >
-                          <GoStack className="inline-block mr-2" />
-                          Bulk Order History
+                          <span className="w-7 h-7 rounded-lg bg-slate-100 flex items-center justify-center flex-shrink-0 group-hover:bg-red-50 transition-colors">
+                            <HiOutlineUserCircle
+                              size={15}
+                              className="text-slate-500 group-hover:text-red-500"
+                              aria-hidden="true"
+                            />
+                          </span>
+                          <span className="text-[13px] font-medium">
+                            My Account
+                          </span>
                         </NavLink>
                       </li>
 
-                      {customer && customer.role === "admin" && (
-                        <li className="flex items-center px-4 py-2 text-gray-500 text-sm mb-2">
-                          <NavLink
-                            to="/baltra-admin-dashboard"
-                            className="text-gray-800 hover:text-red-600 hover:border-red-700 transition duration-300 font-gothamNarrow"
-                          >
-                            <MdOutlineDashboardCustomize className="inline-block mr-2" />{" "}
-                            Dashboard
-                          </NavLink>
-                        </li>
-                      )}
-                      <li className="px-4 py-2 mb-2">
-                        <button
-                          onClick={handleLogout}
-                          className="text-gray-800 hover:text-red-600 hover:border-[#000000] transition duration-300 font-gothamNarrow"
+                      {/* My Products */}
+                      <li role="menuitem">
+                        <NavLink
+                          to="/baltra-user-ProductPage"
+                          onClick={handleDropdownClose}
+                          className="flex items-center gap-2.5 px-3 py-2.5 rounded-xl text-gray-600 hover:bg-slate-50 hover:text-gray-900 transition-colors duration-100 group"
                         >
-                          <GoSignOut className="inline-block mr-2" /> Logout
+                          <span className="w-7 h-7 rounded-lg bg-slate-100 flex items-center justify-center flex-shrink-0 group-hover:bg-red-50 transition-colors">
+                            <AiOutlineProduct
+                              size={15}
+                              className="text-slate-500 group-hover:text-red-500"
+                              aria-hidden="true"
+                            />
+                          </span>
+                          <span className="text-[13px] font-medium">
+                            My Products
+                          </span>
+                        </NavLink>
+                      </li>
+
+                      {/* Service Ticket */}
+                      <li role="menuitem">
+                        <NavLink
+                          to="/baltra-trackingProducts"
+                          onClick={handleDropdownClose}
+                          className="flex items-center gap-2.5 px-3 py-2.5 rounded-xl text-gray-600 hover:bg-slate-50 hover:text-gray-900 transition-colors duration-100 group"
+                        >
+                          <span className="w-7 h-7 rounded-lg bg-slate-100 flex items-center justify-center flex-shrink-0 group-hover:bg-red-50 transition-colors">
+                            <MdOutlineMedicalServices
+                              size={15}
+                              className="text-slate-500 group-hover:text-red-500"
+                              aria-hidden="true"
+                            />
+                          </span>
+                          <span className="text-[13px] font-medium">
+                            Service Ticket
+                          </span>
+                        </NavLink>
+                      </li>
+
+                      {/* Bulk Order History */}
+                      <li role="menuitem">
+                        <NavLink
+                          to="/baltra-bulk-quote"
+                          onClick={handleDropdownClose}
+                          className="flex items-center gap-2.5 px-3 py-2.5 rounded-xl text-gray-600 hover:bg-slate-50 hover:text-gray-900 transition-colors duration-100 group"
+                        >
+                          <span className="w-7 h-7 rounded-lg bg-slate-100 flex items-center justify-center flex-shrink-0 group-hover:bg-red-50 transition-colors">
+                            <GoStack
+                              size={15}
+                              className="text-slate-500 group-hover:text-red-500"
+                              aria-hidden="true"
+                            />
+                          </span>
+                          <span className="text-[13px] font-medium">
+                            Bulk Order History
+                          </span>
+                        </NavLink>
+                      </li>
+
+                      {/* Admin Dashboard — only for admins */}
+                      {customer?.role === "admin" && (
+                        <>
+                          <li
+                            role="separator"
+                            className="h-px bg-slate-100 mx-1 my-0.5"
+                          />
+                          <li role="menuitem">
+                            <NavLink
+                              to="/baltra-admin-dashboard"
+                              onClick={handleDropdownClose}
+                              className="flex items-center gap-2.5 px-3 py-2.5 rounded-xl text-gray-600 hover:bg-blue-50 hover:text-blue-700 transition-colors duration-100 group"
+                            >
+                              <span className="w-7 h-7 rounded-lg bg-slate-100 flex items-center justify-center flex-shrink-0 group-hover:bg-blue-100 transition-colors">
+                                <MdOutlineDashboardCustomize
+                                  size={15}
+                                  className="text-slate-500 group-hover:text-blue-500"
+                                  aria-hidden="true"
+                                />
+                              </span>
+                              <span className="text-[13px] font-medium flex-1">
+                                Dashboard
+                              </span>
+                              <span className="text-[10px] font-semibold px-2 py-0.5 rounded-full bg-blue-50 text-blue-600 border border-blue-100">
+                                Admin
+                              </span>
+                            </NavLink>
+                          </li>
+                        </>
+                      )}
+
+                      {/* Divider + Logout */}
+                      <li
+                        role="separator"
+                        className="h-px bg-slate-100 mx-1 my-0.5"
+                      />
+
+                      <li role="menuitem">
+                        <button
+                          onClick={openLogoutModal}
+                          className="w-full flex items-center gap-2.5 px-3 py-2.5 rounded-xl text-gray-600 hover:bg-red-50 hover:text-red-700 transition-colors duration-100 group"
+                        >
+                          <span className="w-7 h-7 rounded-lg bg-slate-100 flex items-center justify-center flex-shrink-0 group-hover:bg-red-100 transition-colors">
+                            <GoSignOut
+                              size={15}
+                              className="text-slate-500 group-hover:text-red-500"
+                              aria-hidden="true"
+                            />
+                          </span>
+                          <div className="flex-1 min-w-0 text-left">
+                            <p className="text-[13px] font-medium leading-none">
+                              Log out
+                            </p>
+                            <p className="text-[11px] text-gray-400 mt-0.5 group-hover:text-red-400">
+                              End current session
+                            </p>
+                          </div>
                         </button>
                       </li>
                     </ul>
@@ -393,6 +508,11 @@ const UserProductHeader = () => {
           showSidebar={showSidebar}
           setShowSidebar={setShowSidebar}
         />
+      )}
+
+      {/* ── Logout confirmation modal ── */}
+      {showLogoutModal && (
+        <LogoutPopUp onClose={closeLogoutModal} handleLogout={handleLogout} />
       )}
     </>
   );

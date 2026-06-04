@@ -439,7 +439,10 @@ const AllCustomerList = () => {
 
         {/* ── Pagination ── */}
         {total_pages > 1 && (
-          <div className="flex justify-end px-5 py-3 border-t border-gray-100 bg-gray-50/50">
+          <div className="flex items-center justify-between px-5 py-4 border-t border-slate-100 bg-slate-50/50">
+            <p className="text-xs text-slate-400 font-medium">
+              Page {page} of {total_pages}
+            </p>
             <CustomerPagination
               currentPage={page}
               totalPages={total_pages}

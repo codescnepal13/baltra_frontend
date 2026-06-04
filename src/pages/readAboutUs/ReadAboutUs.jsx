@@ -1,13 +1,12 @@
-import React from "react";
-import ReadAboutBanner from "./readAboutBanner/ReadAboutBanner";
-import ReadAboutTitle from "./readAboutTitle/ReadAboutTitle";
-import ReadAboutParagraphBelow from "./readAboutParagraphBelow/ReadAboutParagraphBelow";
-import ExploreOurRange from "./exploreOurRange/ExploreOurRange";
-import ReadAboutVideo from "./readAboutVideo/ReadAboutVideo";
-import BaltraPhilosophy from "./baltraPhilosophy/BaltraPhilosophy";
+import MetaData from "../../components/layout/metaData/MetaData";
 import BackGroundIntegration from "./backGroundIntegration/BackGroundIntegration";
 import BaltraFamily from "./baltraFamily/BaltraFamily";
-import MetaData from "../../components/layout/metaData/MetaData";
+import BaltraPhilosophy from "./baltraPhilosophy/BaltraPhilosophy";
+import ExploreOurRange from "./exploreOurRange/ExploreOurRange";
+import ReadAboutBanner from "./readAboutBanner/ReadAboutBanner";
+import ReadAboutParagraphBelow from "./readAboutParagraphBelow/ReadAboutParagraphBelow";
+import ReadAboutTitle from "./readAboutTitle/ReadAboutTitle";
+import ReadAboutVideo from "./readAboutVideo/ReadAboutVideo";
 
 const ReadAboutUs = () => {
   return (
@@ -18,9 +17,9 @@ const ReadAboutUs = () => {
       <ReadAboutVideo />
       <ReadAboutParagraphBelow />
       <ExploreOurRange />
+      <BaltraFamily />
       <BaltraPhilosophy />
       <BackGroundIntegration />
-      <BaltraFamily />
     </>
   );
 };

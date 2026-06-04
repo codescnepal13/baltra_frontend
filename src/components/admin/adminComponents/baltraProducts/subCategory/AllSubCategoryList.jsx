@@ -204,7 +204,7 @@ const AllSubCategoryList = () => {
                     type="checkbox"
                     onChange={handleSelectAll}
                     checked={allSelected}
-                    className="accent-red-500 w-3.5 h-3.5 cursor-pointer"
+                    className="accent-red-500 w-3 h-3 cursor-pointer"
                   />
                 </th>
                 {COLUMNS.map((col) => (
@@ -248,7 +248,7 @@ const AllSubCategoryList = () => {
                           onChange={(e) =>
                             handleSelectProduct(e, subCategory.id)
                           }
-                          className="accent-red-500 w-3.5 h-3.5 cursor-pointer"
+                          className="accent-red-500 w-3 h-3 cursor-pointer"
                         />
                       </td>
 
@@ -345,7 +345,10 @@ const AllSubCategoryList = () => {
 
         {/* Pagination */}
         {total_pages > 1 && (
-          <div className="flex justify-end px-4 py-3 border-t border-gray-100">
+          <div className="flex items-center justify-between px-5 py-4 border-t border-slate-100 bg-slate-50/50">
+            <p className="text-xs text-slate-400 font-medium">
+              Page {page} of {total_pages}
+            </p>
             <SubCategoryPagination
               currentPage={page}
               totalPages={total_pages}

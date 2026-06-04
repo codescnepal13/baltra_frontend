@@ -52,7 +52,7 @@ export const getAllCustomerAddedProductList = createAsyncThunk(
     } catch (error) {
       return rejectWithValue({ message: getErrorMessage(error) });
     }
-  }
+  },
 );
 
 //single Customer Product List
@@ -65,7 +65,7 @@ export const getSingleProductView = createAsyncThunk(
     } catch (error) {
       return rejectWithValue({ message: getErrorMessage(error) });
     }
-  }
+  },
 );
 
 //delete CustomerProduct
@@ -74,19 +74,19 @@ export const deleteCustomerProduct = createAsyncThunk(
   async ({ stock_id, enqueueSnackbar }, { rejectWithValue }) => {
     try {
       const response = await API.delete(
-        `/stocks/deleteproductbyadmin/${stock_id}`
+        `/stocks/deleteproductbyadmin/${stock_id}`,
       );
       enqueueSnackbar(
         response.data.message || "customer product deleted successFully!",
         {
           variant: "success",
-        }
+        },
       );
       return response.data;
     } catch (error) {
       return rejectWithValue({ message: getErrorMessage(error) });
     }
-  }
+  },
 );
 
 //deleteMultipleCustomer
@@ -98,19 +98,19 @@ export const deleteMultipleCustomer = createAsyncThunk(
         `/stocks/deletemultipleproductbyadmin`,
         {
           data: { stock_ids },
-        }
+        },
       );
       enqueueSnackbar(
         response.data.message || "product deleted successFully!",
         {
           variant: "success",
-        }
+        },
       );
       return response.data;
     } catch (error) {
       return rejectWithValue({ message: getErrorMessage(error) });
     }
-  }
+  },
 );
 
 //VerifyCustomerProductList
@@ -128,7 +128,7 @@ export const verifiedCustomerProduct = createAsyncThunk(
     } catch (error) {
       return rejectWithValue({ message: getErrorMessage(error) });
     }
-  }
+  },
 );
 
 //getAllProductComplaints
@@ -142,13 +142,13 @@ export const allProductComplaints = createAsyncThunk(
       const response = await API.get(
         `/stocks/getallcomplaints${
           queryParams.toString() ? `?${queryParams.toString()}` : ""
-        }`
+        }`,
       );
       return response.data;
     } catch (error) {
       return rejectWithValue({ message: getErrorMessage(error) });
     }
-  }
+  },
 );
 
 //getSingleProductComplaint
@@ -157,13 +157,13 @@ export const getSingleProductComplaint = createAsyncThunk(
   async ({ complaint_id }, { rejectWithValue }) => {
     try {
       const response = await API.get(
-        `/stocks/getcomplaintbyid/${complaint_id}`
+        `/stocks/getcomplaintbyid/${complaint_id}`,
       );
       return response.data;
     } catch (error) {
       return rejectWithValue({ message: getErrorMessage(error) });
     }
-  }
+  },
 );
 
 //deleteProductComplaint
@@ -172,7 +172,7 @@ export const deleteProductComplaint = createAsyncThunk(
   async ({ complaint_id, enqueueSnackbar }, { rejectWithValue }) => {
     try {
       const response = await API.delete(
-        `/stocks/deletecomplaintbyid/${complaint_id}`
+        `/stocks/deletecomplaintbyid/${complaint_id}`,
       );
       enqueueSnackbar(response.data.message || "product complaint deleted!", {
         variant: "success",
@@ -181,7 +181,7 @@ export const deleteProductComplaint = createAsyncThunk(
     } catch (error) {
       return rejectWithValue({ message: getErrorMessage(error) });
     }
-  }
+  },
 );
 
 //deleteMultipleProductComplaints
@@ -196,13 +196,13 @@ export const deleteMultipleProductComplaints = createAsyncThunk(
         response.data.message || "product complaint deleted successFully!",
         {
           variant: "success",
-        }
+        },
       );
       return response.data;
     } catch (error) {
       return rejectWithValue({ message: getErrorMessage(error) });
     }
-  }
+  },
 );
 
 //addCrmContent
@@ -212,7 +212,7 @@ export const addCrmContent = createAsyncThunk(
     try {
       const response = await API.post(
         `/stocks/customerservicerequesttocrm`,
-        CRMConfig
+        CRMConfig,
       );
 
       enqueueSnackbar(response.data.message || "CRM added successFully!", {
@@ -222,29 +222,33 @@ export const addCrmContent = createAsyncThunk(
     } catch (error) {
       return rejectWithValue({ msg: getErrorMessage(error) });
     }
-  }
+  },
 );
 
 //getAllTrackingProducts
 export const getAllTrackingProducts = createAsyncThunk(
   "customer/getAllTrackingProducts",
-  async ({ job_no, status } = {}, { rejectWithValue }) => {
+  async (
+    { job_no, model_no, model_name, serial_no, status } = {},
+    { rejectWithValue },
+  ) => {
     try {
-      let queryParams = new URLSearchParams();
+      const queryParams = new URLSearchParams();
       if (status) queryParams.append("status", status);
       if (job_no) queryParams.append("job_no", job_no);
+      if (model_no) queryParams.append("model_no", model_no);
+      if (model_name) queryParams.append("model_name", model_name);
+      if (serial_no) queryParams.append("serial_no", serial_no);
 
+      const query = queryParams.toString();
       const response = await API.get(
-        `/stocks/getallcomplaintsbycustomer${
-          queryParams.toString() ? `?${queryParams.toString()}` : ""
-        }`
+        `/stocks/getallcomplaintsbycustomer${query ? `?${query}` : ""}`,
       );
-
       return response.data;
     } catch (error) {
       return rejectWithValue({ message: getErrorMessage(error) });
     }
-  }
+  },
 );
 
 //singleTrackingProductByID
@@ -253,13 +257,13 @@ export const singleTrackingProductByID = createAsyncThunk(
   async ({ complaint_id }, { rejectWithValue }) => {
     try {
       const response = await API.get(
-        `/stocks/getcomplaintbyidcustomer/${complaint_id}`
+        `/stocks/getcomplaintbyidcustomer/${complaint_id}`,
       );
       return response.data;
     } catch (error) {
       return rejectWithValue({ message: getErrorMessage(error) });
     }
-  }
+  },
 );
 
 const customerSlice = createSlice({
@@ -306,7 +310,7 @@ const customerSlice = createSlice({
         } = action.meta;
         if (stock_id) {
           state.allCustomerProductsList = state.allCustomerProductsList.filter(
-            (item) => item.id !== stock_id
+            (item) => item.id !== stock_id,
           );
         }
       })
@@ -324,7 +328,7 @@ const customerSlice = createSlice({
         } = action.meta;
         if (Array.isArray(stock_ids) && stock_ids.length > 0) {
           state.allCustomerProductsList = state.allCustomerProductsList.filter(
-            (item) => !stock_ids.includes(item.product_id)
+            (item) => !stock_ids.includes(item.product_id),
           );
         }
       })
@@ -379,7 +383,7 @@ const customerSlice = createSlice({
         } = action.meta;
         if (complaint_id) {
           state.productComplaints = state.productComplaints.filter(
-            (item) => item.id !== complaint_id
+            (item) => item.id !== complaint_id,
           );
         }
       })
@@ -397,7 +401,7 @@ const customerSlice = createSlice({
         } = action.meta;
         if (Array.isArray(complaint_ids) && complaint_ids.length > 0) {
           state.productComplaints = state.productComplaints.filter(
-            (item) => !complaint_ids.includes(item.product_id)
+            (item) => !complaint_ids.includes(item.product_id),
           );
         }
       })

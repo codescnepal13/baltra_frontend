@@ -6,6 +6,7 @@ import API from "../../api/api";
  * @typedef {Object} ProductState
  * @property {boolean} loading
  * @property {boolean} success
+ * @property {boolean} isSearchActive
  * @property {boolean} isLoading
  * @property {boolean} isProcessing
  * @property {boolean} isFetching
@@ -45,6 +46,7 @@ const initialState = {
   isLoading: false,
   isFetching: false,
   success: false,
+  isSearchActive: false,
   error: "",
   message: "",
   singleProduct: null,
@@ -88,7 +90,7 @@ export const baltraCategoryProducts = createAsyncThunk(
     } catch (error) {
       return rejectWithValue({ message: getErrorMessage(error) });
     }
-  }
+  },
 );
 
 //Action(Get ID By SubCategoryProducts)
@@ -97,13 +99,13 @@ export const baltraSubCategoryProducts = createAsyncThunk(
   async (category_id, { rejectWithValue }) => {
     try {
       const response = await API.get(
-        `/products/subcategorybycategory/${category_id}`
+        `/products/subcategorybycategory/${category_id}`,
       );
       return response.data;
     } catch (error) {
       return rejectWithValue({ message: getErrorMessage(error) });
     }
-  }
+  },
 );
 
 //baltraSubCategoryRelatedProducts(Main Products)
@@ -112,13 +114,13 @@ export const baltraSubCategoryRelatedProducts = createAsyncThunk(
   async (subcategory_id, { rejectWithValue }) => {
     try {
       const response = await API.get(
-        `/products/productsbysubcategory/${subcategory_id}`
+        `/products/productsbysubcategory/${subcategory_id}`,
       );
       return response.data;
     } catch (error) {
       return rejectWithValue({ message: getErrorMessage(error) });
     }
-  }
+  },
 );
 
 //SingleProductViewById
@@ -128,13 +130,13 @@ export const singleProductView = createAsyncThunk(
   async (product_id, { rejectWithValue }) => {
     try {
       const response = await API.get(
-        `/products/getdatabyidpublic/${product_id}`
+        `/products/getdatabyidpublic/${product_id}`,
       );
       return response.data;
     } catch (error) {
       return rejectWithValue({ message: getErrorMessage(error) });
     }
-  }
+  },
 );
 
 //addRatingAndReviews
@@ -142,7 +144,7 @@ export const addRatingReview = createAsyncThunk(
   "products/addRatingReview",
   async (
     { data, product_id, enqueueSnackbar },
-    { rejectWithValue, dispatch }
+    { rejectWithValue, dispatch },
   ) => {
     try {
       const response = await API.post(`/products/addrating`, data);
@@ -154,7 +156,7 @@ export const addRatingReview = createAsyncThunk(
     } catch (error) {
       return rejectWithValue({ message: getErrorMessage(error) });
     }
-  }
+  },
 );
 
 //getRatingsReviewByProductId
@@ -167,7 +169,7 @@ export const allRatingsReviewsById = createAsyncThunk(
     } catch (error) {
       return rejectWithValue({ message: getErrorMessage(error) });
     }
-  }
+  },
 );
 
 //ProductsRelated
@@ -180,7 +182,7 @@ export const baltraProductsRelated = createAsyncThunk(
     } catch (error) {
       return rejectWithValue({ message: getErrorMessage(error) });
     }
-  }
+  },
 );
 
 //CustomerAdd
@@ -197,7 +199,7 @@ export const baltraCustomerAdd = createAsyncThunk(
     } catch (error) {
       return rejectWithValue({ message: getErrorMessage(error) });
     }
-  }
+  },
 );
 
 //CustomerAllProducts
@@ -210,7 +212,7 @@ export const allCustomerProducts = createAsyncThunk(
     } catch (error) {
       return rejectWithValue({ message: getErrorMessage(error) });
     }
-  }
+  },
 );
 
 //SingleUserProductPage
@@ -219,13 +221,13 @@ export const SingleUserProductPage = createAsyncThunk(
   async ({ stock_id }, { rejectWithValue }) => {
     try {
       const response = await API.get(
-        `/stocks/customerproductbyidcustomer/${stock_id}`
+        `/stocks/customerproductbyidcustomer/${stock_id}`,
       );
       return response.data;
     } catch (error) {
       return rejectWithValue({ message: getErrorMessage(error) });
     }
-  }
+  },
 );
 
 export const deleteCustomerProduct = createAsyncThunk(
@@ -241,7 +243,7 @@ export const deleteCustomerProduct = createAsyncThunk(
     } catch (error) {
       return rejectWithValue({ message: getErrorMessage(error) });
     }
-  }
+  },
 );
 
 //RegisteredComplaint
@@ -251,30 +253,31 @@ export const addRegisteredComplaint = createAsyncThunk(
     try {
       const response = await API.post(
         `/stocks/registercomplaint/${stock_id}`,
-        formData
+        formData,
       );
       enqueueSnackbar(
         response.data.message || "Register Complaint added successFully",
         {
           variant: "success",
-        }
+        },
       );
       return response.data;
     } catch (error) {
       return rejectWithValue({ message: getErrorMessage(error) });
     }
-  }
+  },
 );
 
 // Baltra SearchProducts Action Thunk
 
+// productSlice.js
 export const baltraSearchProducts = createAsyncThunk(
   "products/all-searchProducts",
-  async ({ product_name, sort_order } = {}, { rejectWithValue }) => {
+  async ({ product_name, category, sort_order } = {}, { rejectWithValue }) => {
     try {
       let queryParams = new URLSearchParams();
       if (product_name) queryParams.append("product_name", product_name);
-
+      if (category) queryParams.append("category", category);
       if (sort_order && sort_order !== "all") {
         queryParams.append("sort_order", sort_order);
       }
@@ -282,15 +285,13 @@ export const baltraSearchProducts = createAsyncThunk(
       const response = await API.get(
         `/products/productsearch${
           queryParams.toString() ? `?${queryParams.toString()}` : ""
-        }`
+        }`,
       );
-
       return response.data;
     } catch (error) {
-      // Handle any errors
       return rejectWithValue({ message: getErrorMessage(error) });
     }
-  }
+  },
 );
 
 //getWarrantySection(LoyaltyPoints)
@@ -303,7 +304,7 @@ export const getSingleBaltraLoyaltyPoints = createAsyncThunk(
     } catch (error) {
       return rejectWithValue({ message: getErrorMessage(error) });
     }
-  }
+  },
 );
 
 //getRewardPointValue
@@ -316,7 +317,7 @@ export const getRewardPointValue = createAsyncThunk(
     } catch (error) {
       return rejectWithValue({ message: getErrorMessage(error) });
     }
-  }
+  },
 );
 
 //addRedeemPoint
@@ -333,7 +334,7 @@ export const addRedeemPoint = createAsyncThunk(
     } catch (error) {
       return rejectWithValue({ message: getErrorMessage(error) });
     }
-  }
+  },
 );
 
 //get public Products Catalog
@@ -346,7 +347,7 @@ export const allProductsCatalog = createAsyncThunk(
     } catch (error) {
       return rejectWithValue({ message: getErrorMessage(error) });
     }
-  }
+  },
 );
 
 //Add Baltra Personalization
@@ -359,13 +360,13 @@ export const addBaltraPersonalization = createAsyncThunk(
         response.data.message || "personalization added successFully!",
         {
           variant: "success",
-        }
+        },
       );
       return response.data;
     } catch (error) {
       return rejectWithValue({ message: getErrorMessage(error) });
     }
-  }
+  },
 );
 
 //addBulkQuote
@@ -381,7 +382,7 @@ export const addBulkQuote = createAsyncThunk(
     } catch (error) {
       return rejectWithValue({ message: getErrorMessage(error) });
     }
-  }
+  },
 );
 
 //allBulkHistoryProducts
@@ -396,14 +397,14 @@ export const allBulkHistoryProducts = createAsyncThunk(
       const response = await API.get(
         `/products/getallquotationbycustomer${
           queryParams.toString() ? `?${queryParams.toString()}` : ""
-        }`
+        }`,
       );
 
       return response.data;
     } catch (error) {
       return rejectWithValue({ message: getErrorMessage(error) });
     }
-  }
+  },
 );
 
 //singleOrderHistory
@@ -412,14 +413,14 @@ export const singleOrderHistory = createAsyncThunk(
   async ({ quote_id }, { rejectWithValue }) => {
     try {
       const response = await API.get(
-        `/products/getquotationbyidcustomer/${quote_id}`
+        `/products/getquotationbyidcustomer/${quote_id}`,
       );
 
       return response.data;
     } catch (error) {
       return rejectWithValue({ message: getErrorMessage(error) });
     }
-  }
+  },
 );
 
 const productSlice = createSlice({
@@ -428,6 +429,11 @@ const productSlice = createSlice({
   reducers: {
     clearProductError: (state) => {
       state.error = "";
+    },
+    // ADD THIS
+    clearSearch: (state) => {
+      state.baltraSearchProductsList = [];
+      state.isSearchActive = false;
     },
   },
   extraReducers: (builder) => {
@@ -563,7 +569,7 @@ const productSlice = createSlice({
         } = action.meta;
         if (id) {
           state.customerAddedList = state.customerAddedList.filter(
-            (item) => item.id !== id
+            (item) => item.id !== id,
           );
         }
       })
@@ -588,6 +594,7 @@ const productSlice = createSlice({
       .addCase(baltraSearchProducts.fulfilled, (state, action) => {
         state.isProcessing = false;
         state.baltraSearchProductsList = action.payload.data;
+        state.isSearchActive = true; // ADD THIS LINE ONLY
       })
       .addCase(baltraSearchProducts.rejected, (state, action) => {
         state.isProcessing = false;
@@ -685,6 +692,6 @@ const productSlice = createSlice({
   },
 });
 
-export const { clearProductError } = productSlice.actions;
+export const { clearProductError, clearSearch } = productSlice.actions;
 
 export default productSlice.reducer;

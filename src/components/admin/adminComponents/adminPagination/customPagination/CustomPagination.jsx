@@ -81,7 +81,7 @@ const NavButton = ({ onClick, disabled, children, ariaLabel }) => (
 
 /* ─── main component ──────────────────────────────────────────────────────── */
 
-const ProductPagination = ({ currentPage, totalPages, onPageChange }) => {
+const CustomPagination = ({ currentPage, totalPages, onPageChange }) => {
   const current = currentPage ?? 1;
   const total = totalPages ?? 0;
 
@@ -131,10 +131,10 @@ const ProductPagination = ({ currentPage, totalPages, onPageChange }) => {
   );
 };
 
-ProductPagination.propTypes = {
+CustomPagination.propTypes = {
   currentPage: PropTypes.number,
   totalPages: PropTypes.number,
   onPageChange: PropTypes.func.isRequired,
 };
 
-export default ProductPagination;
+export default CustomPagination;

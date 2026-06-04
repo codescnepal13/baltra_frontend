@@ -64,7 +64,7 @@ const EditPassword = () => {
         )
       );
     },
-    [errors]
+    [errors],
   );
 
   const onSubmit = (editPasswordData) => {
@@ -74,7 +74,7 @@ const EditPassword = () => {
           editPasswordData,
           enqueueSnackbar,
           navigate,
-        })
+        }),
       );
     } else {
       enqueueSnackbar("Invalid Input", {
@@ -141,7 +141,19 @@ const EditPassword = () => {
                   </label>
                   <div className="relative">
                     <input
-                      className="w-full px-4 py-4 text-sm font-gothamNarrow bg-gray-50 border border-gray-300 rounded-xl focus:outline-none focus:border-red-600 transition-all duration-200 pr-12"
+                      className="block w-full
+                               bg-white text-slate-700
+                                border-2 border-slate-200
+                                rounded-xl py-4 px-5
+                                text-sm leading-tight
+                                appearance-none
+                                outline-none
+                                focus:outline-none
+                                focus-visible:outline-none
+                              focus:border-red-500
+                                focus:ring-0
+                               transition-all duration-300
+                              hover:border-slate-300"
                       id="old_password"
                       name="old_password"
                       type={passwordVisible ? "text" : "password"}
@@ -180,7 +192,19 @@ const EditPassword = () => {
                   </label>
                   <div className="relative">
                     <input
-                      className="w-full px-4 py-4 text-sm font-gothamNarrow bg-gray-50 border border-gray-300 rounded-xl focus:outline-none focus:border-red-600 transition-all duration-200 pr-12"
+                      className="  block w-full
+                               bg-white text-slate-700
+                                border-2 border-slate-200
+                                rounded-xl py-4 px-5
+                                text-sm leading-tight
+                                appearance-none
+                                outline-none
+                                focus:outline-none
+                                focus-visible:outline-none
+                              focus:border-red-500
+                                focus:ring-0
+                               transition-all duration-300
+                              hover:border-slate-300"
                       id="new_password"
                       name="new_password"
                       type={passwordVisibleOne ? "text" : "password"}
@@ -219,7 +243,19 @@ const EditPassword = () => {
                   </label>
                   <div className="relative">
                     <input
-                      className="w-full px-4 py-4 text-sm font-gothamNarrow bg-gray-50 border border-gray-300 rounded-xl focus:outline-none focus:border-red-600 transition-all duration-200 pr-12"
+                      className="  block w-full
+                               bg-white text-slate-700
+                                border-2 border-slate-200
+                                rounded-xl py-4 px-5
+                                text-sm leading-tight
+                                appearance-none
+                                outline-none
+                                focus:outline-none
+                                focus-visible:outline-none
+                              focus:border-red-500
+                                focus:ring-0
+                               transition-all duration-300
+                              hover:border-slate-300"
                       id="confirm_newpassword"
                       name="confirm_newpassword"
                       type={passwordVisibleTwo ? "text" : "password"}

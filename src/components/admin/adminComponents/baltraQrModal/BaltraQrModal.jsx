@@ -1,5 +1,3 @@
-import React from "react";
-
 const BaltraQrModal = ({ onClose, qrCodeSrc }) => {
   const downloadQrCode = async () => {
     try {
@@ -42,23 +40,6 @@ const BaltraQrModal = ({ onClose, qrCodeSrc }) => {
       console.error("Failed to download QR code:", error);
     }
   };
-  // const downloadQrCode = async () => {
-  //   try {
-  //     const response = await fetch(qrCodeSrc);
-  //     const blob = await response.blob();
-  //     const url = window.URL.createObjectURL(blob);
-  //     const link = document.createElement("a");
-  //     link.href = url;
-  //     link.download = "QRCode.png";
-  //     document.body.appendChild(link);
-  //     link.click();
-  //     document.body.removeChild(link);
-  //     window.URL.revokeObjectURL(url);
-  //   } catch (error) {
-  //     console.error("Failed to download QR code:", error);
-  //   }
-  // };
-
   return (
     <div className="fixed font-gothamNarrow inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full">
       <div className="relative top-20 mx-auto p-5 border w-96 shadow-lg rounded-md bg-white">

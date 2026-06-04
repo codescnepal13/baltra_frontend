@@ -1,5 +1,5 @@
-import { defineConfig } from "vite";
 import react from "@vitejs/plugin-react-swc";
+import { defineConfig } from "vite";
 import viteCompression from "vite-plugin-compression";
 
 export default defineConfig({
@@ -30,8 +30,5 @@ export default defineConfig({
   optimizeDeps: {
     include: ["react", "react-dom", "some-large-library"],
     exclude: ["some-library-you-want-to-exclude"],
-  },
-  define: {
-    "process.env": process.env,
   },
 });

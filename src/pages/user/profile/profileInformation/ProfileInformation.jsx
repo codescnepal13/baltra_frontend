@@ -5,7 +5,6 @@ import { useForm } from "react-hook-form";
 import { FaArrowRightLong, FaKey } from "react-icons/fa6";
 import { MdOutlineCloudUpload } from "react-icons/md";
 import { useDispatch, useSelector } from "react-redux";
-import LogoutPopUp from "../../../../components/layout/logoutPopUp/LogoutPopUp";
 import {
   clearAuthError,
   getProfileMe,
@@ -17,7 +16,7 @@ import EditPassword from "../editPassword/EditPassword";
 
 const ProfileInformation = () => {
   const { customer, error, isError, isLoading } = useSelector(
-    (state) => state.auth
+    (state) => state.auth,
   );
 
   const {
@@ -211,67 +210,10 @@ const ProfileInformation = () => {
                     </div>
 
                     {/* Membership Status Card */}
-                    <div className="bg-white bg-opacity-20 backdrop-blur-lg rounded-2xl p-4 border border-white border-opacity-30 max-w-sm">
-                      <div className="flex items-center justify-between">
-                        <div>
-                          <h3 className="text-white font-semibold text-lg mb-1">
-                            Reward Points
-                          </h3>
-                          <p className="text-red-100 text-sm">
-                            {isMember ? "Premium Member" : "Standard Member"}
-                          </p>
-                        </div>
-
-                        <div className="flex items-center gap-3">
-                          <label className="relative inline-flex items-center cursor-pointer">
-                            <input
-                              type="checkbox"
-                              className="sr-only peer"
-                              checked={isMember}
-                              disabled={!isToggleEnabled}
-                              onChange={handleMembershipToggle}
-                            />
-                            <div className="w-14 h-7 bg-white bg-opacity-30 focus:outline-none rounded-full peer peer-checked:after:translate-x-7 peer-checked:after:border-white after:content-[''] after:absolute after:top-0.5 after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-6 after:w-6 after:transition-all peer-checked:bg-green-500 peer-checked:bg-opacity-80"></div>
-                          </label>
-                          <span
-                            className={`font-bold text-sm ${
-                              isMember ? "text-green-200" : "text-red-200"
-                            }`}
-                          >
-                            {isMember ? "Active" : "Inactive"}
-                          </span>
-                        </div>
-                      </div>
-                    </div>
                   </div>
                 </div>
 
                 {/* Right Side - Action Buttons */}
-                <div className="flex flex-col gap-3 lg:min-w-[240px]">
-                  <div className="bg-white bg-opacity-20 backdrop-blur-lg border border-white border-opacity-30 rounded-xl px-6 py-3 hover:bg-opacity-30 transition-all duration-300 cursor-pointer">
-                    <button
-                      type="submit"
-                      className="text-white font-semibold w-full text-center"
-                    >
-                      Switch Account
-                    </button>
-                  </div>
-                  <div className="bg-red-800 hover:bg-red-900 border border-red-700 rounded-xl px-6 py-3 transition-all duration-300 cursor-pointer">
-                    <button
-                      type="submit"
-                      className="text-white font-semibold w-full text-center"
-                      onClick={() => setOpenModal(true)}
-                    >
-                      Log Out
-                    </button>
-                    {openModal && (
-                      <LogoutPopUp
-                        onClose={handleClose}
-                        handleDelete={handleLogout}
-                      />
-                    )}
-                  </div>
-                </div>
               </div>
             </div>
 
@@ -336,11 +278,26 @@ const ProfileInformation = () => {
                               <label className="text-slate-700 font-semibold text-sm mb-3 block">
                                 First Name
                               </label>
+
                               <input
                                 type="text"
                                 name="firstname"
                                 placeholder="Enter Your firstName"
-                                className="block w-full bg-white text-slate-700 border-2 border-slate-200 rounded-xl py-4 px-5 text-sm leading-tight focus:outline-none focus:border-red-500 focus:ring-4 focus:ring-red-100 transition-all duration-300 hover:border-slate-300"
+                                className="
+                                block w-full
+                               bg-white text-slate-700
+                                border-2 border-slate-200
+                                rounded-xl py-4 px-5
+                                text-sm leading-tight
+                                appearance-none
+                                outline-none
+                                focus:outline-none
+                                focus-visible:outline-none
+                              focus:border-red-500
+                                focus:ring-0
+                               transition-all duration-300
+                              hover:border-slate-300
+                               "
                                 {...register("firstname")}
                               />
                             </div>
@@ -353,7 +310,19 @@ const ProfileInformation = () => {
                                 type="text"
                                 name="lastname"
                                 placeholder="Enter Your lastname"
-                                className="block w-full bg-white text-slate-700 border-2 border-slate-200 rounded-xl py-4 px-5 text-sm leading-tight focus:outline-none focus:border-red-500 focus:ring-4 focus:ring-red-100 transition-all duration-300 hover:border-slate-300"
+                                className="  block w-full
+                               bg-white text-slate-700
+                                border-2 border-slate-200
+                                rounded-xl py-4 px-5
+                                text-sm leading-tight
+                                appearance-none
+                                outline-none
+                                focus:outline-none
+                                focus-visible:outline-none
+                              focus:border-red-500
+                                focus:ring-0
+                               transition-all duration-300
+                              hover:border-slate-300"
                                 {...register("lastname")}
                               />
                             </div>
@@ -366,7 +335,19 @@ const ProfileInformation = () => {
                                 type="email"
                                 name="email"
                                 placeholder="Enter your email"
-                                className="block w-full bg-slate-50 text-slate-500 border-2 border-slate-200 rounded-xl py-4 px-5 text-sm leading-tight cursor-not-allowed"
+                                className="  block w-full
+                               bg-white text-slate-700
+                                border-2 border-slate-200
+                                rounded-xl py-4 px-5
+                                text-sm leading-tight
+                                appearance-none
+                                outline-none
+                                focus:outline-none
+                                focus-visible:outline-none
+                              focus:border-red-500
+                                focus:ring-0
+                               transition-all duration-300
+                              hover:border-slate-300"
                                 {...register("email")}
                                 readOnly
                               />
@@ -380,7 +361,19 @@ const ProfileInformation = () => {
                                 type="tel"
                                 name="contact"
                                 placeholder="+977-9861884972"
-                                className="block w-full bg-slate-50 text-slate-500 border-2 border-slate-200 rounded-xl py-4 px-5 text-sm leading-tight cursor-not-allowed"
+                                className="  block w-full
+                               bg-white text-slate-700
+                                border-2 border-slate-200
+                                rounded-xl py-4 px-5
+                                text-sm leading-tight
+                                appearance-none
+                                outline-none
+                                focus:outline-none
+                                focus-visible:outline-none
+                              focus:border-red-500
+                                focus:ring-0
+                               transition-all duration-300
+                              hover:border-slate-300"
                                 {...register("contact")}
                                 readOnly
                               />
@@ -406,7 +399,19 @@ const ProfileInformation = () => {
                                 type="text"
                                 name="customerAddress"
                                 placeholder="Enter Your Address"
-                                className="block w-full bg-white text-slate-700 border-2 border-slate-200 rounded-xl py-4 px-5 text-sm leading-tight focus:outline-none focus:border-red-500 focus:ring-4 focus:ring-red-100 transition-all duration-300 hover:border-slate-300"
+                                className="  block w-full
+                               bg-white text-slate-700
+                                border-2 border-slate-200
+                                rounded-xl py-4 px-5
+                                text-sm leading-tight
+                                appearance-none
+                                outline-none
+                                focus:outline-none
+                                focus-visible:outline-none
+                              focus:border-red-500
+                                focus:ring-0
+                               transition-all duration-300
+                              hover:border-slate-300"
                                 {...register("customerAddress")}
                               />
                             </div>
@@ -420,7 +425,19 @@ const ProfileInformation = () => {
                                   type="text"
                                   name="district"
                                   placeholder="Enter Your district"
-                                  className="block w-full bg-white text-slate-700 border-2 border-slate-200 rounded-xl py-4 px-5 text-sm leading-tight focus:outline-none focus:border-red-500 focus:ring-4 focus:ring-red-100 transition-all duration-300 hover:border-slate-300"
+                                  className="  block w-full
+                               bg-white text-slate-700
+                                border-2 border-slate-200
+                                rounded-xl py-4 px-5
+                                text-sm leading-tight
+                                appearance-none
+                                outline-none
+                                focus:outline-none
+                                focus-visible:outline-none
+                              focus:border-red-500
+                                focus:ring-0
+                               transition-all duration-300
+                              hover:border-slate-300"
                                   {...register("district")}
                                 />
                               </div>
@@ -433,7 +450,19 @@ const ProfileInformation = () => {
                                   type="text"
                                   name="city"
                                   placeholder="Enter Your City"
-                                  className="block w-full bg-white text-slate-700 border-2 border-slate-200 rounded-xl py-4 px-5 text-sm leading-tight focus:outline-none focus:border-red-500 focus:ring-4 focus:ring-red-100 transition-all duration-300 hover:border-slate-300"
+                                  className="  block w-full
+                               bg-white text-slate-700
+                                border-2 border-slate-200
+                                rounded-xl py-4 px-5
+                                text-sm leading-tight
+                                appearance-none
+                                outline-none
+                                focus:outline-none
+                                focus-visible:outline-none
+                              focus:border-red-500
+                                focus:ring-0
+                               transition-all duration-300
+                              hover:border-slate-300"
                                   {...register("city")}
                                 />
                               </div>
@@ -445,7 +474,19 @@ const ProfileInformation = () => {
                               </label>
                               <div className="relative">
                                 <select
-                                  className="block w-full bg-white text-slate-700 border-2 border-slate-200 rounded-xl py-4 px-5 text-sm leading-tight focus:outline-none focus:border-red-500 focus:ring-4 focus:ring-red-100 transition-all duration-300 hover:border-slate-300 appearance-none cursor-pointer"
+                                  className="  block w-full
+                               bg-white text-slate-700
+                                border-2 border-slate-200
+                                rounded-xl py-4 px-5
+                                text-sm leading-tight
+                                appearance-none
+                                outline-none
+                                focus:outline-none
+                                focus-visible:outline-none
+                              focus:border-red-500
+                                focus:ring-0
+                               transition-all duration-300
+                              hover:border-slate-300 cursor-pointer"
                                   id="gender"
                                   name="gender"
                                   {...register("gender")}
@@ -481,7 +522,19 @@ const ProfileInformation = () => {
                               <input
                                 type="date"
                                 name="dob"
-                                className="block w-full bg-white text-slate-700 border-2 border-slate-200 rounded-xl py-4 px-5 text-sm leading-tight focus:outline-none focus:border-red-500 focus:ring-4 focus:ring-red-100 transition-all duration-300 hover:border-slate-300"
+                                className="  block w-full
+                               bg-white text-slate-700
+                                border-2 border-slate-200
+                                rounded-xl py-4 px-5
+                                text-sm leading-tight
+                                appearance-none
+                                outline-none
+                                focus:outline-none
+                                focus-visible:outline-none
+                              focus:border-red-500
+                                focus:ring-0
+                               transition-all duration-300
+                              hover:border-slate-300"
                                 {...register("dob")}
                               />
                             </div>
