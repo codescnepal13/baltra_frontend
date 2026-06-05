@@ -1,6 +1,6 @@
 import moment from "moment";
 import { enqueueSnackbar } from "notistack";
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import {
   HiOutlineArrowPath,
   HiOutlineExclamationCircle,
@@ -17,67 +17,36 @@ import {
   deleteMultipleProductComplaints,
   deleteProductComplaint,
 } from "../../../../redux/features/customer/customerSlice";
+import CustomPagination from "../adminPagination/customPagination/CustomPagination";
 import DeleteComplaintModal from "./deleteComplaintModal/DeleteComplaintModal";
 
 const ProductComplaintList = () => {
+  const dispatch = useDispatch();
+
   const { loading, error, productComplaints } = useSelector(
     (state) => state.customer,
   );
-  const dispatch = useDispatch();
+
+  const complaint_Pagination =
+    useSelector((state) => state.customer.complaint_Pagination) || {};
+  const { page = 1, total_pages = 1 } = complaint_Pagination;
 
   const [selectedProductsId, setSelectedProductsId] = useState([]);
   const [selectedProductId, setSelectedProductId] = useState(null);
 
-  const handleSelectAll = (e) => {
-    setSelectedProductsId(
-      e.target.checked ? productComplaints.map((p) => p.id) : [],
-    );
-  };
+  // ── Fetch helper ─────────────────────────────────────────────────────────
+  const fetchPage = useCallback(
+    (p = 1) => dispatch(allProductComplaints({ page: p })),
+    [dispatch],
+  );
 
-  const handleSelectProduct = (e, id) => {
-    setSelectedProductsId((prev) =>
-      e.target.checked ? [...prev, id] : prev.filter((i) => i !== id),
-    );
-  };
-
-  const handleMultipleDelete = () => {
-    if (!selectedProductsId.length) return;
-    dispatch(
-      deleteMultipleProductComplaints({
-        complaint_ids: selectedProductsId,
-        enqueueSnackbar,
-      }),
-    ).then(() => dispatch(allProductComplaints()));
+  // ── Pagination ────────────────────────────────────────────────────────────
+  const handlePageChange = (newPage) => {
     setSelectedProductsId([]);
+    fetchPage(newPage);
   };
 
-  const handleOpenModal = (id) => setSelectedProductId(id);
-  const handleCloseModal = () => setSelectedProductId(null);
-  const handleReset = () => {
-    setSelectedProductId(null);
-    setSelectedProductsId([]);
-    dispatch(allProductComplaints());
-  };
-
-  const handleDeleteConfirm = () => {
-    if (selectedProductId == null) return;
-    dispatch(
-      deleteProductComplaint({
-        complaint_id: selectedProductId,
-        enqueueSnackbar,
-      }),
-    );
-    setSelectedProductId(null);
-  };
-
-  useEffect(() => {
-    if (error) dispatch(clearCustomerError());
-  }, [dispatch, error]);
-
-  useEffect(() => {
-    dispatch(allProductComplaints());
-  }, [dispatch]);
-
+  // ── Selection ─────────────────────────────────────────────────────────────
   const allSelected =
     productComplaints?.length > 0 &&
     selectedProductsId.length === productComplaints.length;
@@ -86,9 +55,63 @@ const ProductComplaintList = () => {
     selectedProductsId.length > 0 &&
     selectedProductsId.length < (productComplaints?.length ?? 0);
 
+  const handleSelectAll = (e) =>
+    setSelectedProductsId(
+      e.target.checked ? productComplaints.map((p) => p.id) : [],
+    );
+
+  const handleSelectProduct = (e, id) =>
+    setSelectedProductsId((prev) =>
+      e.target.checked ? [...prev, id] : prev.filter((i) => i !== id),
+    );
+
+  // ── Bulk delete ───────────────────────────────────────────────────────────
+  const handleMultipleDelete = () => {
+    if (!selectedProductsId.length) return;
+    dispatch(
+      deleteMultipleProductComplaints({
+        complaint_ids: selectedProductsId,
+        enqueueSnackbar,
+      }),
+    ).then(() => fetchPage(page));
+    setSelectedProductsId([]);
+  };
+
+  // ── Single delete ─────────────────────────────────────────────────────────
+  const handleOpenModal = (id) => setSelectedProductId(id);
+  const handleCloseModal = () => setSelectedProductId(null);
+
+  const handleDeleteConfirm = () => {
+    if (selectedProductId == null) return;
+    dispatch(
+      deleteProductComplaint({
+        complaint_id: selectedProductId,
+        enqueueSnackbar,
+      }),
+    ).then(() => fetchPage(page));
+    setSelectedProductId(null);
+  };
+
+  // ── Reset ─────────────────────────────────────────────────────────────────
+  const handleReset = () => {
+    setSelectedProductId(null);
+    setSelectedProductsId([]);
+    fetchPage(1);
+  };
+
+  // ── Effects ───────────────────────────────────────────────────────────────
+  useEffect(() => {
+    if (error) dispatch(clearCustomerError());
+  }, [dispatch, error]);
+
+  useEffect(() => {
+    fetchPage(1);
+  }, [fetchPage]);
+
+  // ── Render ────────────────────────────────────────────────────────────────
   return (
     <div className="font-gothamNarrow max-w-screen-2xl mx-auto px-4 py-6">
-      {/* ── Page Header ── */}
+      {/* Page Header */}
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 mb-5">
         <div className="flex items-center gap-3">
           <div className="w-10 h-10 rounded-xl bg-red-50 flex items-center justify-center flex-shrink-0">
@@ -96,10 +119,11 @@ const ProductComplaintList = () => {
           </div>
           <div>
             <h1 className="text-base font-semibold text-gray-900 tracking-tight">
-              Product complaints
+              Product Complaints
             </h1>
             <p className="text-xs text-gray-400 mt-0.5">
-              {productComplaints?.length ?? 0} complaints total
+              {productComplaints?.length ?? 0} complaints on this page
+              {total_pages > 1 && ` · page ${page} of ${total_pages}`}
             </p>
           </div>
         </div>
@@ -124,7 +148,7 @@ const ProductComplaintList = () => {
         </div>
       </div>
 
-      {/* ── Selected banner ── */}
+      {/* Selection banner */}
       {selectedProductsId.length > 0 && (
         <div className="flex items-center gap-2 mb-4 px-4 py-2.5 bg-red-50 border border-red-200 rounded-xl">
           <span className="w-2 h-2 rounded-full bg-red-400 animate-pulse" />
@@ -135,7 +159,7 @@ const ProductComplaintList = () => {
         </div>
       )}
 
-      {/* ── Table Card ── */}
+      {/* Table Card */}
       <div className="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden">
         <div className="overflow-x-auto">
           <table className="min-w-full">
@@ -149,14 +173,14 @@ const ProductComplaintList = () => {
                     }}
                     checked={allSelected}
                     onChange={handleSelectAll}
-                    className="w-3.5 h-3.5 cursor-pointer accent-red-500"
+                    className="w-3 h-3 cursor-pointer accent-red-500"
                   />
                 </th>
                 {[
-                  "S.N.",
+                  "#",
                   "Customer",
                   "Model",
-                  "Serial no.",
+                  "Serial No.",
                   "Damage",
                   "Date",
                   "Actions",
@@ -186,6 +210,7 @@ const ProductComplaintList = () => {
               ) : productComplaints?.length > 0 ? (
                 productComplaints.map((item, index) => {
                   const isSelected = selectedProductsId.includes(item.id);
+                  const rowNum = (page - 1) * 10 + index + 1;
                   return (
                     <tr
                       key={item.id}
@@ -197,16 +222,16 @@ const ProductComplaintList = () => {
                       <td className="px-4 py-3">
                         <input
                           type="checkbox"
-                          className="w-3.5 h-3.5 cursor-pointer accent-red-500"
+                          className="w-3 h-3 cursor-pointer accent-red-500"
                           checked={isSelected}
                           onChange={(e) => handleSelectProduct(e, item.id)}
                         />
                       </td>
 
-                      {/* S.N. */}
+                      {/* Row number */}
                       <td className="px-4 py-3">
-                        <span className="text-xs font-medium text-gray-400">
-                          {index + 1}
+                        <span className="text-xs font-medium text-gray-400 tabular-nums">
+                          {rowNum}
                         </span>
                       </td>
 
@@ -253,7 +278,7 @@ const ProductComplaintList = () => {
 
                       {/* Date */}
                       <td className="px-4 py-3 whitespace-nowrap">
-                        <span className="text-xs text-gray-400">
+                        <span className="text-xs text-gray-400 tabular-nums">
                           {moment(item.created_at || item.date_joined).format(
                             "D MMM YYYY",
                           )}
@@ -265,29 +290,32 @@ const ProductComplaintList = () => {
                         <div className="flex items-center gap-1.5">
                           <Link
                             to={`/baltra-admin-dashboard/single-product-complaint/${item.id}`}
-                            className="w-7 h-7 rounded-lg bg-sky-50 border border-sky-100 flex items-center justify-center hover:bg-sky-100 transition-colors"
+                            className="w-7 h-7 rounded-lg bg-sky-50 border border-sky-100 flex items-center justify-center hover:bg-sky-500 hover:text-white hover:border-sky-500 transition-all group"
                             title="View"
                           >
-                            <HiOutlineEye size={13} className="text-sky-500" />
+                            <HiOutlineEye
+                              size={13}
+                              className="text-sky-500 group-hover:text-white"
+                            />
                           </Link>
                           <Link
                             to={`/baltra-admin-dashboard/edit-product-complaint/${item.id}`}
-                            className="w-7 h-7 rounded-lg bg-emerald-50 border border-emerald-100 flex items-center justify-center hover:bg-emerald-100 transition-colors"
+                            className="w-7 h-7 rounded-lg bg-emerald-50 border border-emerald-100 flex items-center justify-center hover:bg-emerald-500 hover:border-emerald-500 transition-all group"
                             title="Edit"
                           >
                             <HiOutlinePencilSquare
                               size={13}
-                              className="text-emerald-500"
+                              className="text-emerald-500 group-hover:text-white"
                             />
                           </Link>
                           <button
                             onClick={() => handleOpenModal(item.id)}
-                            className="w-7 h-7 rounded-lg bg-red-50 border border-red-100 flex items-center justify-center hover:bg-red-100 transition-colors"
+                            className="w-7 h-7 rounded-lg bg-red-50 border border-red-100 flex items-center justify-center hover:bg-red-500 hover:border-red-500 transition-all group"
                             title="Delete"
                           >
                             <HiOutlineTrash
                               size={13}
-                              className="text-red-500"
+                              className="text-red-500 group-hover:text-white"
                             />
                           </button>
                         </div>
@@ -322,6 +350,34 @@ const ProductComplaintList = () => {
             </tbody>
           </table>
         </div>
+
+        {/* Footer + Pagination */}
+        {productComplaints?.length > 0 && (
+          <div className="px-5 py-3.5 border-t border-gray-100 bg-gray-50/50 flex items-center justify-between flex-wrap gap-3">
+            <span className="text-xs text-gray-400">
+              {productComplaints.length} record
+              {productComplaints.length !== 1 ? "s" : ""} on this page
+              {selectedProductsId.length > 0 && (
+                <span className="ml-2 text-red-500 font-medium">
+                  · {selectedProductsId.length} selected
+                </span>
+              )}
+            </span>
+
+            {total_pages > 1 && (
+              <div className="flex items-center gap-3">
+                <span className="text-xs text-gray-400 font-medium hidden sm:block">
+                  Page {page} of {total_pages}
+                </span>
+                <CustomPagination
+                  currentPage={page}
+                  totalPages={total_pages}
+                  onPageChange={handlePageChange}
+                />
+              </div>
+            )}
+          </div>
+        )}
       </div>
     </div>
   );

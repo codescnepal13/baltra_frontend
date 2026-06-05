@@ -1,7 +1,7 @@
 import { useSnackbar } from "notistack";
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import { Controller, useForm } from "react-hook-form";
-import { FaSyncAlt, FaUserShield } from "react-icons/fa";
+import { FaEye, FaEyeSlash, FaSyncAlt, FaUserShield } from "react-icons/fa";
 import { useDispatch, useSelector } from "react-redux";
 import { Link, useNavigate } from "react-router-dom";
 import {
@@ -22,17 +22,7 @@ const ROLES = [
     activeBg: "bg-red-50",
     dot: "bg-red-500 border-red-500",
   },
-  {
-    value: "customer",
-    label: "Customer",
-    desc: "Basic platform access",
-    icon: "👤",
-    color: "text-blue-500",
-    bg: "bg-blue-50",
-    border: "border-blue-400",
-    activeBg: "bg-blue-50",
-    dot: "bg-blue-500 border-blue-500",
-  },
+
   {
     value: "product_incharge",
     label: "Product Incharge",
@@ -92,6 +82,15 @@ const Field = ({ label, error, children, optional }) => (
   </div>
 );
 
+/* ─── PasswordField — input with show/hide toggle ────────────────────────── */
+const PasswordField = ({ label, error, children }) => (
+  <div>
+    <label className={labelCls}>{label}</label>
+    {children}
+    <FieldError message={error?.message} />
+  </div>
+);
+
 /* ══════════════════════════════════════════════════════════════════════════
    AddRole
 ══════════════════════════════════════════════════════════════════════════ */
@@ -100,6 +99,10 @@ const AddRole = () => {
   const navigate = useNavigate();
   const { enqueueSnackbar } = useSnackbar();
   const { loading, error } = useSelector((state) => state.admin);
+
+  // show/hide toggles for the two password fields
+  const [showPassword, setShowPassword] = useState(false);
+  const [showConfirm, setShowConfirm] = useState(false);
 
   const {
     register,
@@ -110,20 +113,18 @@ const AddRole = () => {
     formState: { errors, isSubmitting },
   } = useForm({
     defaultValues: {
-      firstName: "",
-      lastName: "",
+      firstname: "",
+      lastname: "",
       email: "",
-      mobile: "",
-      gender: "",
-      dob: "",
-      district: "",
-      city: "",
-      address: "",
+      contact: "",
+      password: "",
+      confirmPassword: "",
       role: "",
     },
   });
 
   const selectedRole = watch("role");
+  const passwordValue = watch("password"); // used for confirmPassword cross-validation
 
   /* ── Redux error → snackbar ────────────────────────────────────────── */
   useEffect(() => {
@@ -135,22 +136,20 @@ const AddRole = () => {
 
   /* ── Submit ────────────────────────────────────────────────────────── */
   const onSubmit = (data) => {
-    // Strip empty optional fields so the API doesn't receive empty strings
+    // Remove confirmPassword — API doesn't need it
+    const { confirmPassword, ...rest } = data;
     const formData = Object.fromEntries(
-      Object.entries(data).filter(([, v]) => v !== ""),
+      Object.entries(rest).filter(([, v]) => v !== ""),
     );
-
-    dispatch(
-      assignRoleByAdmin({
-        formData,
-        enqueueSnackbar,
-        navigate,
-      }),
-    );
+    dispatch(assignRoleByAdmin({ formData, enqueueSnackbar, navigate }));
   };
 
   /* ── Reset ─────────────────────────────────────────────────────────── */
-  const handleReset = () => reset();
+  const handleReset = () => {
+    reset();
+    setShowPassword(false);
+    setShowConfirm(false);
+  };
 
   /* ────────────────────────────────────────────────────────────────────── */
 
@@ -175,7 +174,7 @@ const AddRole = () => {
       </div>
 
       {/* Form card */}
-      <div className="bg-white rounded-xl border border-gray-200 overflow-hidden">
+      <div className="bg-white rounded-xl border border-gray-200">
         {/* Card header */}
         <div className="flex items-center gap-3 px-5 py-4 border-b border-gray-100">
           <div className="w-8 h-8 rounded-lg bg-red-50 flex items-center justify-center text-sm">
@@ -198,25 +197,25 @@ const AddRole = () => {
         >
           {/* ── Name ─────────────────────────────────────────────────── */}
           <div className="grid grid-cols-2 gap-4">
-            <Field label="First Name" error={errors.firstName}>
+            <Field label="First Name" error={errors.firstname}>
               <input
-                {...register("firstName", {
+                {...register("firstname", {
                   required: "First name is required",
                   minLength: { value: 2, message: "At least 2 characters" },
                 })}
                 placeholder="e.g. Aarav"
-                className={inputCls(errors.firstName)}
+                className={inputCls(errors.firstname)}
               />
             </Field>
 
-            <Field label="Last Name" error={errors.lastName}>
+            <Field label="Last Name" error={errors.lastname}>
               <input
-                {...register("lastName", {
+                {...register("lastname", {
                   required: "Last name is required",
                   minLength: { value: 2, message: "At least 2 characters" },
                 })}
                 placeholder="e.g. Sharma"
-                className={inputCls(errors.lastName)}
+                className={inputCls(errors.lastname)}
               />
             </Field>
           </div>
@@ -238,9 +237,9 @@ const AddRole = () => {
               />
             </Field>
 
-            <Field label="Mobile Number" error={errors.mobile}>
+            <Field label="Mobile Number" error={errors.contact}>
               <input
-                {...register("mobile", {
+                {...register("contact", {
                   required: "Mobile number is required",
                   pattern: {
                     value: /^[0-9]{10}$/,
@@ -249,72 +248,76 @@ const AddRole = () => {
                 })}
                 placeholder="98XXXXXXXX"
                 maxLength={10}
-                className={inputCls(errors.mobile)}
+                className={inputCls(errors.contact)}
               />
             </Field>
           </div>
 
-          {/* ── Gender & DOB (optional) ──────────────────────────────── */}
+          <hr className="border-gray-100" />
+
+          {/* ── Password & Confirm Password ──────────────────────────── */}
           <div className="grid grid-cols-2 gap-4">
-            <Field label="Gender" error={errors.gender} optional>
-              <select
-                {...register("gender")}
-                className={inputCls(errors.gender)}
-              >
-                <option value="">Select gender</option>
-                <option value="Male">Male</option>
-                <option value="Female">Female</option>
-                <option value="Other">Other</option>
-              </select>
-            </Field>
+            <PasswordField label="Password" error={errors.password}>
+              <div className="relative">
+                <input
+                  type={showPassword ? "text" : "password"}
+                  {...register("password", {
+                    required: "Password is required",
+                    minLength: {
+                      value: 8,
+                      message: "At least 8 characters",
+                    },
+                    pattern: {
+                      value: /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)/,
+                      message: "Must include uppercase, lowercase & number",
+                    },
+                  })}
+                  placeholder="Min. 8 characters"
+                  className={`${inputCls(errors.password)} pr-9`}
+                />
+                <button
+                  type="button"
+                  onClick={() => setShowPassword((v) => !v)}
+                  className="absolute right-2.5 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600 transition-colors"
+                  tabIndex={-1}
+                  aria-label={showPassword ? "Hide password" : "Show password"}
+                >
+                  {showPassword ? (
+                    <FaEyeSlash size={13} />
+                  ) : (
+                    <FaEye size={13} />
+                  )}
+                </button>
+              </div>
+            </PasswordField>
 
-            <Field label="Date of Birth" error={errors.dob} optional>
-              <input
-                type="date"
-                {...register("dob", {
-                  validate: (v) => {
-                    if (!v) return true; // optional
-                    const d = new Date(v);
-                    const now = new Date();
-                    if (d >= now) return "DOB must be in the past";
-                    const age = now.getFullYear() - d.getFullYear();
-                    if (age > 120) return "Enter a valid date of birth";
-                    return true;
-                  },
-                })}
-                max={new Date().toISOString().split("T")[0]}
-                className={inputCls(errors.dob)}
-              />
-            </Field>
+            <PasswordField
+              label="Confirm Password"
+              error={errors.confirmPassword}
+            >
+              <div className="relative">
+                <input
+                  type={showConfirm ? "text" : "password"}
+                  {...register("confirmPassword", {
+                    required: "Please confirm your password",
+                    validate: (v) =>
+                      v === passwordValue || "Passwords do not match",
+                  })}
+                  placeholder="Re-enter password"
+                  className={`${inputCls(errors.confirmPassword)} pr-9`}
+                />
+                <button
+                  type="button"
+                  onClick={() => setShowConfirm((v) => !v)}
+                  className="absolute right-2.5 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600 transition-colors"
+                  tabIndex={-1}
+                  aria-label={showConfirm ? "Hide password" : "Show password"}
+                >
+                  {showConfirm ? <FaEyeSlash size={13} /> : <FaEye size={13} />}
+                </button>
+              </div>
+            </PasswordField>
           </div>
-
-          {/* ── District & City (optional) ───────────────────────────── */}
-          <div className="grid grid-cols-2 gap-4">
-            <Field label="District" error={errors.district} optional>
-              <input
-                {...register("district")}
-                placeholder="e.g. Kathmandu"
-                className={inputCls(errors.district)}
-              />
-            </Field>
-
-            <Field label="City" error={errors.city} optional>
-              <input
-                {...register("city")}
-                placeholder="e.g. Kathmandu"
-                className={inputCls(errors.city)}
-              />
-            </Field>
-          </div>
-
-          {/* ── Address (optional) ──────────────────────────────────── */}
-          <Field label="Address" error={errors.address} optional>
-            <input
-              {...register("address")}
-              placeholder="Street address, Ward no."
-              className={inputCls(errors.address)}
-            />
-          </Field>
 
           <hr className="border-gray-100" />
 

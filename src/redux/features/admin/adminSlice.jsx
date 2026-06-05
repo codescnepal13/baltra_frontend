@@ -1100,7 +1100,7 @@ export const assignRoleByAdmin = createAsyncThunk(
   "/admin/assign-role",
   async ({ formData, enqueueSnackbar, navigate }, { rejectWithValue }) => {
     try {
-      const response = await API.post(`/users/assign-role`, formData);
+      const response = await API.post(`/user/createuser`, formData);
       enqueueSnackbar(response.data.message || "role assigned successFully!", {
         variant: "success",
       });
@@ -1108,6 +1108,86 @@ export const assignRoleByAdmin = createAsyncThunk(
       return response.data;
     } catch (error) {
       return rejectWithValue({ message: getErrorMessage(error) });
+    }
+  },
+);
+
+//allRoleListAdmin
+
+export const allRoleListAdmin = createAsyncThunk(
+  "/admin/allRoleListAdmin",
+  async ({ serial_number, page } = {}, { rejectWithValue }) => {
+    try {
+      let queryParams = new URLSearchParams();
+      if (serial_number) queryParams.append("serial_number", serial_number);
+      if (page) queryParams.append("page", page);
+
+      const response = await API.get(
+        `/user/getallusers${
+          queryParams.toString() ? `?${queryParams.toString()}` : ""
+        }`,
+      );
+
+      return response.data;
+    } catch (error) {
+      return rejectWithValue({ message: getErrorMessage(error) });
+    }
+  },
+);
+
+//deleteMultipleUserRole
+
+export const deleteMultipleUserRole = createAsyncThunk(
+  "/admin/deleteMultipleUserRole",
+  async ({ user_ids, enqueueSnackbar }, { rejectWithValue }) => {
+    try {
+      const response = await API.delete("/user/deleteusers", {
+        data: { user_ids }, // body: { user_ids: [...] }
+      });
+
+      const message =
+        user_ids.length === 1
+          ? "User deleted successfully!"
+          : `${user_ids.length} users deleted successfully!`;
+
+      enqueueSnackbar(response.data.message || message, {
+        variant: "success",
+      });
+
+      return response.data;
+    } catch (error) {
+      return rejectWithValue({ message: getErrorMessage(error) });
+    }
+  },
+);
+
+//EditUserRole
+
+export const EditUserRole = createAsyncThunk(
+  "admin/EditUserRole",
+  async ({ id, formData, enqueueSnackbar, navigate }, { rejectWithValue }) => {
+    try {
+      const response = await API.put(`/user/updateuser/${id}`, formData);
+      enqueueSnackbar(response.data.message || "User updated successfully!", {
+        variant: "success",
+      });
+      navigate("/baltra-admin-dashboard/all/manage-roles");
+      return response.data;
+    } catch (error) {
+      return rejectWithValue({ message: error.message });
+    }
+  },
+);
+
+//getSingleUserRole
+export const getSingleUserRole = createAsyncThunk(
+  "admin/getSingleUserRole",
+  async (id, { rejectWithValue }) => {
+    try {
+      const response = await API.get(`/user/getuserbyid/${id}`);
+      return response.data;
+    } catch (error) {
+      return rejectWithValue({ message: error.message });
     }
   },
 );
@@ -1216,6 +1296,90 @@ const adminSlice = createSlice({
       .addCase(assignRoleByAdmin.rejected, (state, action) => {
         state.loading = false;
         state.error = action.payload.message;
+      })
+
+      .addCase(allRoleListAdmin.pending, (state) => {
+        state.loading = true;
+      })
+      .addCase(allRoleListAdmin.fulfilled, (state, action) => {
+        state.loading = false;
+        state.userRoleList = action.payload.data;
+        state.userRolePagination = action.payload.userPagination;
+      })
+      .addCase(allRoleListAdmin.rejected, (state, action) => {
+        state.loading = false;
+        state.error = action.payload.message;
+      })
+      .addCase(getSingleUserRole.pending, (state) => {
+        state.loading = true;
+      })
+      .addCase(getSingleUserRole.fulfilled, (state, action) => {
+        state.loading = false;
+        state.userRole = action.payload.data;
+      })
+      .addCase(getSingleUserRole.rejected, (state, action) => {
+        state.loading = false;
+        state.error = action.payload.message;
+      })
+
+      .addCase(deleteMultipleUserRole.pending, (state) => {
+        state.isProcessing = true;
+      })
+      .addCase(deleteMultipleUserRole.fulfilled, (state, action) => {
+        state.isProcessing = false;
+
+        const { user_ids } = action.meta.arg;
+
+        if (Array.isArray(user_ids) && user_ids.length > 0) {
+          // Remove deleted users from the current page list
+          state.userRoleList = state.userRoleList.filter(
+            (item) => !user_ids.includes(item.id),
+          );
+
+          // Update pagination totals and clamp page if needed
+          if (state.userRolePagination) {
+            const prev = state.userRolePagination;
+            const newTotalResults = Math.max(
+              0,
+              (prev.total_results ?? 0) - user_ids.length,
+            );
+            const perPage = prev.results_per_page ?? 8;
+            const newTotalPages = Math.max(
+              1,
+              Math.ceil(newTotalResults / perPage),
+            );
+
+            state.userRolePagination = {
+              ...prev,
+              total_results: newTotalResults,
+              total_pages: newTotalPages,
+              page: Math.min(prev.page ?? 1, newTotalPages), // go back if page no longer exists
+            };
+          }
+        }
+      })
+      .addCase(deleteMultipleUserRole.rejected, (state, action) => {
+        state.isProcessing = false;
+        state.error = action.payload.message;
+      })
+
+      .addCase(EditUserRole.pending, (state) => {
+        state.isLoading = true;
+      })
+      .addCase(EditUserRole.fulfilled, (state, action) => {
+        state.isLoading = false;
+        const {
+          arg: { id },
+        } = action.meta;
+        if (id) {
+          state.userRoleList = state.userRoleList.map((item) =>
+            item.id === id ? action.payload : item,
+          );
+        }
+      })
+      .addCase(EditUserRole.rejected, (state, action) => {
+        state.isLoading = false;
+        state.isError = action.payload.message;
       })
 
       .addCase(getAllCustomerList.pending, (state) => {

@@ -277,7 +277,7 @@ const AllCustomerList = () => {
                     type="checkbox"
                     checked={allSelected}
                     onChange={handleSelectAll}
-                    className="accent-white w-3.5 h-3.5 rounded cursor-pointer"
+                    className="accent-white w-3 h-3 rounded cursor-pointer"
                   />
                 </th>
                 {[
@@ -328,7 +328,7 @@ const AllCustomerList = () => {
                           type="checkbox"
                           checked={isSelected}
                           onChange={(e) => handleSelectCustomer(e, c.id)}
-                          className="accent-red-500 w-3.5 h-3.5 cursor-pointer"
+                          className="accent-red-500 w-3 h-3 cursor-pointer"
                         />
                       </td>
 

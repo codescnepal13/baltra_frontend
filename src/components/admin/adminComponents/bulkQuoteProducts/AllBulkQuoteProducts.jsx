@@ -68,7 +68,6 @@ const BulkQuoteModal = ({ quoteId, onClose }) => {
       onClick={(e) => e.target === e.currentTarget && onClose()}
     >
       <div className="bg-white rounded-2xl border border-gray-100 w-full max-w-lg overflow-hidden shadow-sm">
-        {/* Header */}
         <div className="px-6 py-5 border-b border-gray-100 flex items-start justify-between">
           <div>
             <h2 className="text-lg font-medium text-gray-900">
@@ -93,7 +92,6 @@ const BulkQuoteModal = ({ quoteId, onClose }) => {
           </button>
         </div>
 
-        {/* Body */}
         {loading || !d ? (
           <div className="py-16 flex items-center justify-center">
             <div className="w-5 h-5 border-2 border-gray-200 border-t-red-500 rounded-full animate-spin" />
@@ -101,14 +99,12 @@ const BulkQuoteModal = ({ quoteId, onClose }) => {
         ) : (
           <div className="px-6 py-5">
             <div className="grid grid-cols-2 divide-x divide-gray-100">
-              {/* Left col */}
               <div className="pr-5 space-y-4">
                 <Field label="Customer name" value={d.customer_name} />
                 <Field label="Contact" value={`+977-${d.contact}`} mono />
                 <Field label="Model name" value={d.model_name} />
                 <Field label="Model number" value={d.model_num} mono />
               </div>
-              {/* Right col */}
               <div className="pl-5 space-y-4">
                 <Field
                   label="Quantity"
@@ -130,8 +126,6 @@ const BulkQuoteModal = ({ quoteId, onClose }) => {
                 />
               </div>
             </div>
-
-            {/* Description — full width */}
             {d.description && (
               <div className="mt-4 pt-4 border-t border-gray-100">
                 <p className="text-[11px] font-medium text-gray-400 uppercase tracking-wider mb-1.5">
@@ -145,7 +139,6 @@ const BulkQuoteModal = ({ quoteId, onClose }) => {
           </div>
         )}
 
-        {/* Footer */}
         <div className="px-6 py-4 border-t border-gray-100 flex justify-end">
           <button
             onClick={onClose}
@@ -159,7 +152,6 @@ const BulkQuoteModal = ({ quoteId, onClose }) => {
   );
 };
 
-// tiny helper used inside modal
 const Field = ({ label, value, mono, small }) => (
   <div>
     <p className="text-[11px] font-medium text-gray-400 uppercase tracking-wider mb-1">
@@ -186,10 +178,48 @@ const AllBulkQuoteProducts = () => {
   } = useSelector((s) => s.admin.bulkPagination) || {};
 
   const [selectStatus, setSelectStatus] = useState("All");
-  const [viewQuoteId, setViewQuoteId] = useState(null); // for detail modal
+  const [viewQuoteId, setViewQuoteId] = useState(null);
   const [selectedBulkQuoteId, setSelectedBulkQuoteId] = useState(null);
   const [selectedItem, setSelectedItem] = useState(null);
   const [openBulkModal, setOpenBulkModal] = useState(false);
+
+  // ── checkbox state ────────────────────────────────────────────────────────
+  const [checkedIds, setCheckedIds] = useState(new Set());
+
+  const allIds = useMemo(
+    () => new Set((bulkQuoteProducts || []).map((r) => r.quote_id)),
+    [bulkQuoteProducts],
+  );
+  const isAllChecked = checkedIds.size > 0 && checkedIds.size === allIds.size;
+  const isIndeterminate = checkedIds.size > 0 && checkedIds.size < allIds.size;
+
+  const toggleAll = useCallback(() => {
+    setCheckedIds((prev) =>
+      prev.size === allIds.size ? new Set() : new Set(allIds),
+    );
+  }, [allIds]);
+
+  const toggleOne = useCallback((id) => {
+    setCheckedIds((prev) => {
+      const next = new Set(prev);
+      next.has(id) ? next.delete(id) : next.add(id);
+      return next;
+    });
+  }, []);
+
+  const clearChecked = useCallback(() => setCheckedIds(new Set()), []);
+
+  // reset selection on page/filter change
+  useEffect(() => {
+    setCheckedIds(new Set());
+  }, [bulkQuoteProducts]);
+
+  const handleBulkDelete = useCallback(() => {
+    checkedIds.forEach((id) =>
+      dispatch(deleteBulkQuoteProduct({ quote_id: id, enqueueSnackbar })),
+    );
+    clearChecked();
+  }, [dispatch, checkedIds, clearChecked]);
 
   const handleOpenStatusModal = useCallback((item) => {
     setSelectedItem(item);
@@ -207,7 +237,6 @@ const AllBulkQuoteProducts = () => {
     () => setSelectedBulkQuoteId(null),
     [],
   );
-
   const handleDeleteConfirm = useCallback(() => {
     if (selectedBulkQuoteId) {
       dispatch(
@@ -221,17 +250,15 @@ const AllBulkQuoteProducts = () => {
   }, [dispatch, selectedBulkQuoteId]);
 
   const handlePageChange = useCallback(
-    (newPage) => {
+    (newPage) =>
       dispatch(
         allBulkQuoteProducts({
           status: selectStatus === "All" ? "" : selectStatus,
           page: newPage,
         }),
-      );
-    },
+      ),
     [dispatch, selectStatus],
   );
-
   const handleReset = useCallback(() => {
     setSelectStatus("All");
     dispatch(allBulkQuoteProducts({ status: "" }));
@@ -259,7 +286,7 @@ const AllBulkQuoteProducts = () => {
     if (!bulkQuoteProducts?.length)
       return (
         <tr>
-          <td colSpan={9} className="text-center py-16 text-sm text-gray-400">
+          <td colSpan={10} className="text-center py-16 text-sm text-gray-400">
             No results found.
           </td>
         </tr>
@@ -267,16 +294,30 @@ const AllBulkQuoteProducts = () => {
 
     return bulkQuoteProducts.map((item, index) => {
       const av = AVATAR[item.status] || { bg: "#E6F1FB", color: "#0C447C" };
+      const checked = checkedIds.has(item.quote_id);
+
       return (
         <tr
           key={item.quote_id}
-          className="border-b border-gray-100 last:border-b-0 hover:bg-red-50/40 transition-colors cursor-pointer"
+          className={`border-b border-gray-100 last:border-b-0 transition-colors cursor-pointer
+            ${checked ? "bg-red-50/60" : "hover:bg-red-50/40"}`}
           onClick={() => setViewQuoteId(item.quote_id)}
         >
-          <td className="px-4 py-3 text-xs text-gray-400">
+          {/* Checkbox */}
+          <td className="pl-4 pr-1 py-2" onClick={(e) => e.stopPropagation()}>
+            <input
+              type="checkbox"
+              checked={checked}
+              onChange={() => toggleOne(item.quote_id)}
+              className="w-3 h-3 accent-red-600 cursor-pointer"
+              aria-label={`Select ${item.customer_name}`}
+            />
+          </td>
+
+          <td className="px-4 py-2 text-xs text-gray-400">
             {(page - 1) * results_per_page + index + 1}
           </td>
-          <td className="px-4 py-3">
+          <td className="px-4 py-2">
             <div className="flex items-center gap-2">
               <div
                 className="w-7 h-7 rounded-full flex items-center justify-center text-[11px] font-medium flex-shrink-0"
@@ -289,15 +330,15 @@ const AllBulkQuoteProducts = () => {
               </span>
             </div>
           </td>
-          <td className="px-4 py-3 text-sm text-gray-500">{item.model_name}</td>
-          <td className="px-4 py-3 text-xs text-gray-500 font-mono">
+          <td className="px-4 py-2 text-sm text-gray-500">{item.model_name}</td>
+          <td className="px-4 py-2 text-xs text-gray-500 font-mono">
             {item.model_num}
           </td>
-          <td className="px-4 py-3 text-sm text-gray-500">{item.contact}</td>
-          <td className="px-4 py-3 text-sm font-mono font-medium text-gray-800">
+          <td className="px-4 py-2 text-sm text-gray-500">{item.contact}</td>
+          <td className="px-4 py-2 text-sm font-mono font-medium text-gray-800">
             {Number(item.quantity).toLocaleString()}
           </td>
-          <td className="px-4 py-3" onClick={(e) => e.stopPropagation()}>
+          <td className="px-4 py-2" onClick={(e) => e.stopPropagation()}>
             <StatusBadge
               status={item.status}
               onClick={
@@ -307,24 +348,41 @@ const AllBulkQuoteProducts = () => {
               }
             />
           </td>
-          <td className="px-4 py-3 text-xs text-gray-400 whitespace-nowrap">
+          <td className="px-4 py-2 text-xs text-gray-400 whitespace-nowrap">
             {moment(item.created_at).format("ddd, D MMM YYYY")}
           </td>
-          <td className="px-4 py-3" onClick={(e) => e.stopPropagation()}>
+          <td className="px-4 py-2" onClick={(e) => e.stopPropagation()}>
             <div className="flex items-center gap-2">
               <button
                 onClick={() => setViewQuoteId(item.quote_id)}
-                className="w-7 h-7 flex items-center justify-center rounded-lg border border-gray-200 text-gray-400 hover:bg-red-50 hover:border-red-200 hover:text-red-600 transition-colors"
+                className="
+        w-8 h-8
+        flex items-center justify-center
+        rounded-lg
+        border border-gray-200
+        text-gray-500
+        hover:bg-red-50 hover:border-red-200 hover:text-red-600
+        transition-colors
+      "
                 aria-label="View"
               >
-                <FaEye />
+                <FaEye className="w-3 h-3" />
               </button>
+
               <button
                 onClick={() => handleOpenDeleteModal(item.quote_id)}
-                className="w-7 h-7 flex items-center justify-center rounded-lg border border-gray-200 text-gray-400 hover:bg-red-50 hover:border-red-200 hover:text-red-600 transition-colors"
+                className="
+        w-8 h-8
+        flex items-center justify-center
+        rounded-lg
+        border border-gray-200
+        text-gray-500
+        hover:bg-red-50 hover:border-red-200 hover:text-red-600
+        transition-colors
+      "
                 aria-label="Delete"
               >
-                <FaTrashAlt />
+                <FaTrashAlt className="w-3 h-3" />
               </button>
             </div>
           </td>
@@ -335,6 +393,8 @@ const AllBulkQuoteProducts = () => {
     bulkQuoteProducts,
     page,
     results_per_page,
+    checkedIds,
+    toggleOne,
     handleOpenStatusModal,
     handleOpenDeleteModal,
   ]);
@@ -360,7 +420,8 @@ const AllBulkQuoteProducts = () => {
           </svg>
           <p className="text-xs text-red-800 leading-relaxed">
             Click any row or the view button to open full quote details. Click a
-            pending or rejected status badge to approve or reject it.
+            pending or rejected status badge to approve or reject it. Use
+            checkboxes to bulk-delete.
           </p>
         </div>
 
@@ -407,10 +468,45 @@ const AllBulkQuoteProducts = () => {
 
         {/* Table */}
         <div className="bg-white border border-gray-100 rounded-xl overflow-hidden">
+          {/* Bulk action bar — only visible when rows are checked */}
+          {checkedIds.size > 0 && (
+            <div className="flex items-center gap-3 px-4 py-2 bg-red-50 border-b border-red-100">
+              <span className="text-xs font-medium text-red-700">
+                {checkedIds.size} selected
+              </span>
+              <button
+                onClick={handleBulkDelete}
+                className="inline-flex items-center gap-1.5 text-xs px-3 py-1.5 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors font-medium"
+              >
+                <FaTrashAlt className="text-[10px]" />
+                Delete selected
+              </button>
+              <button
+                onClick={clearChecked}
+                className="text-xs text-gray-400 hover:text-gray-600 transition-colors"
+              >
+                Clear
+              </button>
+            </div>
+          )}
+
           <div className="overflow-x-auto">
             <table className="min-w-full border-collapse">
               <thead>
                 <tr className="bg-gray-50 border-b border-gray-100">
+                  {/* Select-all */}
+                  <th className="pl-4 pr-1 py-2.5 w-8">
+                    <input
+                      type="checkbox"
+                      checked={isAllChecked}
+                      ref={(el) => {
+                        if (el) el.indeterminate = isIndeterminate;
+                      }}
+                      onChange={toggleAll}
+                      className="w-3 h-3 accent-red-600 cursor-pointer"
+                      aria-label="Select all"
+                    />
+                  </th>
                   {[
                     "#",
                     "Customer",
@@ -434,7 +530,7 @@ const AllBulkQuoteProducts = () => {
               <tbody>
                 {loading ? (
                   <tr>
-                    <td colSpan={9} className="text-center py-16">
+                    <td colSpan={10} className="text-center py-16">
                       <div className="inline-block w-5 h-5 border-2 border-gray-200 border-t-red-500 rounded-full animate-spin" />
                     </td>
                   </tr>
@@ -444,11 +540,12 @@ const AllBulkQuoteProducts = () => {
               </tbody>
             </table>
           </div>
+
           {total_pages > 1 && (
-            <div className="px-4 py-3 border-t border-gray-100 flex items-center justify-between">
-              <span className="text-xs text-gray-400">
+            <div className="flex items-center justify-between px-5 py-4 border-t border-slate-100 bg-slate-50/50">
+              <p className="text-xs text-slate-400 font-medium">
                 Page {page} of {total_pages}
-              </span>
+              </p>
               <BulkQuotePagination
                 currentPage={page}
                 totalPages={total_pages}
@@ -459,14 +556,12 @@ const AllBulkQuoteProducts = () => {
         </div>
       </div>
 
-      {/* Detail modal — replaces SingleBulkQuote page */}
       {viewQuoteId && (
         <BulkQuoteModal
           quoteId={viewQuoteId}
           onClose={() => setViewQuoteId(null)}
         />
       )}
-
       {openBulkModal && selectedItem && (
         <BulkStatusModal item={selectedItem} onClose={handleCloseStatusModal} />
       )}

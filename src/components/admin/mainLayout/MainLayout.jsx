@@ -4,11 +4,11 @@ import {
   FiChevronsLeft,
   FiChevronsRight,
 } from "react-icons/fi";
-import { Link, useLocation, useNavigate } from "react-router-dom";
+import { Link, Outlet, useLocation, useNavigate } from "react-router-dom";
 import baltraAdminLogo from "../../../assets/images/baltraAdminLogo.png";
 import MetaData from "../../layout/metaData/MetaData";
 import AdminHeader from "../adminHeader/AdminHeader";
-import { items } from "../routes/MenuItems";
+import { useMenuItems } from "../routes/MenuItems";
 
 const SECTION_LABELS = {
   Dashboard: "Main",
@@ -28,12 +28,14 @@ const MainLayout = () => {
   const navigate = useNavigate();
   const location = useLocation();
 
-  const currentPath = location.pathname;
+  // ✅ Call the hook — returns menu filtered by logged-in user's role
+  const menuItems = useMenuItems();
 
+  const currentPath = location.pathname;
   const isDashboardActive = currentPath === "/baltra-admin-dashboard";
 
   const getActiveChild = () => {
-    for (const item of items) {
+    for (const item of menuItems) {
       if (item.children) {
         for (const child of item.children) {
           if (currentPath.includes(child.key.toLowerCase())) {
@@ -47,7 +49,7 @@ const MainLayout = () => {
 
   const getActiveParent = () => {
     if (isDashboardActive) return "/admin/dashboard";
-    for (const item of items) {
+    for (const item of menuItems) {
       if (item.children) {
         for (const child of item.children) {
           if (currentPath.includes(child.key.toLowerCase())) {
@@ -63,9 +65,7 @@ const MainLayout = () => {
   const activeChildKey = getActiveChild();
 
   useEffect(() => {
-    if (activeParentKey) {
-      setOpenParent(activeParentKey);
-    }
+    if (activeParentKey) setOpenParent(activeParentKey);
   }, [activeParentKey]);
 
   const toggleCollapsed = () => setCollapsed((prev) => !prev);
@@ -81,10 +81,11 @@ const MainLayout = () => {
 
   const latestFullYear = new Date().getFullYear();
 
-  // Build section-grouped list
   const renderedSections = [];
   let lastSection = null;
-  items.forEach((item, index) => {
+
+  // ✅ use menuItems instead of items
+  menuItems.forEach((item, index) => {
     const section = SECTION_LABELS[item.label] ?? null;
     if (section && section !== lastSection) {
       renderedSections.push({
@@ -100,15 +101,18 @@ const MainLayout = () => {
   return (
     <>
       <MetaData title="baltra-admin-dashboard" />
-      <div className="font-inter flex h-screen bg-gray-100">
+
+      <div className="font-inter flex h-screen bg-gray-100 overflow-hidden">
         {/* Sidebar */}
         <aside
           className={`
-            fixed inset-y-0 left-0 z-40 flex flex-col
-            bg-[#1f2029] transition-transform duration-300 ease-in-out
+            fixed inset-y-0 left-0 z-40 flex flex-col flex-shrink-0
+            bg-[#1f2029]
             w-56 xl:w-60 2xl:w-64
+            transition-transform duration-300 ease-in-out
+            overscroll-contain
             ${collapsed ? "-translate-x-full" : "translate-x-0"}
-            lg:static lg:translate-x-0 lg:inset-auto
+            lg:translate-x-0
           `}
         >
           {/* Logo */}
@@ -120,15 +124,14 @@ const MainLayout = () => {
                 className="h-7 w-auto"
               />
             </Link>
-            <p className="mt-2 text-[10px] font-medium tracking-[0.12em] uppercase text-white/25">
-              Admin Panel · v2.0.1
-            </p>
           </div>
 
-          {/* Nav */}
-          <nav className="flex-1 overflow-y-auto px-2.5 py-3 space-y-0.5">
+          {/* Navigation */}
+          <nav
+            className="flex-1 overflow-y-auto overscroll-contain px-2.5 py-3 space-y-0.5"
+            style={{ scrollbarWidth: "thin" }}
+          >
             {renderedSections.map((entry) => {
-              // Section label
               if (entry.type === "label") {
                 return (
                   <p
@@ -147,7 +150,6 @@ const MainLayout = () => {
 
               return (
                 <React.Fragment key={index}>
-                  {/* Parent row */}
                   <div
                     onClick={() => handleParentClick(item.key, item.label)}
                     className={`
@@ -161,11 +163,9 @@ const MainLayout = () => {
                       }
                     `}
                   >
-                    {/* Active indicator bar */}
                     {isThisParentActive && (
                       <span className="absolute left-0 top-1/2 -translate-y-1/2 w-[3px] h-5 bg-red-400 rounded-r-full" />
                     )}
-
                     {item.icon && (
                       <span className="w-4 text-center flex-shrink-0 text-base">
                         {item.icon}
@@ -174,18 +174,15 @@ const MainLayout = () => {
                     <span className="flex-1 whitespace-nowrap">
                       {item.label}
                     </span>
-
                     {!isDashboard && (
                       <FiChevronRight
-                        className={`
-                          w-3 h-3 opacity-40 transition-transform duration-200
-                          ${isOpen ? "rotate-90 opacity-70" : ""}
-                        `}
+                        className={`w-3 h-3 opacity-40 transition-transform duration-200 ${
+                          isOpen ? "rotate-90 opacity-70" : ""
+                        }`}
                       />
                     )}
                   </div>
 
-                  {/* Children */}
                   {!isDashboard && (
                     <div
                       className="overflow-hidden transition-all duration-300 ease-in-out"
@@ -200,7 +197,6 @@ const MainLayout = () => {
                           {item.children.map((child) => {
                             const childKey = child.key.toLowerCase();
                             const isChildActive = activeChildKey === childKey;
-
                             return (
                               <Link
                                 key={childKey}
@@ -216,12 +212,12 @@ const MainLayout = () => {
                                   }
                                 `}
                               >
-                                {/* Child icon (replaces bullet dot) */}
                                 <span
-                                  className={`
-                                    flex-shrink-0 text-[13px] transition-all
-                                    ${isChildActive ? "text-red-400" : "opacity-30"}
-                                  `}
+                                  className={`flex-shrink-0 text-[13px] transition-all ${
+                                    isChildActive
+                                      ? "text-red-400"
+                                      : "opacity-30"
+                                  }`}
                                 >
                                   {child.icon}
                                 </span>
@@ -246,16 +242,29 @@ const MainLayout = () => {
           </div>
         </aside>
 
-        {/* Main content */}
-        <div className="flex-1 flex flex-col overflow-hidden">
+        <div
+          className={`
+            flex flex-col flex-1 min-w-0 overflow-hidden
+            transition-[margin] duration-300 ease-in-out
+            ${collapsed ? "ml-0" : "ml-0 lg:ml-56 xl:ml-60 2xl:ml-64"}
+          `}
+        >
           <AdminHeader
             collapsed={collapsed}
             toggleCollapsed={toggleCollapsed}
           />
+          <main
+            className="flex-1 overflow-y-auto overscroll-contain"
+            style={{
+              scrollbarWidth: "none",
+              msOverflowStyle: "none",
+            }}
+          >
+            <Outlet />
+          </main>
         </div>
       </div>
 
-      {/* Mobile toggle */}
       <button
         onClick={toggleCollapsed}
         className="fixed left-0 top-0 z-50 p-4 cursor-pointer lg:hidden"

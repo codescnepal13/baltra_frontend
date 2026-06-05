@@ -1,10 +1,11 @@
 import { debounce } from "lodash";
 import moment from "moment";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
-import { HiOutlineRefresh, HiOutlineSearch } from "react-icons/hi";
 import {
+  HiOutlineArrowPath,
   HiOutlineClipboardDocumentList,
   HiOutlineEye,
+  HiOutlineMagnifyingGlass,
   HiOutlineTrash,
   HiOutlineXMark,
 } from "react-icons/hi2";
@@ -16,16 +17,12 @@ import {
 } from "../../../../redux/features/admin/adminSlice";
 import WarrantyComplaintPagination from "../adminPagination/warrantyComplaintPagination/WarrantyComplaintPagination";
 
-/* ─── Indeterminate checkbox ─────────────────────────────────────────────── */
+/* ── Indeterminate checkbox ─────────────────────────────────────────────── */
 const BCheckbox = ({ indeterminate = false, checked, onChange, disabled }) => {
   const ref = useRef(null);
-
   useEffect(() => {
-    if (ref.current) {
-      ref.current.indeterminate = Boolean(indeterminate);
-    }
+    if (ref.current) ref.current.indeterminate = Boolean(indeterminate);
   }, [indeterminate]);
-
   return (
     <input
       ref={ref}
@@ -33,38 +30,39 @@ const BCheckbox = ({ indeterminate = false, checked, onChange, disabled }) => {
       checked={checked}
       onChange={onChange}
       disabled={disabled}
-      className="
-        w-3 h-3 rounded cursor-pointer
-        border-2 border-slate-300
-        checked:bg-rose-500 checked:border-rose-500
-        indeterminate:bg-rose-400 indeterminate:border-rose-400
-        focus:ring-2 focus:ring-rose-300 focus:ring-offset-1
-        disabled:opacity-40 disabled:cursor-not-allowed
-        transition-colors accent-rose-500
-      "
+      className="w-3.5 h-3.5 rounded cursor-pointer accent-red-600 disabled:opacity-40 disabled:cursor-not-allowed"
     />
   );
 };
 
-/* ─── Status badge ───────────────────────────────────────────────────────── */
-const StatusBadge = ({ active }) =>
+/* ── Warranty status badge ──────────────────────────────────────────────── */
+const WarrantyBadge = ({ active }) =>
   active ? (
-    <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-emerald-50 border border-emerald-200 text-[11px] font-bold text-emerald-600 tracking-wide uppercase">
+    <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-emerald-50 border border-emerald-200 text-[11px] font-semibold text-emerald-700">
       <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
       Active
     </span>
   ) : (
-    <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-rose-50 border border-rose-200 text-[11px] font-bold text-rose-500 tracking-wide uppercase">
-      <span className="w-1.5 h-1.5 rounded-full bg-rose-400" />
+    <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-red-50 border border-red-200 text-[11px] font-semibold text-red-600">
+      <span className="w-1.5 h-1.5 rounded-full bg-red-400" />
       Expired
     </span>
   );
 
-/* ─── Column header ──────────────────────────────────────────────────────── */
-const ColHeader = ({ children }) => (
-  <th className="px-4 py-3.5 text-left text-[10px] font-extrabold uppercase tracking-widest text-slate-400 whitespace-nowrap select-none">
+/* ── Table header cell ──────────────────────────────────────────────────── */
+const Th = ({ children, checkbox }) => (
+  <th
+    className={`px-4 py-3 text-left text-[11px] font-semibold uppercase tracking-wider text-slate-400 whitespace-nowrap select-none ${
+      checkbox ? "w-10" : ""
+    }`}
+  >
     {children}
   </th>
+);
+
+/* ── Table data cell ────────────────────────────────────────────────────── */
+const Td = ({ children, className = "" }) => (
+  <td className={`px-4 py-3.5 align-middle ${className}`}>{children}</td>
 );
 
 /* ══════════════════════════════════════════════════════════════════════════
@@ -76,19 +74,16 @@ const TrackingComplaintStatusList = () => {
   const { loading, complaintStatus, error } = useSelector((s) => s.admin);
   const warrantyComplaintPagination =
     useSelector((s) => s.admin.warrantyComplaintPagination) ?? {};
-  const { page, total_pages, results_per_page } = warrantyComplaintPagination;
+  const {
+    page = 1,
+    total_pages = 1,
+    results_per_page = 10,
+  } = warrantyComplaintPagination;
 
   const [searchSerialNumber, setSearchSerialNumber] = useState("");
-  /*
-   * selectedIds → Set<id>
-   * Always keyed by item.id — never by array index.
-   * A Set gives O(1) lookup and prevents duplicate entries.
-   */
   const [selectedIds, setSelectedIds] = useState(new Set());
 
   const items = useMemo(() => complaintStatus ?? [], [complaintStatus]);
-
-  /* IDs visible on the current page */
   const currentPageIds = useMemo(() => items.map((c) => c.id), [items]);
 
   const selectedCount = selectedIds.size;
@@ -113,33 +108,26 @@ const TrackingComplaintStatusList = () => {
     debouncedSearch(value);
   };
 
-  /* ── Select-all: scoped to the current page only ─────────────────────── */
+  /* ── Selection ───────────────────────────────────────────────────────── */
   const handleSelectAll = (e) => {
     setSelectedIds((prev) => {
       const next = new Set(prev);
-      if (e.target.checked) {
-        currentPageIds.forEach((id) => next.add(id));
-      } else {
-        currentPageIds.forEach((id) => next.delete(id));
-      }
+      if (e.target.checked) currentPageIds.forEach((id) => next.add(id));
+      else currentPageIds.forEach((id) => next.delete(id));
       return next;
     });
   };
 
-  /* ── Row-level toggle ────────────────────────────────────────────────── */
   const handleSelectItem = (e, id) => {
     setSelectedIds((prev) => {
       const next = new Set(prev);
-      if (e.target.checked) {
-        next.add(id);
-      } else {
-        next.delete(id);
-      }
+      if (e.target.checked) next.add(id);
+      else next.delete(id);
       return next;
     });
   };
 
-  /* ── Bulk delete ─────────────────────────────────────────────────────── */
+  /* ── Delete ──────────────────────────────────────────────────────────── */
   const handleBulkDelete = () => {
     const ids = Array.from(selectedIds);
     if (!ids.length) return;
@@ -147,7 +135,6 @@ const TrackingComplaintStatusList = () => {
     setSelectedIds(new Set());
   };
 
-  /* ── Single-row delete ───────────────────────────────────────────────── */
   const handleSingleDelete = (id) => {
     setSelectedIds((prev) => {
       const next = new Set(prev);
@@ -160,7 +147,7 @@ const TrackingComplaintStatusList = () => {
   const handlePageChange = useCallback(
     (newPage) => {
       dispatch(trackingComplaintStatus({ page: newPage }));
-      setSelectedIds(new Set()); // clear cross-page selection on navigate
+      setSelectedIds(new Set());
     },
     [dispatch],
   );
@@ -181,137 +168,133 @@ const TrackingComplaintStatusList = () => {
     dispatch(trackingComplaintStatus());
   }, [dispatch]);
 
-  /* ────────────────────────────────────────────────────────────────────── */
-
-  const columns = [
-    "S.N.",
-    "Image",
-    "Customer",
-    "Model",
-    "Serial No.",
-    "Status",
-    "Purchase Date",
-    "Warranty Expiry",
-    "Actions",
-  ];
-
+  /* ── Render ──────────────────────────────────────────────────────────── */
   return (
-    <div className="font-sans max-w-screen-2xl mx-auto px-6 py-8 bg-slate-50 min-h-screen">
+    <div className="font-gothamNarrow max-w-screen-2xl mx-auto px-4 py-6 min-h-screen bg-slate-50">
       {/* ── Page header ─────────────────────────────────────────────────── */}
-      <div className="flex items-start justify-between mb-8">
-        <div className="flex items-center gap-4">
-          <div className="w-12 h-12 rounded-2xl bg-rose-500 shadow-lg shadow-rose-200 flex items-center justify-center flex-shrink-0">
-            <HiOutlineClipboardDocumentList size={22} className="text-white" />
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 mb-5">
+        <div className="flex items-center gap-3">
+          <div className="w-10 h-10 rounded-xl bg-red-50 flex items-center justify-center flex-shrink-0">
+            <HiOutlineClipboardDocumentList
+              size={20}
+              className="text-red-500"
+            />
           </div>
           <div>
-            <h1 className="text-xl font-bold text-slate-800 tracking-tight leading-none">
+            <h1 className="text-base font-semibold text-gray-900 tracking-tight">
               Warranty Complaints
             </h1>
-            <p className="text-sm text-slate-400 mt-1">
-              {items.length} record{items.length !== 1 ? "s" : ""} found
+            <p className="text-xs text-gray-400 mt-0.5">
+              {items.length} record{items.length !== 1 ? "s" : ""} on this page
+              {total_pages > 1 && ` · page ${page} of ${total_pages}`}
             </p>
           </div>
         </div>
-      </div>
 
-      {/* ── Toolbar ─────────────────────────────────────────────────────── */}
-      <div className="flex items-center gap-3 mb-5 flex-wrap">
-        {/* Search */}
-        <div className="relative flex items-center">
-          <HiOutlineSearch
-            size={15}
-            className="absolute left-3.5 text-slate-400 pointer-events-none"
-          />
-          <input
-            type="text"
-            value={searchSerialNumber}
-            onChange={handleSearchChange}
-            placeholder="Search serial number…"
-            className="pl-9 pr-4 py-2.5 text-sm
-    border border-slate-200 rounded-xl
-    bg-white shadow-sm
-    w-60 text-slate-700
-             appearance-none font-gothamNarrow block leading-tight focus:outline-none focus:border-red-600 tracking-normal
-            "
-          />
-        </div>
+        {/* Toolbar */}
+        <div className="flex items-center gap-2 flex-wrap">
+          {/* Search */}
+          <div className="relative flex items-center">
+            <HiOutlineMagnifyingGlass
+              size={13}
+              className="absolute left-3 text-slate-400 pointer-events-none"
+            />
+            <input
+              type="text"
+              value={searchSerialNumber}
+              onChange={handleSearchChange}
+              placeholder="Search serial no…"
+              className="pl-8 pr-3 py-2 text-xs border border-slate-200 rounded-lg bg-white w-48 text-slate-700 placeholder-slate-400 focus:outline-none focus:border-red-400 transition-colors"
+            />
+            {searchSerialNumber && (
+              <button
+                onClick={() => {
+                  setSearchSerialNumber("");
+                  dispatch(trackingComplaintStatus());
+                }}
+                className="absolute right-2.5 text-slate-300 hover:text-slate-500 transition-colors"
+              >
+                <HiOutlineXMark size={12} />
+              </button>
+            )}
+          </div>
 
-        {/* Reset */}
-        <button
-          onClick={handleReset}
-          className="
-            inline-flex items-center gap-2 px-4 py-2.5 rounded-xl border
-            border-slate-200 text-sm font-semibold text-slate-500 bg-white
-            shadow-sm hover:bg-slate-50 hover:border-slate-300 hover:text-slate-700
-            transition-all active:scale-95
-          "
-        >
-          <HiOutlineRefresh size={14} />
-          Reset
-        </button>
-
-        {/* Bulk delete */}
-        {selectedCount > 0 && (
+          {/* Reset */}
           <button
-            onClick={handleBulkDelete}
-            className="
-              inline-flex items-center gap-2 px-4 py-2.5 rounded-xl
-              bg-rose-500 text-white text-sm font-bold shadow-md
-              shadow-rose-200 hover:bg-rose-600 transition-all active:scale-95
-            "
+            onClick={handleReset}
+            className="inline-flex items-center gap-1.5 px-3 py-2 rounded-lg border border-slate-200 bg-white text-xs font-semibold text-slate-500 hover:bg-slate-50 hover:border-slate-300 transition-all"
           >
-            <HiOutlineTrash size={14} />
-            Delete {selectedCount} selected
+            <HiOutlineArrowPath size={12} />
+            Reset
           </button>
-        )}
+
+          {/* Bulk delete */}
+          {selectedCount > 0 && (
+            <button
+              onClick={handleBulkDelete}
+              className="inline-flex items-center gap-1.5 px-3 py-2 rounded-lg bg-red-500 hover:bg-red-600 text-white text-xs font-semibold transition-colors"
+            >
+              <HiOutlineTrash size={12} />
+              Delete {selectedCount} selected
+            </button>
+          )}
+        </div>
       </div>
 
       {/* ── Selection banner ─────────────────────────────────────────────── */}
       {selectedCount > 0 && (
-        <div className="flex items-center gap-3 mb-5 px-4 py-3 bg-rose-50 border border-rose-200 rounded-2xl">
-          <span className="w-2 h-2 rounded-full bg-rose-500 animate-pulse flex-shrink-0" />
-          <span className="text-sm font-semibold text-rose-600">
+        <div className="flex items-center gap-2 mb-4 px-4 py-2.5 bg-red-50 border border-red-200 rounded-xl">
+          <span className="w-1.5 h-1.5 rounded-full bg-red-500 animate-pulse flex-shrink-0" />
+          <span className="text-xs font-semibold text-red-600">
             {selectedCount} item{selectedCount > 1 ? "s" : ""} selected
           </span>
           <button
             onClick={() => setSelectedIds(new Set())}
-            className="ml-auto inline-flex items-center gap-1 text-xs text-rose-400 hover:text-rose-600 transition-colors font-semibold"
+            className="ml-auto inline-flex items-center gap-1 text-xs text-red-400 hover:text-red-600 transition-colors font-semibold"
           >
-            <HiOutlineXMark size={13} />
+            <HiOutlineXMark size={12} />
             Clear
           </button>
         </div>
       )}
 
       {/* ── Table card ───────────────────────────────────────────────────── */}
-      <div className="bg-white rounded-3xl border border-slate-100 shadow-sm overflow-hidden">
+      <div className="bg-white rounded-2xl border border-slate-200 overflow-hidden shadow-sm">
         <div className="overflow-x-auto">
-          <table className="min-w-full">
+          <table className="min-w-full text-sm">
             <thead>
-              <tr className="bg-slate-50 border-b border-slate-100">
-                <th className="px-4 py-3.5 w-12">
+              <tr className="bg-slate-50 border-b border-slate-200">
+                <Th checkbox>
                   <BCheckbox
                     checked={allSelected}
                     indeterminate={someSelected}
                     onChange={handleSelectAll}
                     disabled={items.length === 0}
                   />
-                </th>
-                {columns.map((h) => (
-                  <ColHeader key={h}>{h}</ColHeader>
+                </Th>
+                {[
+                  "#",
+                  "Image",
+                  "Customer",
+                  "Model",
+                  "Serial No.",
+                  "Warranty",
+                  "Purchase Date",
+                  "Expiry Date",
+                  "Actions",
+                ].map((h) => (
+                  <Th key={h}>{h}</Th>
                 ))}
               </tr>
             </thead>
 
-            <tbody className="divide-y divide-slate-50">
+            <tbody className="divide-y divide-slate-100">
               {loading ? (
                 <tr>
-                  <td colSpan={10} className="py-20 text-center">
-                    <div className="flex flex-col items-center gap-3">
-                      <div className="w-8 h-8 rounded-full border-2 border-rose-400 border-t-transparent animate-spin" />
-                      <span className="text-sm text-slate-400 font-medium">
-                        Loading records…
-                      </span>
+                  <td colSpan={10} className="py-16 text-center">
+                    <div className="flex flex-col items-center gap-2">
+                      <div className="w-6 h-6 rounded-full border-2 border-slate-200 border-t-red-500 animate-spin" />
+                      <span className="text-xs text-slate-400">Loading…</span>
                     </div>
                   </td>
                 </tr>
@@ -321,37 +304,34 @@ const TrackingComplaintStatusList = () => {
                   const isActive = moment(item.warranty_expire).isAfter(
                     moment(),
                   );
-                  const sn =
-                    page != null && results_per_page != null
-                      ? (page - 1) * results_per_page + index + 1
-                      : index + 1;
+                  const sn = (page - 1) * results_per_page + index + 1;
 
                   return (
                     <tr
                       key={item.id ?? index}
-                      className={`transition-colors duration-150 ${
-                        isSelected ? "bg-rose-50/60" : "hover:bg-slate-50/80"
+                      className={`transition-colors duration-100 ${
+                        isSelected ? "bg-red-50/40" : "hover:bg-slate-50/80"
                       }`}
                     >
                       {/* Checkbox */}
-                      <td className="px-4 py-3">
+                      <Td>
                         <BCheckbox
                           checked={isSelected}
                           onChange={(e) => handleSelectItem(e, item.id)}
                         />
-                      </td>
+                      </Td>
 
-                      {/* S.N. */}
-                      <td className="px-4 py-3">
-                        <span className="text-xs font-bold text-slate-300 tabular-nums">
-                          {String(sn).padStart(2, "0")}
+                      {/* Row number */}
+                      <Td>
+                        <span className="text-xs text-slate-400 tabular-nums font-medium">
+                          {sn}
                         </span>
-                      </td>
+                      </Td>
 
                       {/* Image */}
-                      <td className="px-4 py-3">
+                      <Td>
                         {item?.warranty_image ? (
-                          <div className="w-12 h-10 rounded-xl overflow-hidden border border-slate-100 shadow-sm">
+                          <div className="w-10 h-10 rounded-lg overflow-hidden border border-slate-200 bg-slate-50">
                             <img
                               src={item.warranty_image}
                               alt="Warranty"
@@ -359,128 +339,106 @@ const TrackingComplaintStatusList = () => {
                             />
                           </div>
                         ) : (
-                          <div className="w-12 h-10 rounded-xl bg-slate-50 border border-dashed border-slate-200 flex items-center justify-center">
-                            <span className="text-[10px] text-slate-300 font-bold">
+                          <div className="w-10 h-10 rounded-lg bg-slate-50 border border-dashed border-slate-200 flex items-center justify-center">
+                            <span className="text-[10px] text-slate-300 font-semibold">
                               N/A
                             </span>
                           </div>
                         )}
-                      </td>
+                      </Td>
 
                       {/* Customer */}
-                      <td className="px-4 py-3 whitespace-nowrap">
-                        <span className="text-sm font-semibold text-slate-700">
+                      <Td>
+                        <span className="text-sm font-medium text-slate-800 whitespace-nowrap">
                           {item?.customer_name || "—"}
                         </span>
-                      </td>
+                      </Td>
 
                       {/* Model */}
-                      <td className="px-4 py-3 whitespace-nowrap">
-                        <p className="text-sm font-bold text-slate-700 leading-tight">
+                      <Td>
+                        <p className="text-sm font-medium text-slate-800 leading-tight whitespace-nowrap">
                           {item?.model_name || "—"}
                         </p>
-                        <p className="text-[11px] text-slate-400 mt-0.5 font-medium">
+                        <p className="text-[11px] font-mono text-slate-400 mt-0.5">
                           #{item?.model_num || "—"}
                         </p>
-                      </td>
+                      </Td>
 
                       {/* Serial no. */}
-                      <td className="px-4 py-3 whitespace-nowrap">
-                        <span className="inline-flex items-center px-2.5 py-1 rounded-lg bg-slate-100 border border-slate-200 text-xs font-mono font-bold text-slate-600 tracking-wide">
+                      <Td>
+                        <span className="inline-flex items-center px-2 py-0.5 rounded-md bg-slate-100 border border-slate-200 text-xs font-mono font-semibold text-slate-600 whitespace-nowrap">
                           {item?.serial_number || "—"}
                         </span>
-                      </td>
+                      </Td>
 
-                      {/* Status */}
-                      <td className="px-4 py-3 whitespace-nowrap">
-                        <StatusBadge active={isActive} />
-                      </td>
+                      {/* Warranty status */}
+                      <Td>
+                        <WarrantyBadge active={isActive} />
+                      </Td>
 
                       {/* Purchase date */}
-                      <td className="px-4 py-3 whitespace-nowrap">
-                        <span className="text-sm text-slate-500 font-medium">
+                      <Td>
+                        <span className="text-xs text-slate-500 whitespace-nowrap tabular-nums">
                           {item?.purchase_date
                             ? moment(item.purchase_date).format("D MMM YYYY")
                             : "—"}
                         </span>
-                      </td>
+                      </Td>
 
-                      {/* Warranty expiry */}
-                      <td className="px-4 py-3 whitespace-nowrap">
+                      {/* Expiry date */}
+                      <Td>
                         <span
-                          className={`text-sm font-bold ${
-                            isActive ? "text-slate-600" : "text-rose-500"
+                          className={`text-xs font-semibold whitespace-nowrap tabular-nums block ${
+                            isActive ? "text-slate-600" : "text-red-500"
                           }`}
                         >
                           {moment(item.warranty_expire).format("D MMM YYYY")}
                         </span>
                         {!isActive && (
-                          <p className="text-[10px] text-rose-400 font-semibold mt-0.5">
-                            Expired {moment(item.warranty_expire).fromNow()}
-                          </p>
+                          <span className="text-[10px] text-red-400 mt-0.5 block">
+                            {moment(item.warranty_expire).fromNow()}
+                          </span>
                         )}
-                      </td>
+                      </Td>
 
                       {/* Actions */}
-                      <td className="px-4 py-3 whitespace-nowrap">
-                        <div className="flex items-center gap-2">
+                      <Td>
+                        <div className="flex items-center gap-1.5">
                           <Link
                             to={`/baltra-admin-dashboard/warranty-complaint/${item.id}`}
+                            className="w-7 h-7 rounded-lg bg-sky-50 border border-sky-100 text-sky-500 hover:bg-sky-500 hover:text-white hover:border-sky-500 flex items-center justify-center transition-all"
+                            title="View"
                           >
-                            <button
-                              className="
-                                w-8 h-8 rounded-xl bg-sky-50 border border-sky-100
-                                flex items-center justify-center hover:bg-sky-100
-                                hover:border-sky-200 hover:shadow-sm transition-all
-                                active:scale-95
-                              "
-                              title="View"
-                            >
-                              <HiOutlineEye
-                                size={14}
-                                className="text-sky-500"
-                              />
-                            </button>
+                            <HiOutlineEye size={13} />
                           </Link>
-
                           <button
                             onClick={() => handleSingleDelete(item.id)}
-                            className="
-                              w-8 h-8 rounded-xl bg-rose-50 border border-rose-100
-                              flex items-center justify-center hover:bg-rose-100
-                              hover:border-rose-200 hover:shadow-sm transition-all
-                              active:scale-95
-                            "
+                            className="w-7 h-7 rounded-lg bg-red-50 border border-red-100 text-red-500 hover:bg-red-500 hover:text-white hover:border-red-500 flex items-center justify-center transition-all"
                             title="Delete"
                           >
-                            <HiOutlineTrash
-                              size={14}
-                              className="text-rose-500"
-                            />
+                            <HiOutlineTrash size={13} />
                           </button>
                         </div>
-                      </td>
+                      </Td>
                     </tr>
                   );
                 })
               ) : (
                 <tr>
-                  <td colSpan={10} className="py-20 text-center">
-                    <div className="flex flex-col items-center gap-4">
-                      <div className="w-14 h-14 rounded-2xl bg-slate-50 border border-slate-100 flex items-center justify-center shadow-inner">
+                  <td colSpan={10} className="py-16 text-center">
+                    <div className="flex flex-col items-center gap-2">
+                      <div className="w-10 h-10 rounded-xl bg-slate-100 flex items-center justify-center">
                         <HiOutlineClipboardDocumentList
-                          size={26}
+                          size={20}
                           className="text-slate-300"
                         />
                       </div>
-                      <div>
-                        <p className="text-sm font-semibold text-slate-400">
-                          No records found
-                        </p>
-                        <p className="text-xs text-slate-300 mt-1">
-                          Try a different search or reset filters
-                        </p>
-                      </div>
+                      <p className="text-sm font-medium text-slate-400">
+                        No records found
+                      </p>
+                      <p className="text-xs text-slate-300">
+                        Try a different search or reset filters
+                      </p>
                     </div>
                   </td>
                 </tr>
@@ -489,17 +447,30 @@ const TrackingComplaintStatusList = () => {
           </table>
         </div>
 
-        {/* ── Pagination ─────────────────────────────────────────────────── */}
-        {total_pages != null && total_pages > 1 && (
-          <div className="flex items-center justify-between px-5 py-4 border-t border-slate-100 bg-slate-50/50">
-            <p className="text-xs text-slate-400 font-medium">
-              Page {page} of {total_pages}
-            </p>
-            <WarrantyComplaintPagination
-              currentPage={page}
-              totalPages={total_pages}
-              onPageChange={handlePageChange}
-            />
+        {/* ── Footer + Pagination ─────────────────────────────────────────── */}
+        {items.length > 0 && (
+          <div className="px-5 py-3.5 border-t border-slate-100 bg-slate-50/50 flex items-center justify-between flex-wrap gap-3">
+            <span className="text-xs text-slate-400">
+              {items.length} record{items.length !== 1 ? "s" : ""} on this page
+              {selectedCount > 0 && (
+                <span className="ml-2 text-red-500 font-medium">
+                  · {selectedCount} selected
+                </span>
+              )}
+            </span>
+
+            {total_pages > 1 && (
+              <div className="flex items-center gap-3">
+                <span className="text-xs text-slate-400 font-medium hidden sm:block">
+                  Page {page} of {total_pages}
+                </span>
+                <WarrantyComplaintPagination
+                  currentPage={page}
+                  totalPages={total_pages}
+                  onPageChange={handlePageChange}
+                />
+              </div>
+            )}
           </div>
         )}
       </div>

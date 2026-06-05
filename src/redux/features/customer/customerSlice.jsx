@@ -40,14 +40,25 @@ const initialState = {
   addCrm: null,
   trackingProducts: [],
   trackingProduct: null,
+  customerProduct_Pagination: {
+    page: null,
+    total_pages: null,
+    results_per_page: null,
+  },
+  complaint_Pagination: {
+    page: null,
+    total_pages: null,
+    results_per_page: null,
+  },
 };
 
 // Async thunk to fetch products
+
 export const getAllCustomerAddedProductList = createAsyncThunk(
   "customer/getAllCustomerAddedProductList",
-  async (__, { rejectWithValue }) => {
+  async (page = 1, { rejectWithValue }) => {
     try {
-      const response = await API.get("/stocks/getcustomerproduct");
+      const response = await API.get(`/stocks/getcustomerproduct?page=${page}`);
       return response.data;
     } catch (error) {
       return rejectWithValue({ message: getErrorMessage(error) });
@@ -283,6 +294,8 @@ const customerSlice = createSlice({
       .addCase(getAllCustomerAddedProductList.fulfilled, (state, action) => {
         state.loading = false;
         state.allCustomerProductsList = action.payload.data;
+        state.customerProduct_Pagination =
+          action.payload.customerProduct_Pagination;
       })
       .addCase(getAllCustomerAddedProductList.rejected, (state, action) => {
         state.loading = false;
@@ -356,6 +369,7 @@ const customerSlice = createSlice({
       .addCase(allProductComplaints.fulfilled, (state, action) => {
         state.loading = false;
         state.productComplaints = action.payload.data;
+        state.complaint_Pagination = action.payload.complaint_Pagination;
       })
       .addCase(allProductComplaints.rejected, (state, action) => {
         state.loading = false;

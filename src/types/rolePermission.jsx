@@ -1,3 +1,6 @@
-export const ProductRoles = ["admin", "product_incharge"];
-
-export const ServiceRoles = ["admin", "service_incharge"];
+// for MainLayout menu items access
+export const FULL_ACCESS_ROLES = [
+  "admin",
+  "service_incharge",
+  "product_incharge",
+];

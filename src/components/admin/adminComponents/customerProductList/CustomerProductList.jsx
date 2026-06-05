@@ -1,6 +1,6 @@
 import moment from "moment";
 import { enqueueSnackbar } from "notistack";
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import {
   FaEye,
   FaInfoCircle,
@@ -16,71 +16,78 @@ import {
   deleteMultipleCustomer,
   getAllCustomerAddedProductList,
 } from "../../../../redux/features/customer/customerSlice";
+import CustomPagination from "../adminPagination/customPagination/CustomPagination";
 import DeleteCustomerModal from "./deleteCustomerModal/DeleteCustomerModal";
 import UpdateModal from "./updateModal/UpdateModal";
 
 const CustomerProductList = () => {
+  const dispatch = useDispatch();
+
   const { loading, error, isError, allCustomerProductsList } = useSelector(
     (state) => state.customer,
   );
-  const dispatch = useDispatch();
+
+  const customerProduct_Pagination =
+    useSelector((state) => state.customer.customerProduct_Pagination) || {};
+  const { page = 1, total_pages = 1 } = customerProduct_Pagination;
 
   const [openUpdateModal, setOpenUpdateModal] = useState(false);
   const [selectedItem, setSelectedItem] = useState(null);
   const [selectedCustomerId, setSelectedCustomerId] = useState(null);
   const [selectedCustomersId, setSelectedCustomersId] = useState([]);
 
-  const handleSelectAll = (e) => {
-    if (e.target.checked) {
-      setSelectedCustomersId(allCustomerProductsList.map((c) => c.id));
-    } else {
-      setSelectedCustomersId([]);
-    }
+  // ── Fetch helpers ────────────────────────────────────────────────────────
+  const fetchPage = useCallback(
+    (p = 1) => dispatch(getAllCustomerAddedProductList(p)),
+    [dispatch],
+  );
+
+  // ── Pagination ───────────────────────────────────────────────────────────
+  const handlePageChange = (newPage) => {
+    setSelectedCustomersId([]);
+    fetchPage(newPage);
   };
 
-  const handleSelectCustomer = (e, id) => {
-    if (e.target.checked) {
-      setSelectedCustomersId((prev) => [...prev, id]);
-    } else {
-      setSelectedCustomersId((prev) => prev.filter((i) => i !== id));
-    }
-  };
+  // ── Selection ────────────────────────────────────────────────────────────
+  const allSelected =
+    allCustomerProductsList?.length > 0 &&
+    selectedCustomersId.length === allCustomerProductsList.length;
 
+  const handleSelectAll = (e) =>
+    setSelectedCustomersId(
+      e.target.checked ? allCustomerProductsList.map((c) => c.id) : [],
+    );
+
+  const handleSelectCustomer = (e, id) =>
+    setSelectedCustomersId((prev) =>
+      e.target.checked ? [...prev, id] : prev.filter((i) => i !== id),
+    );
+
+  // ── Bulk delete ──────────────────────────────────────────────────────────
   const handleMultipleDelete = () => {
-    if (selectedCustomersId.length > 0) {
-      dispatch(
-        deleteMultipleCustomer({
-          stock_ids: selectedCustomersId,
-          enqueueSnackbar,
-        }),
-      ).then(() => dispatch(getAllCustomerAddedProductList()));
-      setSelectedCustomersId([]);
-    }
+    if (!selectedCustomersId.length) return;
+    dispatch(
+      deleteMultipleCustomer({
+        stock_ids: selectedCustomersId,
+        enqueueSnackbar,
+      }),
+    ).then(() => fetchPage(page));
+    setSelectedCustomersId([]);
   };
 
+  // ── Single delete ────────────────────────────────────────────────────────
   const handleOpenModal = (id) => setSelectedCustomerId(id);
   const handleCloseModal = () => setSelectedCustomerId(null);
 
-  const handleReset = () => {
-    setOpenUpdateModal(false);
-    setSelectedItem(null);
-    setSelectedCustomersId([]);
-    setSelectedCustomerId(null);
-    dispatch(getAllCustomerAddedProductList());
-  };
-
   const handleDeleteConfirm = () => {
-    if (selectedCustomerId !== null) {
-      dispatch(
-        deleteCustomerProduct({
-          stock_id: selectedCustomerId,
-          enqueueSnackbar,
-        }),
-      );
-      setSelectedCustomerId(null);
-    }
+    if (selectedCustomerId === null) return;
+    dispatch(
+      deleteCustomerProduct({ stock_id: selectedCustomerId, enqueueSnackbar }),
+    ).then(() => fetchPage(page));
+    setSelectedCustomerId(null);
   };
 
+  // ── Update modal ─────────────────────────────────────────────────────────
   const handleOpenUpdateModal = (item) => {
     setSelectedItem(item);
     setOpenUpdateModal(true);
@@ -91,24 +98,29 @@ const CustomerProductList = () => {
     setSelectedItem(null);
   };
 
-  useEffect(() => {
-    if (error) dispatch(clearCustomerError());
-  }, [dispatch, error]);
-  useEffect(() => {
-    if (isError) dispatch(clearCustomerError());
-  }, [dispatch, isError]);
-  useEffect(() => {
-    dispatch(getAllCustomerAddedProductList());
-  }, [dispatch]);
+  // ── Reset ────────────────────────────────────────────────────────────────
+  const handleReset = () => {
+    setOpenUpdateModal(false);
+    setSelectedItem(null);
+    setSelectedCustomersId([]);
+    setSelectedCustomerId(null);
+    fetchPage(1); // always go back to page 1 on reset
+  };
 
-  const allSelected =
-    allCustomerProductsList?.length > 0 &&
-    selectedCustomersId.length === allCustomerProductsList.length;
+  // ── Effects ──────────────────────────────────────────────────────────────
+  useEffect(() => {
+    if (error || isError) dispatch(clearCustomerError());
+  }, [dispatch, error, isError]);
 
+  useEffect(() => {
+    fetchPage(1);
+  }, [fetchPage]);
+
+  // ── Render ───────────────────────────────────────────────────────────────
   return (
     <div className="min-h-screen bg-slate-50">
       <div className="max-w-screen-2xl mx-auto px-4 py-4 flex flex-col gap-4">
-        {/* ── Info banner ── */}
+        {/* Info banner */}
         <div className="flex items-start gap-3 bg-blue-50 border border-blue-200 rounded-xl px-4 py-3">
           <FaInfoCircle
             className="text-blue-500 mt-0.5 flex-shrink-0"
@@ -122,17 +134,18 @@ const CustomerProductList = () => {
           </p>
         </div>
 
-        {/* ── Main card ── */}
-        <div className="bg-white rounded-2xl border border-slate-200 overflow-hidden">
+        {/* Main card */}
+        <div className="bg-white rounded-2xl border border-slate-200 overflow-hidden shadow-sm">
           {/* Card header */}
-          <div className="px-4 py-4 border-b border-slate-100 flex items-center justify-between gap-4 flex-wrap">
+          <div className="px-5 py-4 border-b border-slate-100 flex items-center justify-between gap-4 flex-wrap">
             <div>
               <h2 className="text-base font-bold text-slate-900">
                 Customer Products
               </h2>
               {allCustomerProductsList?.length > 0 && (
                 <p className="text-xs text-slate-400 mt-0.5">
-                  {allCustomerProductsList.length} total records
+                  {allCustomerProductsList.length} records on this page
+                  {total_pages > 1 && ` · page ${page} of ${total_pages}`}
                 </p>
               )}
             </div>
@@ -159,7 +172,7 @@ const CustomerProductList = () => {
 
           {/* Selection bar */}
           {selectedCustomersId.length > 0 && (
-            <div className="px-6 py-2 bg-blue-50 border-b border-blue-100 flex items-center gap-2">
+            <div className="px-5 py-2 bg-blue-50 border-b border-blue-100 flex items-center gap-2">
               <span className="w-1.5 h-1.5 rounded-full bg-blue-500 inline-block" />
               <span className="text-xs font-medium text-blue-700">
                 {selectedCustomersId.length} item
@@ -168,7 +181,7 @@ const CustomerProductList = () => {
             </div>
           )}
 
-          {/* Table — only essential columns */}
+          {/* Table */}
           <div className="overflow-x-auto">
             <table className="min-w-full text-sm">
               <thead>
@@ -176,19 +189,19 @@ const CustomerProductList = () => {
                   <Th>
                     <input
                       type="checkbox"
-                      className="accent-blue-600 w-3 h-3"
+                      className="accent-red-600 w-3 h-3 cursor-pointer"
                       onChange={handleSelectAll}
                       checked={allSelected}
                     />
                   </Th>
-                  <Th>S.N</Th>
+                  <Th>#</Th>
                   <Th>Customer</Th>
-                  <Th>Product image</Th>
+                  <Th>Image</Th>
                   <Th>Model</Th>
-                  <Th>Purchase date</Th>
+                  <Th>Purchase Date</Th>
                   <Th>Status</Th>
                   <Th>Verified</Th>
-                  <Th>Created at</Th>
+                  <Th>Created</Th>
                   <Th>Actions</Th>
                 </tr>
               </thead>
@@ -196,7 +209,7 @@ const CustomerProductList = () => {
               <tbody className="divide-y divide-slate-100">
                 {loading ? (
                   <tr>
-                    <td colSpan={10} className="py-14 text-center">
+                    <td colSpan={10} className="py-16 text-center">
                       <div className="inline-flex flex-col items-center gap-2">
                         <div className="w-6 h-6 rounded-full border-2 border-slate-200 border-t-blue-500 animate-spin" />
                         <span className="text-xs text-slate-400">Loading…</span>
@@ -206,16 +219,18 @@ const CustomerProductList = () => {
                 ) : allCustomerProductsList?.length > 0 ? (
                   allCustomerProductsList.map((item, index) => {
                     const isChecked = selectedCustomersId.includes(item.id);
+                    // Compute global row number: (page-1)*resultsPerPage + index+1
+                    const rowNum = (page - 1) * 8 + index + 1;
                     return (
                       <tr
                         key={item.id}
-                        className={`transition-colors hover:bg-slate-50 ${isChecked ? "bg-blue-50/50" : ""}`}
+                        className={`transition-colors hover:bg-slate-50/80 ${isChecked ? "bg-blue-50/40" : ""}`}
                       >
                         {/* Checkbox */}
                         <Td>
                           <input
                             type="checkbox"
-                            className="accent-blue-600 w-3 h-3"
+                            className="accent-red-600 w-3 h-3 cursor-pointer"
                             checked={isChecked}
                             onChange={(e) => handleSelectCustomer(e, item.id)}
                           />
@@ -223,15 +238,15 @@ const CustomerProductList = () => {
 
                         {/* Row number */}
                         <Td>
-                          <span className="text-xs text-slate-400">
-                            {index + 1}
+                          <span className="text-xs text-slate-400 tabular-nums">
+                            {rowNum}
                           </span>
                         </Td>
 
-                        {/* Customer name with avatar */}
+                        {/* Customer */}
                         <Td>
                           <div className="flex items-center gap-2.5">
-                            <div className="w-8 h-8 rounded-full bg-blue-100 text-blue-700 text-[11px] font-bold flex items-center justify-center flex-shrink-0 uppercase">
+                            <div className="w-8 h-8 rounded-full bg-gradient-to-br from-blue-100 to-blue-200 text-blue-700 text-[11px] font-bold flex items-center justify-center flex-shrink-0 uppercase ring-1 ring-blue-100">
                               {item?.customer?.firstname?.[0]}
                               {item?.customer?.lastname?.[0]}
                             </div>
@@ -249,7 +264,7 @@ const CustomerProductList = () => {
 
                         {/* Product image */}
                         <Td>
-                          <div className="w-11 h-11 rounded-lg border border-slate-200 bg-slate-50 overflow-hidden">
+                          <div className="w-10 h-10 rounded-lg border border-slate-200 bg-slate-50 overflow-hidden">
                             <img
                               src={item?.product_image}
                               alt="Product"
@@ -258,7 +273,7 @@ const CustomerProductList = () => {
                           </div>
                         </Td>
 
-                        {/* Model name + number */}
+                        {/* Model */}
                         <Td>
                           <div className="text-sm text-slate-700 font-medium whitespace-nowrap">
                             {item?.model_name ?? "—"}
@@ -270,7 +285,7 @@ const CustomerProductList = () => {
 
                         {/* Purchase date */}
                         <Td>
-                          <span className="text-xs text-slate-600 whitespace-nowrap">
+                          <span className="text-xs text-slate-600 whitespace-nowrap tabular-nums">
                             {item?.purchase_date
                               ? moment(item.purchase_date).format("D MMM YYYY")
                               : "—"}
@@ -286,22 +301,22 @@ const CustomerProductList = () => {
                         <Td>
                           <button
                             onClick={() => handleOpenUpdateModal(item)}
-                            className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-semibold border transition-opacity hover:opacity-75 ${
+                            className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-semibold border transition-all hover:scale-105 active:scale-95 ${
                               item?.is_verified
-                                ? "bg-green-50 text-green-700 border-green-200"
-                                : "bg-red-50 text-red-600 border-red-200"
+                                ? "bg-green-50 text-green-700 border-green-200 hover:bg-green-100"
+                                : "bg-red-50 text-red-600 border-red-200 hover:bg-red-100"
                             }`}
                           >
                             <span
                               className={`w-1.5 h-1.5 rounded-full ${item?.is_verified ? "bg-green-500" : "bg-red-400"}`}
                             />
-                            {item?.is_verified ? "Verified" : "Not Verified"}
+                            {item?.is_verified ? "Verified" : "Unverified"}
                           </button>
                         </Td>
 
                         {/* Created at */}
                         <Td>
-                          <span className="text-xs text-slate-400 whitespace-nowrap">
+                          <span className="text-xs text-slate-400 whitespace-nowrap tabular-nums">
                             {moment(item.created_at).format("D MMM YYYY")}
                           </span>
                         </Td>
@@ -311,17 +326,17 @@ const CustomerProductList = () => {
                           <div className="flex items-center gap-1.5">
                             <Link
                               to={`/baltra-admin-dashboard/single-customer-product-list/${item.id}`}
-                              className="w-7 h-7 rounded-lg bg-blue-50 border border-blue-100 text-blue-500 hover:bg-blue-100 flex items-center justify-center transition-colors"
-                              title="View full details"
+                              className="w-7 h-7 rounded-lg bg-blue-50 border border-blue-100 text-blue-500 hover:bg-blue-500 hover:text-white hover:border-blue-500 flex items-center justify-center transition-all"
+                              title="View details"
                             >
-                              <FaEye size={12} />
+                              <FaEye size={11} />
                             </Link>
                             <button
-                              className="w-7 h-7 rounded-lg bg-red-50 border border-red-100 text-red-500 hover:bg-red-100 flex items-center justify-center transition-colors"
+                              className="w-7 h-7 rounded-lg bg-red-50 border border-red-100 text-red-500 hover:bg-red-500 hover:text-white hover:border-red-500 flex items-center justify-center transition-all"
                               title="Delete"
                               onClick={() => handleOpenModal(item.id)}
                             >
-                              <FaTrash size={12} />
+                              <FaTrash size={11} />
                             </button>
                             {selectedCustomerId === item.id && (
                               <DeleteCustomerModal
@@ -355,34 +370,51 @@ const CustomerProductList = () => {
             </table>
           </div>
 
-          {/* Footer */}
+          {/* Footer + Pagination */}
           {allCustomerProductsList?.length > 0 && (
-            <div className="px-6 py-3 border-t border-slate-100 flex items-center justify-between">
+            <div className="px-5 py-3.5 border-t border-slate-100 bg-slate-50/50 flex items-center justify-between flex-wrap gap-3">
               <span className="text-xs text-slate-400">
                 {allCustomerProductsList.length} record
-                {allCustomerProductsList.length !== 1 ? "s" : ""}
+                {allCustomerProductsList.length !== 1 ? "s" : ""} on this page
+                {selectedCustomersId.length > 0 && (
+                  <span className="ml-2 text-blue-600 font-medium">
+                    · {selectedCustomersId.length} selected
+                  </span>
+                )}
               </span>
-              {selectedCustomersId.length > 0 && (
-                <span className="text-xs text-blue-600 font-medium">
-                  {selectedCustomersId.length} selected
-                </span>
+
+              {total_pages > 1 && (
+                <div className="flex items-center gap-3">
+                  <span className="text-xs text-slate-400 font-medium hidden sm:block">
+                    Page {page} of {total_pages}
+                  </span>
+                  <CustomPagination
+                    currentPage={page}
+                    totalPages={total_pages}
+                    onPageChange={handlePageChange}
+                  />
+                </div>
               )}
             </div>
           )}
         </div>
       </div>
 
-      {/* Modals rendered outside table */}
+      {/* Modals */}
       {openUpdateModal && (
-        <UpdateModal item={selectedItem} onClose={handleCloseUpdateModal} />
+        <UpdateModal
+          item={selectedItem}
+          onClose={handleCloseUpdateModal}
+          onSuccess={() => fetchPage(page)}
+        />
       )}
     </div>
   );
 };
 
-/* ── Reusable table primitives ── */
+/* ── Primitives ── */
 const Th = ({ children }) => (
-  <th className="px-4 py-2.5 text-left text-[11px] font-semibold text-slate-400 uppercase tracking-wide whitespace-nowrap">
+  <th className="px-4 py-2.5 text-left text-[11px] font-semibold text-slate-500 uppercase tracking-wide whitespace-nowrap">
     {children}
   </th>
 );

@@ -274,13 +274,15 @@ const AllContactList = () => {
             )}
 
             {/* Excel export */}
-            <button
-              onClick={handleExportExcel}
-              className="inline-flex items-center gap-1.5 px-3 py-1.5 text-[12px] font-medium tracking-[0.02em] text-emerald-600 border border-emerald-200 bg-emerald-50 hover:bg-emerald-100 rounded-lg transition-colors ml-auto"
-            >
-              <FaDownload size={10} />
-              Export Excel
-            </button>
+            {allContacts?.length > 0 && (
+              <button
+                onClick={handleExportExcel}
+                className="inline-flex items-center gap-1.5 px-3 py-1.5 text-[12px] font-medium tracking-[0.02em] text-emerald-600 border border-emerald-200 bg-emerald-50 hover:bg-emerald-100 rounded-lg transition-colors ml-auto"
+              >
+                <FaDownload size={10} />
+                Export Excel
+              </button>
+            )}
           </div>
 
           {/* Selected banner */}
@@ -450,17 +452,23 @@ const AllContactList = () => {
           />
 
           {/* Footer */}
-          <div className="flex items-center justify-between px-4 py-3 border-t border-gray-100">
-            <span className="text-[11px] text-gray-300 tracking-[0.03em]">
+          <div className="flex items-center justify-between px-4 py-2.5 border-t border-gray-100 min-h-[44px]">
+            <span className="text-[11px] text-gray-400 tabular-nums">
               {allContacts?.length ?? 0} result
               {allContacts?.length !== 1 ? "s" : ""}
             </span>
-            {total_pages != null && total_pages > 1 && (
-              <ContactPagination
-                currentPage={page}
-                totalPages={total_pages}
-                onPageChange={handlePageChange}
-              />
+
+            {total_pages > 1 && (
+              <div className="flex items-center gap-1.5">
+                <span className="text-[11px] text-gray-400 mr-1">
+                  Page {page} of {total_pages}
+                </span>
+                <ContactPagination
+                  currentPage={page}
+                  totalPages={total_pages}
+                  onPageChange={handlePageChange}
+                />
+              </div>
             )}
           </div>
         </div>

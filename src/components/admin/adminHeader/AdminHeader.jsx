@@ -9,12 +9,75 @@ import {
 } from "react-icons/fa";
 import { HiOutlineUserCircle } from "react-icons/hi2";
 import { useDispatch, useSelector } from "react-redux";
-import { Link, Outlet, useNavigate } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import { setLogout } from "../../../redux/features/auth/authSlice";
 import LogoutPopUp from "../../layout/logoutPopUp/LogoutPopUp";
 
+// Maps role keys → human-readable label + color classes
+const ROLE_CONFIG = {
+  admin: {
+    label: "Admin",
+    bg: "bg-red-50",
+    text: "text-red-600",
+    border: "border-red-200",
+    dot: "bg-red-500",
+  },
+  product_incharge: {
+    label: "Product Incharge",
+    bg: "bg-blue-50",
+    text: "text-blue-600",
+    border: "border-blue-200",
+    dot: "bg-blue-500",
+  },
+  service_incharge: {
+    label: "Service Incharge",
+    bg: "bg-emerald-50",
+    text: "text-emerald-600",
+    border: "border-emerald-200",
+    dot: "bg-emerald-500",
+  },
+  customer: {
+    label: "Customer",
+    bg: "bg-amber-50",
+    text: "text-amber-600",
+    border: "border-amber-200",
+    dot: "bg-amber-500",
+  },
+};
+
+const RoleBadge = ({ role, size = "sm" }) => {
+  const cfg = ROLE_CONFIG[role] ?? {
+    label: role ?? "Unknown",
+    bg: "bg-slate-50",
+    text: "text-slate-500",
+    border: "border-slate-200",
+    dot: "bg-slate-400",
+  };
+
+  if (size === "xs") {
+    return (
+      <span
+        className={`inline-flex items-center gap-1 px-1.5 py-0.5 rounded-md border text-[10px] font-semibold tracking-wide ${cfg.bg} ${cfg.text} ${cfg.border}`}
+      >
+        <span className={`w-1 h-1 rounded-full ${cfg.dot}`} />
+        {cfg.label}
+      </span>
+    );
+  }
+
+  return (
+    <span
+      className={`inline-flex items-center gap-1.5 px-2 py-0.5 rounded-md border text-[11px] font-semibold tracking-wide ${cfg.bg} ${cfg.text} ${cfg.border}`}
+    >
+      <span className={`w-1.5 h-1.5 rounded-full ${cfg.dot}`} />
+      {cfg.label}
+    </span>
+  );
+};
+
 const AdminHeader = ({ collapsed, toggleCollapsed }) => {
   const { customer } = useSelector((state) => state.auth);
+  console.log("AdminHeader render - customer:", customer);
   const dispatch = useDispatch();
   const navigate = useNavigate();
 
@@ -22,7 +85,6 @@ const AdminHeader = ({ collapsed, toggleCollapsed }) => {
   const [showLogoutModal, setShowLogoutModal] = useState(false);
   const [timer, setTimer] = useState(null);
 
-  /* ── Dropdown hover logic ─────────────────────────────────────────── */
   const handleMouseEnter = () => {
     if (timer) {
       clearTimeout(timer);
@@ -36,7 +98,6 @@ const AdminHeader = ({ collapsed, toggleCollapsed }) => {
     setTimer(t);
   };
 
-  /* ── Logout ───────────────────────────────────────────────────────── */
   const handleLogout = () => {
     dispatch(setLogout());
     localStorage.clear();
@@ -44,17 +105,23 @@ const AdminHeader = ({ collapsed, toggleCollapsed }) => {
     navigate("/baltra-aboutUs-Page");
   };
 
-  /* Open modal; also close dropdown immediately so it doesn't linger */
   const openLogoutModal = () => {
     setDropdownOpen(false);
     setShowLogoutModal(true);
   };
-
   const closeLogoutModal = () => setShowLogoutModal(false);
 
   const fullName = [customer?.firstname, customer?.lastname]
     .filter(Boolean)
     .join(" ");
+  const initials = fullName
+    ? fullName
+        .split(" ")
+        .map((n) => n[0])
+        .slice(0, 2)
+        .join("")
+        .toUpperCase()
+    : "A";
 
   return (
     <>
@@ -74,7 +141,6 @@ const AdminHeader = ({ collapsed, toggleCollapsed }) => {
               Visit Site
               <FaExternalLinkAlt className="text-[10px]" />
             </Link>
-
             <a
               href="/baltra-catalog"
               target="_blank"
@@ -85,14 +151,14 @@ const AdminHeader = ({ collapsed, toggleCollapsed }) => {
             </a>
           </div>
 
-          {/* ── Right: user dropdown ── */}
+          {/* ── Right: user dropdown trigger ── */}
           <div
             className="relative flex items-center"
             onMouseEnter={handleMouseEnter}
             onMouseLeave={handleMouseLeave}
           >
             <button
-              className="flex items-center gap-2 px-2 py-1 rounded-md hover:bg-gray-50 transition-colors duration-150 cursor-pointer"
+              className="flex items-center gap-2 px-2 py-1.5 rounded-xl hover:bg-gray-50 transition-colors duration-150 cursor-pointer"
               aria-haspopup="true"
               aria-expanded={dropdownOpen}
             >
@@ -109,14 +175,12 @@ const AdminHeader = ({ collapsed, toggleCollapsed }) => {
                 )}
               </div>
 
-              {/* Name + email — hidden on xs */}
-              <div className="hidden sm:flex flex-col text-left leading-tight">
+              {/* Name + role badge */}
+              <div className="hidden sm:flex flex-col text-left leading-tight gap-0.5">
                 <span className="text-gray-800 text-sm font-medium truncate max-w-[140px]">
                   {fullName || "Admin"}
                 </span>
-                <span className="text-gray-400 text-xs truncate max-w-[140px]">
-                  {customer?.email}
-                </span>
+                {customer?.role && <RoleBadge role={customer.role} size="xs" />}
               </div>
 
               <FaAngleDown
@@ -133,29 +197,33 @@ const AdminHeader = ({ collapsed, toggleCollapsed }) => {
                 aria-orientation="vertical"
                 onMouseEnter={handleMouseEnter}
                 onMouseLeave={handleMouseLeave}
-                className="absolute right-0 top-full mt-2 w-56 bg-white border border-slate-200/80 rounded-2xl overflow-hidden z-50"
+                className="absolute right-0 top-full mt-2 w-60 bg-white border border-slate-200/80 rounded-2xl overflow-hidden z-50 shadow-lg shadow-slate-100"
               >
-                {/* Identity header */}
+                {/* Dropdown header — name, email, role */}
                 <div className="flex items-center gap-3 px-4 py-3.5 border-b border-slate-100">
-                  <div className="w-9 h-9 rounded-full bg-red-50 flex items-center justify-center flex-shrink-0">
-                    <span className="text-[13px] font-semibold text-red-600 leading-none select-none">
-                      {fullName
-                        ? fullName
-                            .split(" ")
-                            .map((n) => n[0])
-                            .slice(0, 2)
-                            .join("")
-                            .toUpperCase()
-                        : "A"}
-                    </span>
+                  <div className="w-10 h-10 rounded-full bg-red-50 border border-red-100 flex items-center justify-center flex-shrink-0">
+                    {customer?.image_url ? (
+                      <img
+                        src={customer.image_url}
+                        alt={fullName}
+                        className="w-full h-full object-cover rounded-full"
+                      />
+                    ) : (
+                      <span className="text-[13px] font-semibold text-red-600 leading-none select-none">
+                        {initials}
+                      </span>
+                    )}
                   </div>
-                  <div className="min-w-0">
+                  <div className="min-w-0 flex-1">
                     <p className="text-[13px] font-semibold text-gray-800 truncate leading-tight">
                       {fullName || "Admin"}
                     </p>
-                    <p className="text-[11px] text-gray-400 truncate mt-0.5">
+                    <p className="text-[11px] text-gray-400 truncate mt-0.5 mb-1.5">
                       {customer?.email}
                     </p>
+                    {customer?.role && (
+                      <RoleBadge role={customer.role} size="sm" />
+                    )}
                   </div>
                 </div>
 
@@ -194,7 +262,6 @@ const AdminHeader = ({ collapsed, toggleCollapsed }) => {
                     className="h-px bg-slate-100 mx-1 my-0.5"
                   />
 
-                  {/* Logout → opens modal instead of firing directly */}
                   <li role="menuitem">
                     <button
                       onClick={openLogoutModal}
@@ -224,14 +291,6 @@ const AdminHeader = ({ collapsed, toggleCollapsed }) => {
         </div>
       </header>
 
-      <div
-        className="content p-2 overflow-y-auto"
-        style={{ scrollbarWidth: "none", msOverflowStyle: "none" }}
-      >
-        <Outlet />
-      </div>
-
-      {/* ── Logout confirmation modal ── */}
       {showLogoutModal && (
         <LogoutPopUp onClose={closeLogoutModal} handleLogout={handleLogout} />
       )}

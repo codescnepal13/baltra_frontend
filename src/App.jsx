@@ -55,7 +55,12 @@ import BaltraMobile from "./pages/user/baltraMobile/BaltraMobile";
 import BaltraSuccessModal from "./pages/user/baltraSuccessModal/BaltraSuccessModal";
 import Register from "./pages/user/register/Register";
 import VerifyOTP from "./pages/user/verifyOTP/VerifyOTP";
-import { ProductRoles } from "./types/rolePermission";
+const UnAuthorize = lazy(
+  () => import("./components/layout/unauthorize/UnAuthorize"),
+);
+const EditRole = lazy(
+  () => import("./components/admin/adminComponents/manageRoles/edit/EditRole"),
+);
 const AddRole = lazy(
   () => import("./components/admin/adminComponents/manageRoles/add/AddRole"),
 );
@@ -147,6 +152,11 @@ const App = () => {
 
     return () => clearTimeout(timer);
   }, []);
+
+  const ADMIN = ["admin"];
+  const PRODUCT = ["admin", "product_incharge"];
+  const SERVICE = ["admin", "service_incharge"];
+  const ALL_STAFF = ["admin", "product_incharge", "service_incharge"];
 
   return (
     <Router>
@@ -491,55 +501,101 @@ const App = () => {
                 <PrivateRoute
                   isAuthenticated={isAuthenticated}
                   userRole={userRole}
-                  allowedRoles={[
-                    "admin",
-                    "product_incharge",
-                    "service_incharge",
-                  ]}
+                  allowedRoles={ALL_STAFF}
                 >
                   <MainLayout />
                 </PrivateRoute>
               }
             >
+              {/* ── Dashboard (all staff) ── */}
               <Route index element={<AdminDashboard />} />
+
+              {/* ── Admin profile (all staff — personal) ── */}
               <Route
                 path="admin-profile-information"
-                element={<AdminProfile />}
+                element={
+                  <PrivateRoute
+                    isAuthenticated={isAuthenticated}
+                    userRole={userRole}
+                    allowedRoles={ALL_STAFF}
+                  >
+                    <AdminProfile />
+                  </PrivateRoute>
+                }
               />
-              <Route
-                path="all-contact-message-List"
-                element={<AllContactList />}
-              />
-              <Route path="all-customer-List" element={<AllCustomerList />} />
-              <Route
-                path="single-customer-view/:id"
-                element={<SingleCustomerRole />}
-              />
-              <Route path="all-user-List" element={<AllUserList />} />
-              <Route path="single-user-view/:id" element={<SingleUserRole />} />
+
+              {/* ── Product Inventory ── */}
               <Route
                 path="all-category-List"
-                element={<AllCategoryProductList />}
+                element={
+                  <PrivateRoute
+                    isAuthenticated={isAuthenticated}
+                    userRole={userRole}
+                    allowedRoles={PRODUCT}
+                  >
+                    <AllCategoryProductList />
+                  </PrivateRoute>
+                }
               />
               <Route
                 path="add-category-product"
-                element={<AddCategoryProduct />}
+                element={
+                  <PrivateRoute
+                    isAuthenticated={isAuthenticated}
+                    userRole={userRole}
+                    allowedRoles={PRODUCT}
+                  >
+                    <AddCategoryProduct />
+                  </PrivateRoute>
+                }
               />
               <Route
                 path="edit-category-product/:category_id"
-                element={<EditCategory />}
+                element={
+                  <PrivateRoute
+                    isAuthenticated={isAuthenticated}
+                    userRole={userRole}
+                    allowedRoles={PRODUCT}
+                  >
+                    <EditCategory />
+                  </PrivateRoute>
+                }
               />
               <Route
                 path="all-sub-category-List"
-                element={<AllSubCategoryList />}
+                element={
+                  <PrivateRoute
+                    isAuthenticated={isAuthenticated}
+                    userRole={userRole}
+                    allowedRoles={PRODUCT}
+                  >
+                    <AllSubCategoryList />
+                  </PrivateRoute>
+                }
               />
               <Route
                 path="add-subCategory-product"
-                element={<AddSubCategory />}
+                element={
+                  <PrivateRoute
+                    isAuthenticated={isAuthenticated}
+                    userRole={userRole}
+                    allowedRoles={PRODUCT}
+                  >
+                    <AddSubCategory />
+                  </PrivateRoute>
+                }
               />
               <Route
                 path="edit-sub-category-product/:id"
-                element={<SingleSubCategory />}
+                element={
+                  <PrivateRoute
+                    isAuthenticated={isAuthenticated}
+                    userRole={userRole}
+                    allowedRoles={PRODUCT}
+                  >
+                    <SingleSubCategory />
+                  </PrivateRoute>
+                }
               />
               <Route
                 path="all-products-list"
@@ -547,83 +603,365 @@ const App = () => {
                   <PrivateRoute
                     isAuthenticated={isAuthenticated}
                     userRole={userRole}
-                    allowedRoles={ProductRoles}
+                    allowedRoles={PRODUCT}
                   >
                     <AllProductList />
                   </PrivateRoute>
                 }
               />
               <Route
-                path="all-customer-products-list"
-                element={<CustomerProductList />}
+                path="add-product"
+                element={
+                  <PrivateRoute
+                    isAuthenticated={isAuthenticated}
+                    userRole={userRole}
+                    allowedRoles={PRODUCT}
+                  >
+                    <AddProduct />
+                  </PrivateRoute>
+                }
               />
               <Route
-                path="single-customer-product-list/:id"
-                element={<SingleCustomerProductList />}
+                path="edit-product/:id"
+                element={
+                  <PrivateRoute
+                    isAuthenticated={isAuthenticated}
+                    userRole={userRole}
+                    allowedRoles={PRODUCT}
+                  >
+                    <EditProduct />
+                  </PrivateRoute>
+                }
               />
               <Route
                 path="single-product-view/:id"
-                element={<SingleProductView />}
+                element={
+                  <PrivateRoute
+                    isAuthenticated={isAuthenticated}
+                    userRole={userRole}
+                    allowedRoles={PRODUCT}
+                  >
+                    <SingleProductView />
+                  </PrivateRoute>
+                }
               />
-              <Route path="add-product" element={<AddProduct />} />
-              <Route path="edit-product/:id" element={<EditProduct />} />
-              <Route path="all-QrProducts-list" element={<QRProductList />} />
-              <Route path="add-Qr-Product" element={<AddQrProduct />} />
+              {/* QR — admin only */}
+              <Route
+                path="all-QrProducts-list"
+                element={
+                  <PrivateRoute
+                    isAuthenticated={isAuthenticated}
+                    userRole={userRole}
+                    allowedRoles={ADMIN}
+                  >
+                    <QRProductList />
+                  </PrivateRoute>
+                }
+              />
+              <Route
+                path="add-Qr-Product"
+                element={
+                  <PrivateRoute
+                    isAuthenticated={isAuthenticated}
+                    userRole={userRole}
+                    allowedRoles={ADMIN}
+                  >
+                    <AddQrProduct />
+                  </PrivateRoute>
+                }
+              />
+
+              {/* ── Customer Products ── */}
+              {/* Customer Products List — admin + product_incharge */}
+              <Route
+                path="all-customer-products-list"
+                element={
+                  <PrivateRoute
+                    isAuthenticated={isAuthenticated}
+                    userRole={userRole}
+                    allowedRoles={PRODUCT}
+                  >
+                    <CustomerProductList />
+                  </PrivateRoute>
+                }
+              />
+              <Route
+                path="single-customer-product-list/:id"
+                element={
+                  <PrivateRoute
+                    isAuthenticated={isAuthenticated}
+                    userRole={userRole}
+                    allowedRoles={PRODUCT}
+                  >
+                    <SingleCustomerProductList />
+                  </PrivateRoute>
+                }
+              />
+              {/* Product Complaints — admin + service_incharge */}
+              <Route
+                path="all/products-complaints-list"
+                element={
+                  <PrivateRoute
+                    isAuthenticated={isAuthenticated}
+                    userRole={userRole}
+                    allowedRoles={SERVICE}
+                  >
+                    <ProductComplaintList />
+                  </PrivateRoute>
+                }
+              />
+              <Route
+                path="single-product-complaint/:id"
+                element={
+                  <PrivateRoute
+                    isAuthenticated={isAuthenticated}
+                    userRole={userRole}
+                    allowedRoles={SERVICE}
+                  >
+                    <SingleProductComplaint />
+                  </PrivateRoute>
+                }
+              />
+
+              {/* ── Customer Profiles — admin + product_incharge ── */}
+              <Route
+                path="all-customer-List"
+                element={
+                  <PrivateRoute
+                    isAuthenticated={isAuthenticated}
+                    userRole={userRole}
+                    allowedRoles={PRODUCT}
+                  >
+                    <AllCustomerList />
+                  </PrivateRoute>
+                }
+              />
+              <Route
+                path="single-customer-view/:id"
+                element={
+                  <PrivateRoute
+                    isAuthenticated={isAuthenticated}
+                    userRole={userRole}
+                    allowedRoles={PRODUCT}
+                  >
+                    <SingleCustomerRole />
+                  </PrivateRoute>
+                }
+              />
+
+              {/* ── Warranty Package — admin + service_incharge ── */}
               <Route
                 path="all/warranty-package-list"
-                element={<AllWarrantyPackageList />}
+                element={
+                  <PrivateRoute
+                    isAuthenticated={isAuthenticated}
+                    userRole={userRole}
+                    allowedRoles={SERVICE}
+                  >
+                    <AllWarrantyPackageList />
+                  </PrivateRoute>
+                }
               />
               <Route
                 path="add/warranty-package"
-                element={<AddWarrantyPackage />}
+                element={
+                  <PrivateRoute
+                    isAuthenticated={isAuthenticated}
+                    userRole={userRole}
+                    allowedRoles={SERVICE}
+                  >
+                    <AddWarrantyPackage />
+                  </PrivateRoute>
+                }
               />
               <Route
                 path="edit/warranty-package/:id"
-                element={<EditWarrantyPackage />}
+                element={
+                  <PrivateRoute
+                    isAuthenticated={isAuthenticated}
+                    userRole={userRole}
+                    allowedRoles={SERVICE}
+                  >
+                    <EditWarrantyPackage />
+                  </PrivateRoute>
+                }
+              />
+
+              {/* ── Warranty Complaints — admin + service_incharge ── */}
+              <Route
+                path="all/warranty-status-list"
+                element={
+                  <PrivateRoute
+                    isAuthenticated={isAuthenticated}
+                    userRole={userRole}
+                    allowedRoles={SERVICE}
+                  >
+                    <TrackingComplaintStatusList />
+                  </PrivateRoute>
+                }
+              />
+
+              {/* ── Contacts — admin + product_incharge ── */}
+              <Route
+                path="all-contact-message-List"
+                element={
+                  <PrivateRoute
+                    isAuthenticated={isAuthenticated}
+                    userRole={userRole}
+                    allowedRoles={PRODUCT}
+                  >
+                    <AllContactList />
+                  </PrivateRoute>
+                }
               />
               <Route
                 path="single-view-contact/:id"
-                element={<SingleViewContact />}
+                element={
+                  <PrivateRoute
+                    isAuthenticated={isAuthenticated}
+                    userRole={userRole}
+                    allowedRoles={PRODUCT}
+                  >
+                    <SingleViewContact />
+                  </PrivateRoute>
+                }
               />
-              <Route
-                path="all/products-complaints-list"
-                element={<ProductComplaintList />}
-              />
-              <Route
-                path="all/warranty-status-list"
-                element={<TrackingComplaintStatusList />}
-              />
-              <Route path="all/e-catalog-list" element={<AdminCatalogList />} />
+
+              {/* ── Personalize Setting — admin + product_incharge ── */}
               <Route
                 path="all/customize-products"
-                element={<AllPersonalizationProductsList />}
+                element={
+                  <PrivateRoute
+                    isAuthenticated={isAuthenticated}
+                    userRole={userRole}
+                    allowedRoles={PRODUCT}
+                  >
+                    <AllPersonalizationProductsList />
+                  </PrivateRoute>
+                }
               />
               <Route
                 path="single/personalization-view/:id"
-                element={<SinglePersonalizationView />}
-              />
-              <Route path="add/product-catalog" element={<AddCatalog />} />
-              <Route
-                path="single-product-complaint/:id"
-                element={<SingleProductComplaint />}
+                element={
+                  <PrivateRoute
+                    isAuthenticated={isAuthenticated}
+                    userRole={userRole}
+                    allowedRoles={PRODUCT}
+                  >
+                    <SinglePersonalizationView />
+                  </PrivateRoute>
+                }
               />
               <Route
                 path="all/bulk-quote-products"
-                element={<AllBulkQuoteProducts />}
+                element={
+                  <PrivateRoute
+                    isAuthenticated={isAuthenticated}
+                    userRole={userRole}
+                    allowedRoles={PRODUCT}
+                  >
+                    <AllBulkQuoteProducts />
+                  </PrivateRoute>
+                }
               />
 
-              <Route path="all/manage-roles" element={<ManageRoleList />} />
-              <Route path="add-role" element={<AddRole />} />
+              {/* ── Settings — admin only ── */}
+              <Route
+                path="all/e-catalog-list"
+                element={
+                  <PrivateRoute
+                    isAuthenticated={isAuthenticated}
+                    userRole={userRole}
+                    allowedRoles={ADMIN}
+                  >
+                    <AdminCatalogList />
+                  </PrivateRoute>
+                }
+              />
+              <Route
+                path="add/product-catalog"
+                element={
+                  <PrivateRoute
+                    isAuthenticated={isAuthenticated}
+                    userRole={userRole}
+                    allowedRoles={ADMIN}
+                  >
+                    <AddCatalog />
+                  </PrivateRoute>
+                }
+              />
+              <Route
+                path="all/manage-roles"
+                element={
+                  <PrivateRoute
+                    isAuthenticated={isAuthenticated}
+                    userRole={userRole}
+                    allowedRoles={ADMIN}
+                  >
+                    <ManageRoleList />
+                  </PrivateRoute>
+                }
+              />
+              <Route
+                path="add-role"
+                element={
+                  <PrivateRoute
+                    isAuthenticated={isAuthenticated}
+                    userRole={userRole}
+                    allowedRoles={ADMIN}
+                  >
+                    <AddRole />
+                  </PrivateRoute>
+                }
+              />
+              <Route
+                path="edit-role/:id"
+                element={
+                  <PrivateRoute
+                    isAuthenticated={isAuthenticated}
+                    userRole={userRole}
+                    allowedRoles={ADMIN}
+                  >
+                    <EditRole />
+                  </PrivateRoute>
+                }
+              />
+
+              {/* ── User List — admin only (system management) ── */}
+              <Route
+                path="all-user-List"
+                element={
+                  <PrivateRoute
+                    isAuthenticated={isAuthenticated}
+                    userRole={userRole}
+                    allowedRoles={ADMIN}
+                  >
+                    <AllUserList />
+                  </PrivateRoute>
+                }
+              />
+              <Route
+                path="single-user-view/:id"
+                element={
+                  <PrivateRoute
+                    isAuthenticated={isAuthenticated}
+                    userRole={userRole}
+                    allowedRoles={ADMIN}
+                  >
+                    <SingleUserRole />
+                  </PrivateRoute>
+                }
+              />
             </Route>
             <Route
               path="*"
               element={
                 <>
                   <PageNotFound />
-                  <Footer />
                 </>
               }
             />
+            <Route path="/unauthorize" element={<UnAuthorize />} />
           </Routes>
         </Suspense>
         <ScrollMoveUp />

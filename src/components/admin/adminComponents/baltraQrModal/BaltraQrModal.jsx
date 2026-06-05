@@ -1,85 +1,120 @@
+import { useState } from "react";
+
 const BaltraQrModal = ({ onClose, qrCodeSrc }) => {
+  const [downloaded, setDownloaded] = useState(false);
+
   const downloadQrCode = async () => {
     try {
       const response = await fetch(qrCodeSrc);
       const blob = await response.blob();
-
-      // Create an image element and load the blob as its source
       const img = new Image();
-      img.src = window.URL.createObjectURL(blob);
+      img.src = URL.createObjectURL(blob);
 
       img.onload = () => {
-        // Create a canvas element to draw the image
         const canvas = document.createElement("canvas");
-        const context = canvas.getContext("2d");
-
-        // Set the canvas dimensions to match the image
         canvas.width = img.width;
         canvas.height = img.height;
+        canvas.getContext("2d").drawImage(img, 0, 0);
 
-        // Draw the image onto the canvas
-        context.drawImage(img, 0, 0);
-
-        // Convert the canvas content to a JPG blob
         canvas.toBlob((jpgBlob) => {
-          const url = window.URL.createObjectURL(jpgBlob);
+          const url = URL.createObjectURL(jpgBlob);
           const link = document.createElement("a");
           link.href = url;
           link.download = "QRCode.jpg";
           document.body.appendChild(link);
           link.click();
           document.body.removeChild(link);
-          window.URL.revokeObjectURL(url);
+          URL.revokeObjectURL(url);
+          setDownloaded(true);
+          setTimeout(() => setDownloaded(false), 2000);
         }, "image/jpeg");
-      };
-
-      img.onerror = (error) => {
-        console.error("Failed to load image:", error);
       };
     } catch (error) {
       console.error("Failed to download QR code:", error);
     }
   };
+
   return (
-    <div className="fixed font-gothamNarrow inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full">
-      <div className="relative top-20 mx-auto p-5 border w-96 shadow-lg rounded-md bg-white">
-        <div className="mt-3 text-center">
-          <div className="mx-auto flex items-center justify-center h-12 w-12 rounded-full bg-green-100">
+    <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
+      <div className="bg-white rounded-2xl shadow-xl w-full max-w-sm overflow-hidden">
+        {/* Header */}
+        <div className="flex items-center gap-3 px-5 py-4 bg-gray-50 border-b border-gray-100">
+          <div className="flex items-center justify-center w-8 h-8 rounded-full bg-green-100 shrink-0">
             <svg
-              className="h-6 w-6 text-green-600"
+              className="w-4 h-4 text-green-600"
               fill="none"
               stroke="currentColor"
               viewBox="0 0 24 24"
-              xmlns="http://www.w3.org/2000/svg"
             >
               <path
                 strokeLinecap="round"
                 strokeLinejoin="round"
-                strokeWidth="2"
+                strokeWidth={2.5}
                 d="M5 13l4 4L19 7"
-              ></path>
+              />
             </svg>
           </div>
-          <h3 className="text-lg leading-6 font-medium text-gray-900 font-gothamNarrow">
-            QR Code
-          </h3>
-          <div className="mt-2 px-7">
-            <img src={qrCodeSrc} alt="QR Code" className="max-w-full h-auto" />
+          <div>
+            <p className="text-sm font-semibold text-gray-900 font-gothamNarrow">
+              QR Code
+            </p>
+            <p className="text-xs text-gray-400 font-gothamNarrow">
+              Ready to scan or download
+            </p>
           </div>
-          <div className="items-center px-4 space-y-2">
-            <button
-              className="px-4 py-2 bg-gray-500 text-white text-base font-medium rounded-md w-full shadow-sm hover:bg-gray-600 font-gothamNarrow"
-              onClick={onClose}
-            >
-              Close
-            </button>
-            <button
-              className="px-4 py-2 bg-blue-500 text-white text-base font-medium rounded-md w-full shadow-sm hover:bg-blue-600 font-gothamNarrow"
-              onClick={downloadQrCode}
-            >
-              Download QR Code
-            </button>
+        </div>
+
+        {/* QR Image */}
+        <div className="flex flex-col items-center gap-3 px-6 pt-6 pb-2">
+          <div className="bg-white rounded-xl border border-gray-100 p-3 shadow-sm">
+            <img
+              src={qrCodeSrc}
+              alt="QR Code"
+              className="w-44 h-44 object-contain"
+            />
           </div>
+          <p className="text-xs text-gray-400 font-gothamNarrow">
+            Scan with your camera app
+          </p>
+        </div>
+
+        {/* Actions */}
+        <div className="flex flex-col gap-2 px-6 py-5">
+          <button
+            onClick={downloadQrCode}
+            className={`flex items-center justify-center gap-2 w-full py-2.5 rounded-xl text-sm font-medium font-gothamNarrow border transition-all duration-150
+              ${
+                downloaded
+                  ? "bg-green-50 text-green-700 border-green-200"
+                  : "bg-white text-gray-800 border-gray-200 hover:bg-gray-50 active:scale-[0.98]"
+              }`}
+          >
+            <svg
+              className="w-4 h-4"
+              fill="none"
+              stroke="currentColor"
+              viewBox="0 0 24 24"
+            >
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth={2}
+                d={
+                  downloaded
+                    ? "M5 13l4 4L19 7"
+                    : "M4 16v1a2 2 0 002 2h12a2 2 0 002-2v-1M12 4v12m-4-4l4 4 4-4"
+                }
+              />
+            </svg>
+            {downloaded ? "Downloaded!" : "Download QR Code"}
+          </button>
+
+          <button
+            onClick={onClose}
+            className="w-full py-2.5 rounded-xl text-sm text-gray-400 font-gothamNarrow bg-gray-50 hover:bg-gray-100 transition-colors duration-150"
+          >
+            Close
+          </button>
         </div>
       </div>
     </div>
