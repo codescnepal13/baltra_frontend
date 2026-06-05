@@ -212,16 +212,15 @@ const Footer = () => {
             { label: "Privacy Policy", to: "/baltra/privacy-policy" },
             { label: "Terms of Service", to: "/baltra-term-of-use" },
           ].map(({ label, to }) => (
-            <Link
+            <a
               key={label}
-              to={to}
-              className="
-                text-gray-600 text-xs font-gothamNarrow
-                hover:text-gray-300 transition-colors duration-200
-              "
+              href={to}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="text-gray-600 text-xs font-gothamNarrow hover:text-gray-300 transition-colors duration-200"
             >
               {label}
-            </Link>
+            </a>
           ))}
         </div>
       </div>
