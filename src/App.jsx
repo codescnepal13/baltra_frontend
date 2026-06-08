@@ -55,6 +55,10 @@ import BaltraMobile from "./pages/user/baltraMobile/BaltraMobile";
 import BaltraSuccessModal from "./pages/user/baltraSuccessModal/BaltraSuccessModal";
 import Register from "./pages/user/register/Register";
 import VerifyOTP from "./pages/user/verifyOTP/VerifyOTP";
+const EditProductComplaint = lazy(
+  () =>
+    import("./components/admin/adminComponents/productComplaints/editProductComplaint/EditProductComplaint"),
+);
 const UnAuthorize = lazy(
   () => import("./components/layout/unauthorize/UnAuthorize"),
 );
@@ -719,6 +723,19 @@ const App = () => {
                     allowedRoles={SERVICE}
                   >
                     <SingleProductComplaint />
+                  </PrivateRoute>
+                }
+              />
+
+              <Route
+                path="edit-product-complaint/:id"
+                element={
+                  <PrivateRoute
+                    isAuthenticated={isAuthenticated}
+                    userRole={userRole}
+                    allowedRoles={SERVICE}
+                  >
+                    <EditProductComplaint />
                   </PrivateRoute>
                 }
               />

@@ -1,13 +1,14 @@
+// ProductComplaintList.jsx
 import moment from "moment";
 import { enqueueSnackbar } from "notistack";
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import {
   HiOutlineArrowPath,
   HiOutlineExclamationCircle,
   HiOutlineEye,
   HiOutlinePencilSquare,
   HiOutlineTrash,
-  HiOutlineUserMinus,
+  HiOutlineXMark,
 } from "react-icons/hi2";
 import { useDispatch, useSelector } from "react-redux";
 import { Link } from "react-router-dom";
@@ -20,86 +21,132 @@ import {
 import CustomPagination from "../adminPagination/customPagination/CustomPagination";
 import DeleteComplaintModal from "./deleteComplaintModal/DeleteComplaintModal";
 
+/* ── Indeterminate checkbox ─────────────────────────────────────────────── */
+const BCheckbox = ({ indeterminate = false, checked, onChange, disabled }) => {
+  const ref = useRef(null);
+  useEffect(() => {
+    if (ref.current) ref.current.indeterminate = Boolean(indeterminate);
+  }, [indeterminate]);
+  return (
+    <input
+      ref={ref}
+      type="checkbox"
+      checked={checked}
+      onChange={onChange}
+      disabled={disabled}
+      className="w-3.5 h-3 rounded cursor-pointer accent-red-600 disabled:opacity-40 disabled:cursor-not-allowed"
+    />
+  );
+};
+
+/* ── Problem type badge ─────────────────────────────────────────────────── */
+const ProblemBadge = ({ type }) => {
+  if (!type) return <span className="text-slate-300 text-xs">—</span>;
+  return (
+    <span className="inline-flex items-center px-2 py-0.5 rounded-md bg-orange-50 border border-orange-200 text-[10px] font-semibold text-orange-600 whitespace-nowrap">
+      {type}
+    </span>
+  );
+};
+
+/* ── Table header ───────────────────────────────────────────────────────── */
+const Th = ({ children, checkbox }) => (
+  <th
+    className={`px-3 py-3 text-left text-[10px] font-bold uppercase tracking-widest text-slate-400 whitespace-nowrap select-none ${
+      checkbox ? "w-10" : ""
+    }`}
+  >
+    {children}
+  </th>
+);
+
+/* ── Table cell ─────────────────────────────────────────────────────────── */
+const Td = ({ children, className = "" }) => (
+  <td className={`px-3 py-2.5 align-middle ${className}`}>{children}</td>
+);
+
+/* ══════════════════════════════════════════════════════════════════════════
+   Main component
+══════════════════════════════════════════════════════════════════════════ */
 const ProductComplaintList = () => {
   const dispatch = useDispatch();
 
   const { loading, error, productComplaints } = useSelector(
     (state) => state.customer,
   );
-
   const complaint_Pagination =
     useSelector((state) => state.customer.complaint_Pagination) || {};
-  const { page = 1, total_pages = 1 } = complaint_Pagination;
+  const {
+    page = 1,
+    total_pages = 1,
+    results_per_page = 10,
+  } = complaint_Pagination;
 
-  const [selectedProductsId, setSelectedProductsId] = useState([]);
-  const [selectedProductId, setSelectedProductId] = useState(null);
+  const [selectedIds, setSelectedIds] = useState([]);
+  const [deleteTargetId, setDeleteTargetId] = useState(null);
 
-  // ── Fetch helper ─────────────────────────────────────────────────────────
+  const items = productComplaints ?? [];
+
+  /* ── Fetch ──────────────────────────────────────────────────────────── */
   const fetchPage = useCallback(
     (p = 1) => dispatch(allProductComplaints({ page: p })),
     [dispatch],
   );
 
-  // ── Pagination ────────────────────────────────────────────────────────────
-  const handlePageChange = (newPage) => {
-    setSelectedProductsId([]);
-    fetchPage(newPage);
-  };
-
-  // ── Selection ─────────────────────────────────────────────────────────────
-  const allSelected =
-    productComplaints?.length > 0 &&
-    selectedProductsId.length === productComplaints.length;
-
-  const indeterminate =
-    selectedProductsId.length > 0 &&
-    selectedProductsId.length < (productComplaints?.length ?? 0);
+  /* ── Selection ──────────────────────────────────────────────────────── */
+  const allSelected = items.length > 0 && selectedIds.length === items.length;
+  const someSelected =
+    selectedIds.length > 0 && selectedIds.length < items.length;
 
   const handleSelectAll = (e) =>
-    setSelectedProductsId(
-      e.target.checked ? productComplaints.map((p) => p.id) : [],
-    );
+    setSelectedIds(e.target.checked ? items.map((p) => p.id) : []);
 
-  const handleSelectProduct = (e, id) =>
-    setSelectedProductsId((prev) =>
+  const handleSelectItem = (e, id) =>
+    setSelectedIds((prev) =>
       e.target.checked ? [...prev, id] : prev.filter((i) => i !== id),
     );
 
-  // ── Bulk delete ───────────────────────────────────────────────────────────
-  const handleMultipleDelete = () => {
-    if (!selectedProductsId.length) return;
+  /* ── Pagination ─────────────────────────────────────────────────────── */
+  const handlePageChange = (newPage) => {
+    setSelectedIds([]);
+    fetchPage(newPage);
+  };
+
+  /* ── Bulk delete ────────────────────────────────────────────────────── */
+  const handleBulkDelete = () => {
+    if (!selectedIds.length) return;
     dispatch(
       deleteMultipleProductComplaints({
-        complaint_ids: selectedProductsId,
+        complaint_ids: selectedIds,
         enqueueSnackbar,
       }),
-    ).then(() => fetchPage(page));
-    setSelectedProductsId([]);
+    ).then(() => {
+      const remaining = items.length - selectedIds.length;
+      fetchPage(remaining <= 0 && page > 1 ? page - 1 : page);
+    });
+    setSelectedIds([]);
   };
 
-  // ── Single delete ─────────────────────────────────────────────────────────
-  const handleOpenModal = (id) => setSelectedProductId(id);
-  const handleCloseModal = () => setSelectedProductId(null);
-
+  /* ── Single delete ──────────────────────────────────────────────────── */
   const handleDeleteConfirm = () => {
-    if (selectedProductId == null) return;
+    if (deleteTargetId == null) return;
     dispatch(
-      deleteProductComplaint({
-        complaint_id: selectedProductId,
-        enqueueSnackbar,
-      }),
-    ).then(() => fetchPage(page));
-    setSelectedProductId(null);
+      deleteProductComplaint({ complaint_id: deleteTargetId, enqueueSnackbar }),
+    ).then(() => {
+      const remaining = items.length - 1;
+      fetchPage(remaining <= 0 && page > 1 ? page - 1 : page);
+    });
+    setDeleteTargetId(null);
   };
 
-  // ── Reset ─────────────────────────────────────────────────────────────────
+  /* ── Reset ──────────────────────────────────────────────────────────── */
   const handleReset = () => {
-    setSelectedProductId(null);
-    setSelectedProductsId([]);
+    setSelectedIds([]);
+    setDeleteTargetId(null);
     fetchPage(1);
   };
 
-  // ── Effects ───────────────────────────────────────────────────────────────
+  /* ── Effects ────────────────────────────────────────────────────────── */
   useEffect(() => {
     if (error) dispatch(clearCustomerError());
   }, [dispatch, error]);
@@ -108,161 +155,167 @@ const ProductComplaintList = () => {
     fetchPage(1);
   }, [fetchPage]);
 
-  // ── Render ────────────────────────────────────────────────────────────────
+  /* ── Render ─────────────────────────────────────────────────────────── */
   return (
-    <div className="font-gothamNarrow max-w-screen-2xl mx-auto px-4 py-6">
-      {/* Page Header */}
+    <div className="font-gothamNarrow max-w-screen-2xl mx-auto px-4 py-6 min-h-screen bg-slate-50">
+      {/* ── Page header ──────────────────────────────────────────────── */}
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 mb-5">
+        {/* Left */}
         <div className="flex items-center gap-3">
-          <div className="w-10 h-10 rounded-xl bg-red-50 flex items-center justify-center flex-shrink-0">
-            <HiOutlineExclamationCircle size={20} className="text-red-500" />
+          <div className="w-9 h-9 rounded-xl bg-red-50 flex items-center justify-center flex-shrink-0">
+            <HiOutlineExclamationCircle size={18} className="text-red-500" />
           </div>
           <div>
-            <h1 className="text-base font-semibold text-gray-900 tracking-tight">
+            <h1 className="text-sm font-semibold text-slate-900 tracking-tight">
               Product Complaints
             </h1>
-            <p className="text-xs text-gray-400 mt-0.5">
-              {productComplaints?.length ?? 0} complaints on this page
+            <p className="text-[11px] text-slate-400 mt-0.5">
+              {items.length} record{items.length !== 1 ? "s" : ""} on this page
               {total_pages > 1 && ` · page ${page} of ${total_pages}`}
             </p>
           </div>
-        </div>
 
-        <div className="flex items-center gap-2">
-          {selectedProductsId.length > 0 && (
+          {/* Bulk delete — near title */}
+          {selectedIds.length > 0 && (
             <button
-              onClick={handleMultipleDelete}
-              className="inline-flex items-center gap-2 px-3.5 py-2 rounded-lg bg-red-50 border border-red-200 text-red-600 text-xs font-semibold hover:bg-red-100 transition-colors"
+              onClick={handleBulkDelete}
+              className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-red-500 hover:bg-red-600 text-white text-xs font-semibold transition-colors ml-2"
             >
-              <HiOutlineUserMinus size={14} />
-              Delete {selectedProductsId.length} selected
+              <HiOutlineTrash size={12} />
+              Delete {selectedIds.length}
             </button>
           )}
-          <button
-            onClick={handleReset}
-            className="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-lg border border-gray-200 text-xs font-semibold text-gray-500 hover:bg-gray-50 transition-colors"
-          >
-            <HiOutlineArrowPath size={13} />
-            Reset
-          </button>
         </div>
+
+        {/* Right — Reset only */}
+        <button
+          onClick={handleReset}
+          className="inline-flex items-center gap-1 px-3 py-1.5 rounded-lg border border-slate-200 bg-white text-xs font-semibold text-slate-500 hover:bg-slate-50 hover:border-slate-300 transition-all self-start sm:self-auto"
+        >
+          <HiOutlineArrowPath size={12} />
+          Reset
+        </button>
       </div>
 
-      {/* Selection banner */}
-      {selectedProductsId.length > 0 && (
-        <div className="flex items-center gap-2 mb-4 px-4 py-2.5 bg-red-50 border border-red-200 rounded-xl">
-          <span className="w-2 h-2 rounded-full bg-red-400 animate-pulse" />
+      {/* ── Selection banner ─────────────────────────────────────────── */}
+      {selectedIds.length > 0 && (
+        <div className="flex items-center gap-2 mb-4 px-4 py-2 bg-red-50 border border-red-200 rounded-xl">
+          <span className="w-1.5 h-1.5 rounded-full bg-red-500 animate-pulse flex-shrink-0" />
           <span className="text-xs font-semibold text-red-600">
-            {selectedProductsId.length} complaint
-            {selectedProductsId.length > 1 ? "s" : ""} selected
+            {selectedIds.length} complaint{selectedIds.length > 1 ? "s" : ""}{" "}
+            selected
           </span>
+          <button
+            onClick={() => setSelectedIds([])}
+            className="ml-auto inline-flex items-center gap-1 text-xs text-red-400 hover:text-red-600 transition-colors font-semibold"
+          >
+            <HiOutlineXMark size={12} />
+            Clear
+          </button>
         </div>
       )}
 
-      {/* Table Card */}
-      <div className="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden">
+      {/* ── Table card ───────────────────────────────────────────────── */}
+      <div className="bg-white rounded-2xl border border-slate-200 overflow-hidden shadow-sm">
         <div className="overflow-x-auto">
-          <table className="min-w-full">
+          <table className="min-w-full text-sm">
             <thead>
-              <tr className="bg-gray-50 border-b border-gray-100">
-                <th className="px-4 py-3 w-10">
-                  <input
-                    type="checkbox"
-                    ref={(el) => {
-                      if (el) el.indeterminate = indeterminate;
-                    }}
+              <tr className="bg-slate-50 border-b border-slate-200">
+                <Th checkbox>
+                  <BCheckbox
                     checked={allSelected}
+                    indeterminate={someSelected}
                     onChange={handleSelectAll}
-                    className="w-3 h-3 cursor-pointer accent-red-500"
+                    disabled={items.length === 0}
                   />
-                </th>
+                </Th>
                 {[
                   "#",
                   "Customer",
                   "Model",
                   "Serial No.",
+                  "Problem",
                   "Damage",
                   "Date",
                   "Actions",
                 ].map((h) => (
-                  <th
-                    key={h}
-                    className="px-4 py-3 text-left text-[11px] font-semibold uppercase tracking-wider text-gray-500 whitespace-nowrap"
-                  >
-                    {h}
-                  </th>
+                  <Th key={h}>{h}</Th>
                 ))}
               </tr>
             </thead>
 
-            <tbody className="divide-y divide-gray-50">
+            <tbody className="divide-y divide-slate-100">
               {loading ? (
                 <tr>
-                  <td colSpan={8} className="py-16 text-center">
-                    <div className="flex flex-col items-center gap-3">
-                      <div className="w-7 h-7 rounded-full border-2 border-red-400 border-t-transparent animate-spin" />
-                      <span className="text-xs text-gray-400">
+                  <td colSpan={9} className="py-16 text-center">
+                    <div className="flex flex-col items-center gap-2">
+                      <div className="w-5 h-5 rounded-full border-2 border-slate-200 border-t-red-500 animate-spin" />
+                      <span className="text-xs text-slate-400">
                         Loading complaints…
                       </span>
                     </div>
                   </td>
                 </tr>
-              ) : productComplaints?.length > 0 ? (
-                productComplaints.map((item, index) => {
-                  const isSelected = selectedProductsId.includes(item.id);
-                  const rowNum = (page - 1) * 10 + index + 1;
+              ) : items.length > 0 ? (
+                items.map((item, index) => {
+                  const isSelected = selectedIds.includes(item.id);
+                  const rowNum = (page - 1) * results_per_page + index + 1;
+
                   return (
                     <tr
                       key={item.id}
                       className={`transition-colors duration-100 ${
-                        isSelected ? "bg-red-50/70" : "hover:bg-gray-50/70"
+                        isSelected ? "bg-red-50/40" : "hover:bg-slate-50/60"
                       }`}
                     >
                       {/* Checkbox */}
-                      <td className="px-4 py-3">
-                        <input
-                          type="checkbox"
-                          className="w-3 h-3 cursor-pointer accent-red-500"
+                      <Td>
+                        <BCheckbox
                           checked={isSelected}
-                          onChange={(e) => handleSelectProduct(e, item.id)}
+                          onChange={(e) => handleSelectItem(e, item.id)}
                         />
-                      </td>
+                      </Td>
 
                       {/* Row number */}
-                      <td className="px-4 py-3">
-                        <span className="text-xs font-medium text-gray-400 tabular-nums">
+                      <Td>
+                        <span className="text-xs text-slate-400 tabular-nums font-medium">
                           {rowNum}
                         </span>
-                      </td>
+                      </Td>
 
                       {/* Customer */}
-                      <td className="px-4 py-3 whitespace-nowrap">
-                        <span className="text-sm font-semibold text-gray-800">
+                      <Td>
+                        <span className="text-xs font-semibold text-slate-800 whitespace-nowrap">
                           {item?.customer_name || "—"}
                         </span>
-                      </td>
+                      </Td>
 
                       {/* Model */}
-                      <td className="px-4 py-3 whitespace-nowrap">
-                        <p className="text-sm font-semibold text-gray-800 leading-tight">
+                      <Td>
+                        <p className="text-xs font-semibold text-slate-800 leading-tight whitespace-nowrap">
                           {item?.model_name || "—"}
                         </p>
-                        <p className="text-[11px] text-gray-400 mt-0.5">
+                        <p className="text-[10px] font-mono text-slate-400 mt-0.5">
                           #{item?.model_num || "—"}
                         </p>
-                      </td>
+                      </Td>
 
                       {/* Serial no. */}
-                      <td className="px-4 py-3 whitespace-nowrap">
-                        <span className="inline-flex items-center px-2 py-0.5 rounded-md bg-gray-100 border border-gray-200 text-xs font-semibold text-gray-600">
+                      <Td>
+                        <span className="inline-flex items-center px-1.5 py-0.5 rounded-md bg-slate-100 border border-slate-200 text-[10px] font-mono font-semibold text-slate-600 whitespace-nowrap">
                           {item?.serial_number || "—"}
                         </span>
-                      </td>
+                      </Td>
 
-                      {/* Damage */}
-                      <td className="px-4 py-3 whitespace-nowrap">
+                      {/* Problem type */}
+                      <Td>
+                        <ProblemBadge type={item?.problem_type} />
+                      </Td>
+
+                      {/* Damage image */}
+                      <Td>
                         {item?.damaged_image_url ? (
-                          <div className="w-11 h-9 rounded-lg overflow-hidden border border-gray-100">
+                          <div className="w-10 h-9 rounded-lg overflow-hidden border border-slate-200 bg-slate-50">
                             <img
                               src={item.damaged_image_url}
                               alt="Damage"
@@ -270,78 +323,67 @@ const ProductComplaintList = () => {
                             />
                           </div>
                         ) : (
-                          <span className="inline-flex items-center px-2 py-0.5 rounded-md bg-red-50 border border-dashed border-red-200 text-[10px] font-semibold text-red-400">
-                            N/A
-                          </span>
+                          <div className="w-10 h-9 rounded-lg bg-slate-50 border border-dashed border-slate-200 flex items-center justify-center">
+                            <span className="text-[9px] text-slate-300 font-semibold">
+                              N/A
+                            </span>
+                          </div>
                         )}
-                      </td>
+                      </Td>
 
                       {/* Date */}
-                      <td className="px-4 py-3 whitespace-nowrap">
-                        <span className="text-xs text-gray-400 tabular-nums">
+                      <Td>
+                        <span className="text-[11px] text-slate-500 whitespace-nowrap tabular-nums">
                           {moment(item.created_at || item.date_joined).format(
                             "D MMM YYYY",
                           )}
                         </span>
-                      </td>
+                      </Td>
 
                       {/* Actions */}
-                      <td className="px-4 py-3 whitespace-nowrap">
-                        <div className="flex items-center gap-1.5">
+                      <Td>
+                        <div className="flex items-center gap-0.5">
                           <Link
                             to={`/baltra-admin-dashboard/single-product-complaint/${item.id}`}
-                            className="w-7 h-7 rounded-lg bg-sky-50 border border-sky-100 flex items-center justify-center hover:bg-sky-500 hover:text-white hover:border-sky-500 transition-all group"
+                            className="w-7 h-7 rounded-md text-slate-400 hover:text-blue-600 hover:bg-blue-50 flex items-center justify-center transition-all"
                             title="View"
                           >
-                            <HiOutlineEye
-                              size={13}
-                              className="text-sky-500 group-hover:text-white"
-                            />
+                            <HiOutlineEye size={13} />
                           </Link>
                           <Link
                             to={`/baltra-admin-dashboard/edit-product-complaint/${item.id}`}
-                            className="w-7 h-7 rounded-lg bg-emerald-50 border border-emerald-100 flex items-center justify-center hover:bg-emerald-500 hover:border-emerald-500 transition-all group"
+                            className="w-7 h-7 rounded-md text-slate-400 hover:text-emerald-600 hover:bg-emerald-50 flex items-center justify-center transition-all"
                             title="Edit"
                           >
-                            <HiOutlinePencilSquare
-                              size={13}
-                              className="text-emerald-500 group-hover:text-white"
-                            />
+                            <HiOutlinePencilSquare size={13} />
                           </Link>
                           <button
-                            onClick={() => handleOpenModal(item.id)}
-                            className="w-7 h-7 rounded-lg bg-red-50 border border-red-100 flex items-center justify-center hover:bg-red-500 hover:border-red-500 transition-all group"
+                            onClick={() => setDeleteTargetId(item.id)}
+                            className="w-7 h-7 rounded-md text-slate-400 hover:text-red-600 hover:bg-red-50 flex items-center justify-center transition-all"
                             title="Delete"
                           >
-                            <HiOutlineTrash
-                              size={13}
-                              className="text-red-500 group-hover:text-white"
-                            />
+                            <HiOutlineTrash size={13} />
                           </button>
                         </div>
-
-                        {selectedProductId === item.id && (
-                          <DeleteComplaintModal
-                            onClose={handleCloseModal}
-                            onConfirm={handleDeleteConfirm}
-                          />
-                        )}
-                      </td>
+                      </Td>
                     </tr>
                   );
                 })
               ) : (
                 <tr>
-                  <td colSpan={8} className="py-16 text-center">
-                    <div className="flex flex-col items-center gap-3">
-                      <div className="w-11 h-11 rounded-xl bg-red-50 flex items-center justify-center">
+                  <td colSpan={9} className="py-14 text-center">
+                    <div className="flex flex-col items-center gap-2">
+                      <div className="w-9 h-9 rounded-xl bg-slate-100 flex items-center justify-center">
                         <HiOutlineExclamationCircle
-                          size={22}
-                          className="text-red-300"
+                          size={18}
+                          className="text-slate-300"
                         />
                       </div>
-                      <p className="text-sm text-gray-400">
+                      <p className="text-sm font-medium text-slate-400">
                         No complaints found
+                      </p>
+                      <p className="text-xs text-slate-300">
+                        Try resetting or check back later
                       </p>
                     </div>
                   </td>
@@ -351,22 +393,20 @@ const ProductComplaintList = () => {
           </table>
         </div>
 
-        {/* Footer + Pagination */}
-        {productComplaints?.length > 0 && (
-          <div className="px-5 py-3.5 border-t border-gray-100 bg-gray-50/50 flex items-center justify-between flex-wrap gap-3">
-            <span className="text-xs text-gray-400">
-              {productComplaints.length} record
-              {productComplaints.length !== 1 ? "s" : ""} on this page
-              {selectedProductsId.length > 0 && (
+        {/* ── Footer ───────────────────────────────────────────────────── */}
+        {items.length > 0 && (
+          <div className="px-4 py-3 border-t border-slate-100 bg-slate-50/50 flex items-center justify-between flex-wrap gap-3">
+            <span className="text-[11px] text-slate-400">
+              {items.length} record{items.length !== 1 ? "s" : ""} on this page
+              {selectedIds.length > 0 && (
                 <span className="ml-2 text-red-500 font-medium">
-                  · {selectedProductsId.length} selected
+                  · {selectedIds.length} selected
                 </span>
               )}
             </span>
-
             {total_pages > 1 && (
               <div className="flex items-center gap-3">
-                <span className="text-xs text-gray-400 font-medium hidden sm:block">
+                <span className="text-[11px] text-slate-400 font-medium hidden sm:block">
                   Page {page} of {total_pages}
                 </span>
                 <CustomPagination
@@ -379,6 +419,14 @@ const ProductComplaintList = () => {
           </div>
         )}
       </div>
+
+      {/* ── Delete confirmation modal ─────────────────────────────────── */}
+      {deleteTargetId !== null && (
+        <DeleteComplaintModal
+          onClose={() => setDeleteTargetId(null)}
+          onConfirm={handleDeleteConfirm}
+        />
+      )}
     </div>
   );
 };

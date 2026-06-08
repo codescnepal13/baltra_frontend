@@ -1095,6 +1095,46 @@ export const trackingComplaintStatus = createAsyncThunk(
   },
 );
 
+//getWarrantyStatusById
+export const getWarrantyStatusById = createAsyncThunk(
+  "/admin/getWarrantyStatusById",
+  async (complaint_id, { rejectWithValue }) => {
+    try {
+      const response = await API.get(
+        `/stocks/getcomplaintbyid/${complaint_id}`,
+      );
+      return response.data;
+    } catch (error) {
+      return rejectWithValue({ message: getErrorMessage(error) });
+    }
+  },
+);
+
+//deletewarrantyComplaintsMultiple
+export const deletewarrantyComplaintsMultiple = createAsyncThunk(
+  "/admin/deletewarrantyComplaintsMultiple",
+  async ({ complaint_ids, enqueueSnackbar }, { rejectWithValue }) => {
+    try {
+      const response = await API.delete("/stocks/deletecomplaint", {
+        data: { complaint_ids }, // body: { complaint_ids: [...] }
+      });
+
+      const message =
+        complaint_ids.length === 1
+          ? "Complaint deleted successfully!"
+          : `${complaint_ids.length} complaints deleted successfully!`;
+
+      enqueueSnackbar(response.data.message || message, {
+        variant: "success",
+      });
+
+      return response.data;
+    } catch (error) {
+      return rejectWithValue({ message: getErrorMessage(error) });
+    }
+  },
+);
+
 //assignRoleByAdmin(add)
 export const assignRoleByAdmin = createAsyncThunk(
   "/admin/assign-role",
@@ -1223,6 +1263,7 @@ const initialState = {
   bulkQuoteProducts: [],
   bulkQuoteProduct: null,
   complaintStatus: [],
+  singleComplaintStatus: null,
   myProductPagination: {
     page: null,
     total_pages: null,
@@ -1253,17 +1294,13 @@ const initialState = {
     total_pages: null,
     results_per_page: null,
   },
-  warrantyPagination: {
-    page: null,
-    total_pages: null,
-    results_per_page: null,
-  },
+
   bulkPagination: {
     page: null,
     total_pages: null,
     results_per_page: null,
   },
-  warrantyComplaintPagination: {
+  allwarranty_pagination: {
     page: null,
     total_pages: null,
     results_per_page: null,
@@ -2165,12 +2202,39 @@ const adminSlice = createSlice({
       .addCase(trackingComplaintStatus.fulfilled, (state, action) => {
         state.loading = false;
         state.complaintStatus = action.payload.data;
-        state.warrantyComplaintPagination =
-          action.payload.allwarranty_pagination;
+        state.allwarranty_pagination = action.payload.allwarranty_pagination;
       })
 
       .addCase(trackingComplaintStatus.rejected, (state, action) => {
         state.loading = false;
+        state.error = action.payload.message;
+      })
+      .addCase(getWarrantyStatusById.pending, (state) => {
+        state.loading = true;
+      })
+      .addCase(getWarrantyStatusById.fulfilled, (state, action) => {
+        state.loading = false;
+        state.singleComplaintStatus = action.payload.data;
+      })
+      .addCase(getWarrantyStatusById.rejected, (state, action) => {
+        state.loading = false;
+        state.error = action.payload.message;
+      })
+      .addCase(deletewarrantyComplaintsMultiple.pending, (state) => {
+        state.isProcessing = true;
+      })
+      // in extraReducers — arg key fix
+      .addCase(deletewarrantyComplaintsMultiple.fulfilled, (state, action) => {
+        state.isProcessing = false;
+        const { complaint_ids } = action.meta.arg; // ✅ already correct
+        if (Array.isArray(complaint_ids) && complaint_ids.length > 0) {
+          state.complaintStatus = state.complaintStatus.filter(
+            (item) => !complaint_ids.includes(item.id), // ✅ use item.id not item.complaint_id
+          );
+        }
+      })
+      .addCase(deletewarrantyComplaintsMultiple.rejected, (state, action) => {
+        state.isProcessing = false;
         state.error = action.payload.message;
       });
   },

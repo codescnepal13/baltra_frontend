@@ -13,7 +13,7 @@ const DeleteComplaintModal = ({ onClose, onConfirm }) => {
   return (
     <>
       <div
-        className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-[2px]"
+        className="fixed inset-0 z-50 flex items-center justify-center backdrop-blur-[2px]"
         onClick={(e) => e.target === e.currentTarget && onClose()}
       >
         <div className="bg-white w-full max-w-sm mx-4 rounded-2xl shadow-xl overflow-hidden">
@@ -44,9 +44,13 @@ const DeleteComplaintModal = ({ onClose, onConfirm }) => {
 
           {/* Body */}
           <div className="px-5 py-5">
-            <h3 className="text-sm font-semibold text-gray-700">
-              Are you sure you want to delete this item?
-            </h3>
+            <p className="text-[13px] text-gray-500 tracking-[0.01em] leading-[1.6]">
+              Are you sure you want to delete this item? This action{" "}
+              <span className="font-medium text-gray-700">
+                cannot be undone
+              </span>{" "}
+              and the data will be permanently removed.
+            </p>
           </div>
 
           {/* Footer */}

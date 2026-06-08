@@ -1,6 +1,9 @@
+// TrackingComplaintStatusList.jsx
 import { debounce } from "lodash";
 import moment from "moment";
+import { enqueueSnackbar } from "notistack";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { FaTrashAlt } from "react-icons/fa";
 import {
   HiOutlineArrowPath,
   HiOutlineClipboardDocumentList,
@@ -10,14 +13,14 @@ import {
   HiOutlineXMark,
 } from "react-icons/hi2";
 import { useDispatch, useSelector } from "react-redux";
-import { Link } from "react-router-dom";
 import {
   clearAdminError,
+  deletewarrantyComplaintsMultiple,
   trackingComplaintStatus,
 } from "../../../../redux/features/admin/adminSlice";
-import WarrantyComplaintPagination from "../adminPagination/warrantyComplaintPagination/WarrantyComplaintPagination";
+import CustomPagination from "../adminPagination/customPagination/CustomPagination";
+import SingleWarrantyStatusModal from "./singleWarrantyStatusModal/SingleWarrantyStatusModal";
 
-/* ── Indeterminate checkbox ─────────────────────────────────────────────── */
 const BCheckbox = ({ indeterminate = false, checked, onChange, disabled }) => {
   const ref = useRef(null);
   useEffect(() => {
@@ -30,29 +33,27 @@ const BCheckbox = ({ indeterminate = false, checked, onChange, disabled }) => {
       checked={checked}
       onChange={onChange}
       disabled={disabled}
-      className="w-3.5 h-3.5 rounded cursor-pointer accent-red-600 disabled:opacity-40 disabled:cursor-not-allowed"
+      className="w-3.5 h-3 rounded cursor-pointer accent-red-600 disabled:opacity-40 disabled:cursor-not-allowed"
     />
   );
 };
 
-/* ── Warranty status badge ──────────────────────────────────────────────── */
 const WarrantyBadge = ({ active }) =>
   active ? (
-    <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-emerald-50 border border-emerald-200 text-[11px] font-semibold text-emerald-700">
+    <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-emerald-50 border border-emerald-200 text-[10px] font-semibold text-emerald-700">
       <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
       Active
     </span>
   ) : (
-    <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-red-50 border border-red-200 text-[11px] font-semibold text-red-600">
+    <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-red-50 border border-red-200 text-[10px] font-semibold text-red-600">
       <span className="w-1.5 h-1.5 rounded-full bg-red-400" />
       Expired
     </span>
   );
 
-/* ── Table header cell ──────────────────────────────────────────────────── */
 const Th = ({ children, checkbox }) => (
   <th
-    className={`px-4 py-3 text-left text-[11px] font-semibold uppercase tracking-wider text-slate-400 whitespace-nowrap select-none ${
+    className={`px-3 py-3 text-left text-[10px] font-semibold uppercase tracking-wider text-slate-400 whitespace-nowrap select-none ${
       checkbox ? "w-10" : ""
     }`}
   >
@@ -60,28 +61,25 @@ const Th = ({ children, checkbox }) => (
   </th>
 );
 
-/* ── Table data cell ────────────────────────────────────────────────────── */
 const Td = ({ children, className = "" }) => (
-  <td className={`px-4 py-3.5 align-middle ${className}`}>{children}</td>
+  <td className={`px-3 py-2.5 align-middle ${className}`}>{children}</td>
 );
 
-/* ══════════════════════════════════════════════════════════════════════════
-   Main component
-══════════════════════════════════════════════════════════════════════════ */
 const TrackingComplaintStatusList = () => {
   const dispatch = useDispatch();
 
   const { loading, complaintStatus, error } = useSelector((s) => s.admin);
-  const warrantyComplaintPagination =
-    useSelector((s) => s.admin.warrantyComplaintPagination) ?? {};
+  const allwarranty_pagination =
+    useSelector((s) => s.admin.allwarranty_pagination) ?? {};
   const {
     page = 1,
     total_pages = 1,
-    results_per_page = 10,
-  } = warrantyComplaintPagination;
+    results_per_page = 8,
+  } = allwarranty_pagination;
 
-  const [searchSerialNumber, setSearchSerialNumber] = useState("");
+  const [filters, setFilters] = useState({ serial_number: "", page: 1 });
   const [selectedIds, setSelectedIds] = useState(new Set());
+  const [viewId, setViewId] = useState(null);
 
   const items = useMemo(() => complaintStatus ?? [], [complaintStatus]);
   const currentPageIds = useMemo(() => items.map((c) => c.id), [items]);
@@ -93,22 +91,38 @@ const TrackingComplaintStatusList = () => {
   const someSelected =
     !allSelected && currentPageIds.some((id) => selectedIds.has(id));
 
-  /* ── Debounced search ────────────────────────────────────────────────── */
+  const fetchData = useCallback(
+    (overrides = {}) => {
+      setFilters((prev) => {
+        const merged = { ...prev, ...overrides };
+        dispatch(
+          trackingComplaintStatus({
+            ...(merged.serial_number && {
+              serial_number: merged.serial_number,
+            }),
+            page: merged.page,
+          }),
+        );
+        return merged;
+      });
+    },
+    [dispatch],
+  );
+
   // eslint-disable-next-line react-hooks/exhaustive-deps
   const debouncedSearch = useCallback(
     debounce((value) => {
-      dispatch(trackingComplaintStatus({ serial_number: value }));
+      fetchData({ serial_number: value, page: 1 });
     }, 500),
-    [dispatch],
+    [fetchData],
   );
 
   const handleSearchChange = (e) => {
     const value = e.target.value;
-    setSearchSerialNumber(value);
+    setFilters((prev) => ({ ...prev, serial_number: value }));
     debouncedSearch(value);
   };
 
-  /* ── Selection ───────────────────────────────────────────────────────── */
   const handleSelectAll = (e) => {
     setSelectedIds((prev) => {
       const next = new Set(prev);
@@ -127,123 +141,129 @@ const TrackingComplaintStatusList = () => {
     });
   };
 
-  /* ── Delete ──────────────────────────────────────────────────────────── */
-  const handleBulkDelete = () => {
-    const ids = Array.from(selectedIds);
-    if (!ids.length) return;
-    dispatch(deleteComplaintStatus({ ids }));
+  const handleBulkDelete = async () => {
+    const complaint_ids = Array.from(selectedIds);
+    if (!complaint_ids.length) return;
+    await dispatch(
+      deletewarrantyComplaintsMultiple({ complaint_ids, enqueueSnackbar }),
+    );
     setSelectedIds(new Set());
+    // refetch current page; if page becomes empty, go back one page
+    const remainingOnPage = items.length - complaint_ids.length;
+    const targetPage = remainingOnPage <= 0 && page > 1 ? page - 1 : page;
+    fetchData({ page: targetPage });
   };
 
-  const handleSingleDelete = (id) => {
+  const handleSingleDelete = async (id) => {
+    await dispatch(
+      deletewarrantyComplaintsMultiple({
+        complaint_ids: [id],
+        enqueueSnackbar,
+      }),
+    );
     setSelectedIds((prev) => {
       const next = new Set(prev);
       next.delete(id);
       return next;
     });
+    // same logic: if last item on page, go back one
+    const remainingOnPage = items.length - 1;
+    const targetPage = remainingOnPage <= 0 && page > 1 ? page - 1 : page;
+    fetchData({ page: targetPage });
   };
 
-  /* ── Pagination ──────────────────────────────────────────────────────── */
   const handlePageChange = useCallback(
     (newPage) => {
-      dispatch(trackingComplaintStatus({ page: newPage }));
+      fetchData({ page: newPage });
       setSelectedIds(new Set());
     },
-    [dispatch],
+    [fetchData],
   );
 
-  /* ── Reset ───────────────────────────────────────────────────────────── */
   const handleReset = () => {
-    setSearchSerialNumber("");
+    setFilters({ serial_number: "", page: 1 });
     setSelectedIds(new Set());
-    dispatch(trackingComplaintStatus());
+    dispatch(trackingComplaintStatus({ page: 1 }));
   };
 
-  /* ── Effects ─────────────────────────────────────────────────────────── */
   useEffect(() => {
     if (error) dispatch(clearAdminError());
   }, [dispatch, error]);
 
   useEffect(() => {
-    dispatch(trackingComplaintStatus());
+    dispatch(trackingComplaintStatus({ page: 1 }));
   }, [dispatch]);
 
-  /* ── Render ──────────────────────────────────────────────────────────── */
   return (
     <div className="font-gothamNarrow max-w-screen-2xl mx-auto px-4 py-6 min-h-screen bg-slate-50">
       {/* ── Page header ─────────────────────────────────────────────────── */}
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 mb-5">
+        {/* Left: title + bulk delete */}
         <div className="flex items-center gap-3">
-          <div className="w-10 h-10 rounded-xl bg-red-50 flex items-center justify-center flex-shrink-0">
+          <div className="w-9 h-9 rounded-xl bg-red-50 flex items-center justify-center flex-shrink-0">
             <HiOutlineClipboardDocumentList
-              size={20}
+              size={18}
               className="text-red-500"
             />
           </div>
           <div>
-            <h1 className="text-base font-semibold text-gray-900 tracking-tight">
+            <h1 className="text-sm font-semibold text-gray-900 tracking-tight">
               Warranty Complaints
             </h1>
-            <p className="text-xs text-gray-400 mt-0.5">
+            <p className="text-[11px] text-gray-400 mt-0.5">
               {items.length} record{items.length !== 1 ? "s" : ""} on this page
               {total_pages > 1 && ` · page ${page} of ${total_pages}`}
             </p>
           </div>
+
+          {selectedCount > 0 && (
+            <button
+              onClick={handleBulkDelete}
+              className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-red-500 hover:bg-red-600 text-white text-xs font-semibold transition-colors ml-2"
+            >
+              <HiOutlineTrash size={12} />
+              Delete {selectedCount}
+            </button>
+          )}
         </div>
 
-        {/* Toolbar */}
-        <div className="flex items-center gap-2 flex-wrap">
-          {/* Search */}
+        {/* Right: Search + Reset */}
+        <div className="flex items-center gap-2">
           <div className="relative flex items-center">
             <HiOutlineMagnifyingGlass
               size={13}
-              className="absolute left-3 text-slate-400 pointer-events-none"
+              className="absolute left-2.5 text-slate-400 pointer-events-none"
             />
             <input
               type="text"
-              value={searchSerialNumber}
+              value={filters.serial_number}
               onChange={handleSearchChange}
               placeholder="Search serial no…"
-              className="pl-8 pr-3 py-2 text-xs border border-slate-200 rounded-lg bg-white w-48 text-slate-700 placeholder-slate-400 focus:outline-none focus:border-red-400 transition-colors"
+              className="pl-8 pr-7 py-1.5 text-xs border border-slate-200 rounded-lg bg-white w-44 text-slate-700 placeholder-slate-400 focus:outline-none focus:border-red-400 transition-colors"
             />
-            {searchSerialNumber && (
+            {filters.serial_number && (
               <button
-                onClick={() => {
-                  setSearchSerialNumber("");
-                  dispatch(trackingComplaintStatus());
-                }}
-                className="absolute right-2.5 text-slate-300 hover:text-slate-500 transition-colors"
+                onClick={() => fetchData({ serial_number: "", page: 1 })}
+                className="absolute right-2 text-slate-300 hover:text-slate-500 transition-colors"
               >
                 <HiOutlineXMark size={12} />
               </button>
             )}
           </div>
 
-          {/* Reset */}
           <button
             onClick={handleReset}
-            className="inline-flex items-center gap-1.5 px-3 py-2 rounded-lg border border-slate-200 bg-white text-xs font-semibold text-slate-500 hover:bg-slate-50 hover:border-slate-300 transition-all"
+            className="inline-flex items-center gap-1 px-3 py-1.5 rounded-lg border border-slate-200 bg-white text-xs font-semibold text-slate-500 hover:bg-slate-50 hover:border-slate-300 transition-all"
           >
             <HiOutlineArrowPath size={12} />
             Reset
           </button>
-
-          {/* Bulk delete */}
-          {selectedCount > 0 && (
-            <button
-              onClick={handleBulkDelete}
-              className="inline-flex items-center gap-1.5 px-3 py-2 rounded-lg bg-red-500 hover:bg-red-600 text-white text-xs font-semibold transition-colors"
-            >
-              <HiOutlineTrash size={12} />
-              Delete {selectedCount} selected
-            </button>
-          )}
         </div>
       </div>
 
       {/* ── Selection banner ─────────────────────────────────────────────── */}
       {selectedCount > 0 && (
-        <div className="flex items-center gap-2 mb-4 px-4 py-2.5 bg-red-50 border border-red-200 rounded-xl">
+        <div className="flex items-center gap-2 mb-4 px-4 py-2 bg-red-50 border border-red-200 rounded-xl">
           <span className="w-1.5 h-1.5 rounded-full bg-red-500 animate-pulse flex-shrink-0" />
           <span className="text-xs font-semibold text-red-600">
             {selectedCount} item{selectedCount > 1 ? "s" : ""} selected
@@ -293,7 +313,7 @@ const TrackingComplaintStatusList = () => {
                 <tr>
                   <td colSpan={10} className="py-16 text-center">
                     <div className="flex flex-col items-center gap-2">
-                      <div className="w-6 h-6 rounded-full border-2 border-slate-200 border-t-red-500 animate-spin" />
+                      <div className="w-5 h-5 rounded-full border-2 border-slate-200 border-t-red-500 animate-spin" />
                       <span className="text-xs text-slate-400">Loading…</span>
                     </div>
                   </td>
@@ -310,10 +330,9 @@ const TrackingComplaintStatusList = () => {
                     <tr
                       key={item.id ?? index}
                       className={`transition-colors duration-100 ${
-                        isSelected ? "bg-red-50/40" : "hover:bg-slate-50/80"
+                        isSelected ? "bg-red-50/40" : "hover:bg-slate-50/60"
                       }`}
                     >
-                      {/* Checkbox */}
                       <Td>
                         <BCheckbox
                           checked={isSelected}
@@ -321,17 +340,15 @@ const TrackingComplaintStatusList = () => {
                         />
                       </Td>
 
-                      {/* Row number */}
                       <Td>
                         <span className="text-xs text-slate-400 tabular-nums font-medium">
                           {sn}
                         </span>
                       </Td>
 
-                      {/* Image */}
                       <Td>
                         {item?.warranty_image ? (
-                          <div className="w-10 h-10 rounded-lg overflow-hidden border border-slate-200 bg-slate-50">
+                          <div className="w-9 h-9 rounded-lg overflow-hidden border border-slate-200 bg-slate-50">
                             <img
                               src={item.warranty_image}
                               alt="Warranty"
@@ -339,56 +356,50 @@ const TrackingComplaintStatusList = () => {
                             />
                           </div>
                         ) : (
-                          <div className="w-10 h-10 rounded-lg bg-slate-50 border border-dashed border-slate-200 flex items-center justify-center">
-                            <span className="text-[10px] text-slate-300 font-semibold">
+                          <div className="w-9 h-9 rounded-lg bg-slate-50 border border-dashed border-slate-200 flex items-center justify-center">
+                            <span className="text-[9px] text-slate-300 font-semibold">
                               N/A
                             </span>
                           </div>
                         )}
                       </Td>
 
-                      {/* Customer */}
                       <Td>
-                        <span className="text-sm font-medium text-slate-800 whitespace-nowrap">
+                        <span className="text-xs font-medium text-slate-800 whitespace-nowrap">
                           {item?.customer_name || "—"}
                         </span>
                       </Td>
 
-                      {/* Model */}
                       <Td>
-                        <p className="text-sm font-medium text-slate-800 leading-tight whitespace-nowrap">
+                        <p className="text-xs font-medium text-slate-800 leading-tight whitespace-nowrap">
                           {item?.model_name || "—"}
                         </p>
-                        <p className="text-[11px] font-mono text-slate-400 mt-0.5">
+                        <p className="text-[10px] font-mono text-slate-400 mt-0.5">
                           #{item?.model_num || "—"}
                         </p>
                       </Td>
 
-                      {/* Serial no. */}
                       <Td>
-                        <span className="inline-flex items-center px-2 py-0.5 rounded-md bg-slate-100 border border-slate-200 text-xs font-mono font-semibold text-slate-600 whitespace-nowrap">
+                        <span className="inline-flex items-center px-1.5 py-0.5 rounded-md bg-slate-100 border border-slate-200 text-[10px] font-mono font-semibold text-slate-600 whitespace-nowrap">
                           {item?.serial_number || "—"}
                         </span>
                       </Td>
 
-                      {/* Warranty status */}
                       <Td>
                         <WarrantyBadge active={isActive} />
                       </Td>
 
-                      {/* Purchase date */}
                       <Td>
-                        <span className="text-xs text-slate-500 whitespace-nowrap tabular-nums">
+                        <span className="text-[11px] text-slate-500 whitespace-nowrap tabular-nums">
                           {item?.purchase_date
                             ? moment(item.purchase_date).format("D MMM YYYY")
                             : "—"}
                         </span>
                       </Td>
 
-                      {/* Expiry date */}
                       <Td>
                         <span
-                          className={`text-xs font-semibold whitespace-nowrap tabular-nums block ${
+                          className={`text-[11px] font-semibold whitespace-nowrap tabular-nums block ${
                             isActive ? "text-slate-600" : "text-red-500"
                           }`}
                         >
@@ -401,22 +412,21 @@ const TrackingComplaintStatusList = () => {
                         )}
                       </Td>
 
-                      {/* Actions */}
                       <Td>
-                        <div className="flex items-center gap-1.5">
-                          <Link
-                            to={`/baltra-admin-dashboard/warranty-complaint/${item.id}`}
-                            className="w-7 h-7 rounded-lg bg-sky-50 border border-sky-100 text-sky-500 hover:bg-sky-500 hover:text-white hover:border-sky-500 flex items-center justify-center transition-all"
+                        <div className="flex items-center gap-0.5">
+                          <button
+                            onClick={() => setViewId(item.id)}
+                            className="w-7 h-7 rounded-md text-slate-400 hover:text-blue-600 hover:bg-blue-50 flex items-center justify-center transition-all"
                             title="View"
                           >
-                            <HiOutlineEye size={13} />
-                          </Link>
+                            <HiOutlineEye size={14} />
+                          </button>
                           <button
                             onClick={() => handleSingleDelete(item.id)}
-                            className="w-7 h-7 rounded-lg bg-red-50 border border-red-100 text-red-500 hover:bg-red-500 hover:text-white hover:border-red-500 flex items-center justify-center transition-all"
+                            className="w-7 h-7 rounded-md text-slate-400 hover:text-red-600 hover:bg-red-50 flex items-center justify-center transition-all"
                             title="Delete"
                           >
-                            <HiOutlineTrash size={13} />
+                            <FaTrashAlt size={11} />
                           </button>
                         </div>
                       </Td>
@@ -425,11 +435,11 @@ const TrackingComplaintStatusList = () => {
                 })
               ) : (
                 <tr>
-                  <td colSpan={10} className="py-16 text-center">
+                  <td colSpan={10} className="py-14 text-center">
                     <div className="flex flex-col items-center gap-2">
-                      <div className="w-10 h-10 rounded-xl bg-slate-100 flex items-center justify-center">
+                      <div className="w-9 h-9 rounded-xl bg-slate-100 flex items-center justify-center">
                         <HiOutlineClipboardDocumentList
-                          size={20}
+                          size={18}
                           className="text-slate-300"
                         />
                       </div>
@@ -447,10 +457,10 @@ const TrackingComplaintStatusList = () => {
           </table>
         </div>
 
-        {/* ── Footer + Pagination ─────────────────────────────────────────── */}
+        {/* ── Footer ─────────────────────────────────────────────────────── */}
         {items.length > 0 && (
-          <div className="px-5 py-3.5 border-t border-slate-100 bg-slate-50/50 flex items-center justify-between flex-wrap gap-3">
-            <span className="text-xs text-slate-400">
+          <div className="px-4 py-3 border-t border-slate-100 bg-slate-50/50 flex items-center justify-between flex-wrap gap-3">
+            <span className="text-[11px] text-slate-400">
               {items.length} record{items.length !== 1 ? "s" : ""} on this page
               {selectedCount > 0 && (
                 <span className="ml-2 text-red-500 font-medium">
@@ -458,13 +468,12 @@ const TrackingComplaintStatusList = () => {
                 </span>
               )}
             </span>
-
             {total_pages > 1 && (
               <div className="flex items-center gap-3">
-                <span className="text-xs text-slate-400 font-medium hidden sm:block">
+                <span className="text-[11px] text-slate-400 font-medium hidden sm:block">
                   Page {page} of {total_pages}
                 </span>
-                <WarrantyComplaintPagination
+                <CustomPagination
                   currentPage={page}
                   totalPages={total_pages}
                   onPageChange={handlePageChange}
@@ -474,6 +483,14 @@ const TrackingComplaintStatusList = () => {
           </div>
         )}
       </div>
+
+      {/* ✅ Modal — outside all conditional wrappers, at root level */}
+      {viewId && (
+        <SingleWarrantyStatusModal
+          complaintId={viewId}
+          onClose={() => setViewId(null)}
+        />
+      )}
     </div>
   );
 };

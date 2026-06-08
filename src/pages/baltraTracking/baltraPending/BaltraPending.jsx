@@ -1,5 +1,6 @@
 import { debounce } from "lodash";
 import { useCallback, useEffect, useRef, useState } from "react";
+import { FaSearch } from "react-icons/fa";
 import { FiChevronDown, FiSearch, FiX } from "react-icons/fi";
 import { useDispatch, useSelector } from "react-redux";
 import sessiorImg from "../../../assets/images/SessiorImg.png";
@@ -368,7 +369,9 @@ const BaltraPending = () => {
             ))
           ) : (
             <div className="col-span-2 flex flex-col items-center py-16 text-gray-400">
-              <span className="text-4xl mb-3">🔍</span>
+              <span className="text-4xl mb-3">
+                <FaSearch />
+              </span>
               <p className="font-semibold font-gothamNarrow text-lg text-gray-600">
                 {isSearchActive ? "No results found" : "No Data Found"}
               </p>

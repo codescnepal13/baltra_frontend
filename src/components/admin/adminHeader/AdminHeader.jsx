@@ -77,7 +77,6 @@ const RoleBadge = ({ role, size = "sm" }) => {
 
 const AdminHeader = ({ collapsed, toggleCollapsed }) => {
   const { customer } = useSelector((state) => state.auth);
-  console.log("AdminHeader render - customer:", customer);
   const dispatch = useDispatch();
   const navigate = useNavigate();
 

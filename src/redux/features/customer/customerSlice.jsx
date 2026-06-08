@@ -177,6 +177,29 @@ export const getSingleProductComplaint = createAsyncThunk(
   },
 );
 
+//updateProductComplaint
+export const updateProductComplaint = createAsyncThunk(
+  "customer/updateProductComplaint",
+  async (
+    { complaint_id, formData, enqueueSnackbar, navigate },
+    { rejectWithValue },
+  ) => {
+    try {
+      const response = await API.put(
+        `/stocks/updatecomplaintbyid/${complaint_id}`,
+        formData,
+      );
+      enqueueSnackbar(response.data.message || "product complaint updated!", {
+        variant: "success",
+      });
+      navigate("/baltra-admin-dashboard/all/products-complaints-list");
+      return response.data;
+    } catch (error) {
+      return rejectWithValue({ message: getErrorMessage(error) });
+    }
+  },
+);
+
 //deleteProductComplaint
 export const deleteProductComplaint = createAsyncThunk(
   "customer/deleteProductComplaint",
@@ -455,6 +478,17 @@ const customerSlice = createSlice({
       .addCase(singleTrackingProductByID.rejected, (state, action) => {
         state.loading = false;
         state.error = action.payload.message;
+      })
+      .addCase(updateProductComplaint.pending, (state) => {
+        state.isLoading = true;
+      })
+      .addCase(updateProductComplaint.fulfilled, (state, action) => {
+        state.isLoading = false;
+        state.productComplaint = action.payload.data;
+      })
+      .addCase(updateProductComplaint.rejected, (state, action) => {
+        state.isLoading = false;
+        state.isError = action.payload.message;
       });
   },
 });

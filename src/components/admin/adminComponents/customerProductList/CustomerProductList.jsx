@@ -194,7 +194,7 @@ const CustomerProductList = () => {
                       checked={allSelected}
                     />
                   </Th>
-                  <Th>#</Th>
+                  <Th>S.N</Th>
                   <Th>Customer</Th>
                   <Th>Image</Th>
                   <Th>Model</Th>
@@ -326,13 +326,13 @@ const CustomerProductList = () => {
                           <div className="flex items-center gap-1.5">
                             <Link
                               to={`/baltra-admin-dashboard/single-customer-product-list/${item.id}`}
-                              className="w-7 h-7 rounded-lg bg-blue-50 border border-blue-100 text-blue-500 hover:bg-blue-500 hover:text-white hover:border-blue-500 flex items-center justify-center transition-all"
+                              className="w-7 h-7 rounded-lg border border-blue-100 text-blue-500 hover:text-blue-700 flex items-center justify-center transition-all"
                               title="View details"
                             >
                               <FaEye size={11} />
                             </Link>
                             <button
-                              className="w-7 h-7 rounded-lg bg-red-50 border border-red-100 text-red-500 hover:bg-red-500 hover:text-white hover:border-red-500 flex items-center justify-center transition-all"
+                              className="w-7 h-7 rounded-lg border border-red-100 text-red-500 hover:text-red-700 hover:bg-transparent flex items-center justify-center transition-all"
                               title="Delete"
                               onClick={() => handleOpenModal(item.id)}
                             >
