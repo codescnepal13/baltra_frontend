@@ -1,196 +1,280 @@
-import React, { useEffect, useState } from "react";
-import { motion, AnimatePresence } from "framer-motion";
-import ProductHeader from "../../components/topHeader/productHeader/ProductHeader";
-import MetaData from "../../components/layout/metaData/MetaData";
+import { AnimatePresence, motion } from "framer-motion";
+import { memo, useCallback, useEffect, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
-import PdfModal from "./pdfModal/PdfModal";
+import ArtCoverImg from "../../assets/images/userAuthImg.png";
+import MetaData from "../../components/layout/metaData/MetaData";
+import ProductHeader from "../../components/topHeader/productHeader/ProductHeader";
 import {
   allProductsCatalog,
   clearProductError,
 } from "../../redux/features/product/productSlice";
 import CatalogSkeleton from "./CatalogSkeleton";
+import PdfModal from "./pdfModal/PdfModal";
 
-// Reusable RippleButton Component
-const RippleButton = ({ label, rippleColor, onClick }) => {
-  const [ripplePosition, setRipplePosition] = useState({ x: 0, y: 0 });
-  const [isHovered, setIsHovered] = useState(false);
+// ─── RippleButton ────────────────────────────────────────────────────────────
+const RippleButton = memo(
+  ({ label, onClick, disabled = false, variant = "dark" }) => {
+    const [ripple, setRipple] = useState(null);
+    const [hovered, setHovered] = useState(false);
 
-  const handleMouseEnter = (e) => {
-    const rect = e.target.getBoundingClientRect();
-    const x = e.clientX - rect.left;
-    const y = e.clientY - rect.top;
-    setRipplePosition({ x, y });
-    setIsHovered(true);
-  };
+    const handleMouseEnter = useCallback((e) => {
+      const rect = e.currentTarget.getBoundingClientRect();
+      setRipple({ x: e.clientX - rect.left, y: e.clientY - rect.top });
+      setHovered(true);
+    }, []);
 
-  const handleMouseLeave = () => {
-    setIsHovered(false);
-  };
+    const handleMouseLeave = useCallback(() => {
+      setHovered(false);
+      setRipple(null);
+    }, []);
 
-  return (
-    <motion.button
-      whileTap={{ scale: 0.95 }}
-      className="w-full py-3 sm:py-3 border border-[#202D31] flex justify-center items-center relative overflow-hidden"
-      onMouseEnter={handleMouseEnter}
-      onMouseLeave={handleMouseLeave}
-      onClick={onClick}
-    >
-      {/* Ripple Effect */}
-      <AnimatePresence>
-        {isHovered && (
-          <motion.div
-            className="absolute rounded-full"
-            style={{
-              top: ripplePosition.y,
-              left: ripplePosition.x,
-              width: 0,
-              height: 0,
-              transform: "translate(-50%, -50%)",
-              backgroundColor: rippleColor,
-            }}
-            animate={{
-              width: 700,
-              height: 700,
-              opacity: 1,
-            }}
-            exit={{
-              opacity: 0,
-              transition: { duration: 0.5 },
-            }}
-            transition={{
-              duration: 0.5,
-              ease: "easeInOut",
-            }}
-          />
-        )}
-      </AnimatePresence>
-
-      {/* Button Text */}
-      <span
-        className={`relative z-10 text-center text-sm sm:text-base lg:text-lg font-semibold font-gothamNarrow ${
-          isHovered ? "text-white" : "text-black"
-        }`}
+    return (
+      <motion.button
+        whileTap={disabled ? {} : { scale: 0.97 }}
+        disabled={disabled}
+        onClick={onClick}
+        onMouseEnter={handleMouseEnter}
+        onMouseLeave={handleMouseLeave}
+        className="w-full py-3 relative overflow-hidden transition-colors duration-200"
+        style={{
+          border: "1px solid rgba(74, 122, 138, 0.4)",
+          background: hovered ? "transparent" : "transparent",
+          cursor: disabled ? "not-allowed" : "pointer",
+          opacity: disabled ? 0.5 : 1,
+        }}
       >
-        {label}
-      </span>
-    </motion.button>
-  );
-};
+        {/* Ripple fill */}
+        <AnimatePresence>
+          {hovered && ripple && (
+            <motion.span
+              key="ripple"
+              className="absolute rounded-full pointer-events-none"
+              style={{
+                top: ripple.y,
+                left: ripple.x,
+                translateX: "-50%",
+                translateY: "-50%",
+                backgroundColor: variant === "dark" ? "#071C2E" : "#0D2233",
+              }}
+              initial={{ width: 0, height: 0, opacity: 0.8 }}
+              animate={{ width: 700, height: 700, opacity: 1 }}
+              exit={{ opacity: 0 }}
+              transition={{ duration: 0.45, ease: "easeOut" }}
+            />
+          )}
+        </AnimatePresence>
 
+        <span
+          className="relative z-10 text-sm font-semibold tracking-widest uppercase font-gothamNarrow transition-colors duration-200"
+          style={{ color: hovered ? "#90C4D0" : "#202D31" }}
+        >
+          {label}
+        </span>
+      </motion.button>
+    );
+  },
+);
+
+RippleButton.displayName = "RippleButton";
+
+// ─── CatalogCard ─────────────────────────────────────────────────────────────
+const CatalogCard = memo(
+  ({ catalog, onExplore, onDownload, onPreview, isDownloading }) => (
+    <motion.div
+      initial={{ opacity: 0, y: 20 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ duration: 0.4, ease: "easeOut" }}
+      className="flex flex-col items-center gap-4"
+    >
+      {/* Catalog Image */}
+      <div
+        className="relative group cursor-pointer w-full"
+        onClick={() => onPreview(catalog)}
+        style={{ aspectRatio: "3/4" }}
+      >
+        <img
+          src={catalog.catalogue_image}
+          alt={catalog.catalogue_type}
+          className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-[1.02]"
+          style={{
+            boxShadow: "0 8px 32px rgba(0,0,0,0.35), 0 2px 8px rgba(0,0,0,0.2)",
+            padding: "6px",
+            background: "#fff",
+          }}
+          loading="lazy"
+        />
+        {/* Hover overlay */}
+        <div
+          className="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity duration-300"
+          style={{ background: "rgba(7, 24, 36, 0.55)" }}
+        >
+          <span
+            className="text-xs font-semibold tracking-widest uppercase"
+            style={{ color: "#90C4D0" }}
+          >
+            Preview
+          </span>
+        </div>
+      </div>
+
+      {/* Title */}
+      <h3
+        className="text-center text-sm sm:text-base font-medium tracking-wide font-gothamNarrow"
+        style={{ color: "#202D31" }}
+      >
+        {catalog.catalogue_type}
+      </h3>
+
+      {/* Buttons */}
+      <div className="flex flex-col w-full gap-2">
+        <RippleButton label="Explore" onClick={() => onExplore(catalog.file)} />
+        <RippleButton
+          label={isDownloading ? "Downloading…" : "Download"}
+          onClick={() => onDownload(catalog.file)}
+          disabled={isDownloading}
+        />
+      </div>
+    </motion.div>
+  ),
+);
+
+CatalogCard.displayName = "CatalogCard";
+
+// ─── BaltraCatalog ────────────────────────────────────────────────────────────
 const BaltraCatalog = () => {
   const { loading, error, allProductsCatalogList } = useSelector(
-    (state) => state.product
+    (state) => state.product,
   );
   const { isAuthenticated, customer } = useSelector((state) => state.auth);
-
   const dispatch = useDispatch();
-  const [isModalOpen, setIsModalOpen] = useState(false);
-  const [isLoading, setIsLoading] = useState(false);
 
-  const openModal = () => setIsModalOpen(true);
-  const closeModal = () => setIsModalOpen(false);
+  const [modalOpen, setModalOpen] = useState(false);
+  const [selectedCatalog, setSelectedCatalog] = useState(null);
+  const [downloadingId, setDownloadingId] = useState(null);
 
   useEffect(() => {
-    if (error) {
-      dispatch(clearProductError());
-    }
+    if (error) dispatch(clearProductError());
   }, [dispatch, error]);
 
   useEffect(() => {
     dispatch(allProductsCatalog());
   }, [dispatch]);
 
-  const handleExplore = (pdfUrl) => {
-    window.open(pdfUrl, "_blank");
-  };
+  const handlePreview = useCallback((catalog) => {
+    setSelectedCatalog(catalog);
+    setModalOpen(true);
+  }, []);
 
-  // Function to handle download
+  const handleCloseModal = useCallback(() => {
+    setModalOpen(false);
+    setSelectedCatalog(null);
+  }, []);
 
-  const handleDownload = async (pdfUrl) => {
-    try {
-      setIsLoading(true);
+  const handleExplore = useCallback((pdfUrl) => {
+    window.open(pdfUrl, "_blank", "noopener,noreferrer");
+  }, []);
 
-      const response = await fetch(pdfUrl);
-      const arrayBuffer = await response.arrayBuffer();
-
-      const blob = new Blob([arrayBuffer], { type: "application/pdf" });
-      const url = window.URL.createObjectURL(blob);
-
-      const a = document.createElement("a");
-      a.style.display = "none";
-      a.href = url;
-      a.download = "catalog.pdf";
-      document.body.appendChild(a);
-      a.click();
-      window.URL.revokeObjectURL(url);
-
-      console.log("PDF downloaded successfully");
-    } catch (error) {
-      console.error("Error downloading PDF:", error);
-      alert("Failed to download PDF. Please try again.");
-    } finally {
-      setIsLoading(false);
-    }
-  };
+  const handleDownload = useCallback(
+    async (pdfUrl, catalogId) => {
+      if (downloadingId) return;
+      try {
+        setDownloadingId(catalogId);
+        const response = await fetch(pdfUrl);
+        if (!response.ok) throw new Error("Network response was not ok");
+        const blob = await response.blob();
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement("a");
+        a.href = url;
+        a.download = `catalog-${catalogId || "baltra"}.pdf`;
+        a.style.display = "none";
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+        URL.revokeObjectURL(url);
+      } catch (err) {
+        console.error("Download failed:", err);
+        alert("Failed to download. Please try again.");
+      } finally {
+        setDownloadingId(null);
+      }
+    },
+    [downloadingId],
+  );
 
   return (
     <>
-      <MetaData title="baltra-products-catalog" />
-      <div className="px-4 sm:px-8 md:px-16 lg:px-24 my-24 md:my-28 lg:my-32 h-full">
-        <div className="absolute top-0 left-0 w-full z-10">
+      <MetaData title="Baltra Products Catalog" />
+
+      {/* Page wrapper with bg image */}
+      <div className="relative min-h-screen">
+        {/* Background image — full-bleed, no dim, matches About page pattern */}
+        <img
+          src={ArtCoverImg}
+          alt=""
+          aria-hidden="true"
+          className="absolute top-0 left-0 w-full h-full object-cover object-top z-0"
+          style={{ maxWidth: "none" }}
+          loading="lazy"
+        />
+
+        {/* Header */}
+        <div className="absolute top-0 left-0 w-full z-50">
           <ProductHeader
             isAuthenticated={isAuthenticated}
             customer={customer}
           />
         </div>
 
-        {loading ? (
-          <CatalogSkeleton />
-        ) : (
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-8">
-            {allProductsCatalogList && allProductsCatalogList.length > 0 ? (
-              allProductsCatalogList?.map((catalog) => (
-                <div
+        {/* Page Content */}
+        <main className="relative z-10 px-4 sm:px-8 md:px-16 lg:px-24 pt-20 md:pt-24 pb-16 min-h-screen">
+          {/* Soft scrim — keeps catalog cards readable over the bright image */}
+          <div className="absolute inset-0 bg-white/20 -z-10" />
+          {loading ? (
+            <CatalogSkeleton />
+          ) : allProductsCatalogList?.length > 0 ? (
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-8 lg:gap-10">
+              {allProductsCatalogList.map((catalog, index) => (
+                <motion.div
                   key={catalog.id}
-                  className="flex flex-col justify-start items-center gap-4"
+                  initial={{ opacity: 0, y: 24 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{
+                    duration: 0.4,
+                    delay: index * 0.07,
+                    ease: "easeOut",
+                  }}
                 >
-                  {/* Image for the catalog */}
-                  <img
-                    src={catalog.catalogue_image}
-                    onClick={openModal}
-                    className="h-[350px] shadow-lg shadow-gray-400 p-2 cursor-pointer"
-                    alt={catalog.catalogue_type}
+                  <CatalogCard
+                    catalog={catalog}
+                    onPreview={handlePreview}
+                    onExplore={handleExplore}
+                    onDownload={(url) => handleDownload(url, catalog.id)}
+                    isDownloading={downloadingId === catalog.id}
                   />
-                  {/* PDF Modal */}
-                  <PdfModal isOpen={isModalOpen} onClose={closeModal} />
-
-                  {/* Catalog Title */}
-                  <div className="text-center text-[#101214] text-base sm:text-lg md:text-xl font-gothamNarrow">
-                    {catalog.catalogue_type}
-                  </div>
-
-                  {/* Explore and Download Buttons */}
-                  <div className="flex flex-col justify-start items-center gap-3 w-full">
-                    <RippleButton
-                      label="EXPLORE"
-                      rippleColor="#071C2E"
-                      onClick={() => handleExplore(catalog.file)}
-                    />
-                    <RippleButton
-                      label="DOWNLOAD"
-                      rippleColor="#071C2E"
-                      onClick={() => handleDownload(catalog.file)}
-                      disabled={isLoading}
-                    />
-                  </div>
-                </div>
-              ))
-            ) : (
-              <span>No Data Found</span>
-            )}
-          </div>
-        )}
+                </motion.div>
+              ))}
+            </div>
+          ) : (
+            <div className="flex flex-col items-center justify-center py-32 gap-3">
+              <span className="text-4xl opacity-20">📂</span>
+              <p
+                className="text-sm tracking-widest uppercase"
+                style={{ color: "#6A90A0" }}
+              >
+                No catalogs available
+              </p>
+            </div>
+          )}
+        </main>
       </div>
+      {/* end page wrapper */}
+
+      {/* PDF Modal — outside wrapper so it overlays the full viewport */}
+      <PdfModal
+        isOpen={modalOpen}
+        onClose={handleCloseModal}
+        catalog={selectedCatalog}
+      />
     </>
   );
 };

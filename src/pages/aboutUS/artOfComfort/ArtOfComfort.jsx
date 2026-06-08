@@ -51,7 +51,7 @@ const ArtOfComfort = () => {
       <div className="absolute inset-0 w-full h-full">
         <img
           src={ArtCoverImg}
-          alt=""
+          alt="ArtImg"
           aria-hidden="true"
           className="w-full h-full object-cover object-top"
           style={{ filter: "brightness(0.45)" }}
