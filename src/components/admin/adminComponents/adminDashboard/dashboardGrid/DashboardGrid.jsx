@@ -1,3 +1,4 @@
+import { useCallback, useEffect } from "react";
 import {
   IoBagHandle,
   IoCart,
@@ -5,75 +6,17 @@ import {
   IoMailOpen,
   IoPeople,
   IoPersonAdd,
+  IoRefresh,
   IoShieldCheckmark,
 } from "react-icons/io5";
+import { useDispatch, useSelector } from "react-redux";
 import { Link } from "react-router-dom";
+import {
+  adminStatisticsActionDashboard,
+  clearAdminError,
+} from "../../../../../redux/features/admin/adminSlice";
 
-const DataGrid = [
-  {
-    id: 1,
-    icon: <IoCube />,
-    title: "Total Products",
-    staticValue: "250",
-    path: "/baltra/admin-dashboard/all/category-related-products",
-    colorKey: "blue",
-    trend: "+12% this month",
-  },
-  {
-    id: 2,
-    icon: <IoPeople />,
-    title: "Total Users",
-    staticValue: "1,500",
-    path: "/baltra/admin-dashboard/all/admin-users",
-    colorKey: "purple",
-    trend: "+8% this month",
-  },
-  {
-    id: 3,
-    icon: <IoShieldCheckmark />,
-    title: "Total Complaints",
-    staticValue: "320",
-    path: "/baltra/admin-dashboard/all/complaints",
-    colorKey: "red",
-    trend: "-3% this month",
-  },
-  {
-    id: 4,
-    icon: <IoPersonAdd />,
-    title: "Registered Products",
-    staticValue: "890",
-    path: "/baltra/admin-dashboard/all/registered-products",
-    colorKey: "teal",
-    trend: "+21% this month",
-  },
-  {
-    id: 5,
-    icon: <IoMailOpen />,
-    title: "Contact Enquiries",
-    staticValue: "540",
-    path: "/baltra/admin-dashboard/all/contact-enquiries",
-    colorKey: "amber",
-    trend: "+5% this month",
-  },
-  {
-    id: 6,
-    icon: <IoBagHandle />,
-    title: "Bulk Orders",
-    staticValue: "175",
-    path: "/baltra/admin-dashboard/all/bulk-orders",
-    colorKey: "green",
-    trend: "+18% this month",
-  },
-  {
-    id: 7,
-    icon: <IoCart />,
-    title: "Personalized Orders",
-    staticValue: "98",
-    path: "/baltra/admin-dashboard/all/personalized-orders",
-    colorKey: "coral",
-    trend: "+9% this month",
-  },
-];
+// ─── Color map ────────────────────────────────────────────────────────────────
 
 const colorMap = {
   blue: {
@@ -120,9 +63,84 @@ const colorMap = {
   },
 };
 
+// ─── Grid config ──────────────────────────────────────────────────────────────
+
+const buildGrid = (stats) => [
+  {
+    id: 1,
+    icon: <IoCube />,
+    title: "Total Products",
+    value: stats.total_products,
+    path: "/baltra-admin-dashboard/all-products-list",
+    colorKey: "blue",
+  },
+  {
+    id: 2,
+    icon: <IoPeople />,
+    title: "Total Customers",
+    value: stats.total_users,
+    path: "/baltra-admin-dashboard/all-customer-list",
+    colorKey: "purple",
+  },
+  {
+    id: 3,
+    icon: <IoShieldCheckmark />,
+    title: "Total Complaints",
+    value: stats.total_complaints,
+    path: "/baltra-admin-dashboard/all/products-complaints-list",
+    colorKey: "red",
+  },
+  {
+    id: 4,
+    icon: <IoPersonAdd />,
+    title: "Registered Products",
+    value: stats.total_registered_products,
+    path: "/baltra-admin-dashboard/all/warranty-status-list",
+    colorKey: "teal",
+  },
+  {
+    id: 5,
+    icon: <IoMailOpen />,
+    title: "Contact Enquiries",
+    value: stats.total_contact_enquiries,
+    path: "/baltra-admin-dashboard/all-contact-message-list",
+    colorKey: "amber",
+  },
+  {
+    id: 6,
+    icon: <IoBagHandle />,
+    title: "Bulk Orders",
+    value: stats.total_bulk_orders,
+    path: "/baltra-admin-dashboard/all/bulk-quote-products",
+    colorKey: "green",
+  },
+  {
+    id: 7,
+    icon: <IoCart />,
+    title: "Personalized Orders",
+    value: stats.total_personalized_orders,
+    path: "/baltra-admin-dashboard/all/customize-products",
+    colorKey: "coral",
+  },
+];
+
+// ─── Skeleton card ────────────────────────────────────────────────────────────
+
+const SkeletonCard = () => (
+  <div className="bg-white rounded-xl border border-gray-100 p-5 animate-pulse">
+    <div className="w-10 h-10 rounded-lg bg-gray-100 mb-4" />
+    <div className="h-3 w-24 bg-gray-100 rounded mb-2" />
+    <div className="h-7 w-16 bg-gray-100 rounded mb-4" />
+    <div className="border-t border-gray-100 pt-3">
+      <div className="h-3 w-20 bg-gray-100 rounded" />
+    </div>
+  </div>
+);
+
+// ─── Stat card ────────────────────────────────────────────────────────────────
+
 const StatCard = ({ item }) => {
   const c = colorMap[item.colorKey];
-  const isNegative = item.trend?.startsWith("-");
 
   return (
     <Link
@@ -149,19 +167,12 @@ const StatCard = ({ item }) => {
 
         {/* Value */}
         <p className="text-2xl font-semibold text-gray-900 leading-none mb-3">
-          {item.staticValue}
+          {item.value?.toLocaleString() ?? "—"}
         </p>
 
-        {/* Divider */}
-        <div className="border-t border-gray-100 pt-3 flex items-center justify-between">
-          {item.trend && (
-            <span
-              className={`text-xs font-medium ${isNegative ? "text-red-500" : c.trendColor}`}
-            >
-              {item.trend}
-            </span>
-          )}
-          <span className="text-xs text-gray-300 group-hover:text-gray-400 transition-colors ml-auto flex items-center gap-0.5">
+        {/* Footer */}
+        <div className="border-t border-gray-100 pt-3 flex items-center justify-end">
+          <span className="text-xs text-gray-300 group-hover:text-gray-400 transition-colors flex items-center gap-0.5">
             View all
             <svg
               xmlns="http://www.w3.org/2000/svg"
@@ -182,12 +193,79 @@ const StatCard = ({ item }) => {
   );
 };
 
+// ─── Main component ───────────────────────────────────────────────────────────
+
 const DashboardGrid = () => {
+  const dispatch = useDispatch();
+
+  const { dashboardStats, loading, error } = useSelector(
+    (state) => state.admin,
+  );
+
+  const fetchStats = useCallback(() => {
+    dispatch(adminStatisticsActionDashboard());
+  }, [dispatch]);
+
+  // Initial fetch
+  useEffect(() => {
+    fetchStats();
+  }, [fetchStats]);
+
+  // Clear errors
+  useEffect(() => {
+    if (error) {
+      dispatch(clearAdminError());
+    }
+  }, [dispatch, error]);
+
+  const dataGrid = buildGrid(dashboardStats ?? {});
+
   return (
-    <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
-      {DataGrid.map((item) => (
-        <StatCard key={item.id} item={item} />
-      ))}
+    <div className="space-y-4">
+      {/* Header row */}
+      <div className="flex items-center justify-between">
+        <div>
+          <h2 className="text-sm font-semibold text-gray-700">Overview</h2>
+          {!loading && (
+            <p className="text-xs text-gray-400 mt-0.5">
+              Last updated just now
+            </p>
+          )}
+        </div>
+
+        {/* Refresh button */}
+        <button
+          onClick={fetchStats}
+          disabled={loading}
+          className="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium text-gray-500 bg-white border border-gray-200 rounded-lg hover:border-gray-300 hover:text-gray-700 hover:shadow-sm disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-150 focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-400"
+          title="Refresh stats"
+        >
+          <IoRefresh
+            className={`w-3.5 h-3.5 ${loading ? "animate-spin" : ""}`}
+          />
+          {loading ? "Refreshing…" : "Refresh"}
+        </button>
+      </div>
+
+      {/* Error banner */}
+      {error && (
+        <div className="flex items-center gap-2 px-4 py-3 bg-red-50 border border-red-100 rounded-lg text-xs text-red-600">
+          <span>Failed to load stats.</span>
+          <button
+            onClick={fetchStats}
+            className="underline underline-offset-2 hover:text-red-700 font-medium"
+          >
+            Try again
+          </button>
+        </div>
+      )}
+
+      {/* Grid */}
+      <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
+        {loading && !dashboardStats
+          ? Array.from({ length: 7 }).map((_, i) => <SkeletonCard key={i} />)
+          : dataGrid.map((item) => <StatCard key={item.id} item={item} />)}
+      </div>
     </div>
   );
 };

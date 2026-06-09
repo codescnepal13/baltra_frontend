@@ -1232,6 +1232,21 @@ export const getSingleUserRole = createAsyncThunk(
   },
 );
 
+//adminStatisticsActionDashboard
+
+export const adminStatisticsActionDashboard = createAsyncThunk(
+  "/admin/adminStatisticsActionDashboard",
+  async (__, { rejectWithValue }) => {
+    try {
+      const response = await API.get(`/user/dashboardstats`);
+
+      return response.data;
+    } catch (error) {
+      return rejectWithValue({ message: getErrorMessage(error) });
+    }
+  },
+);
+
 const initialState = {
   loading: false,
   isLoading: false,
@@ -1310,6 +1325,16 @@ const initialState = {
     total_pages: null,
     results_per_page: null,
   },
+
+  dashboardStats: {
+    total_products: 0,
+    total_users: 0,
+    total_complaints: 0,
+    total_registered_products: 0,
+    total_contact_enquiries: 0,
+    total_bulk_orders: 0,
+    total_personalized_orders: 0,
+  },
 };
 
 const adminSlice = createSlice({
@@ -1323,7 +1348,19 @@ const adminSlice = createSlice({
   },
   extraReducers: (builder) => {
     builder
-      .addCase(assignRoleByAdmin.pending, (state) => {
+      .addCase(adminStatisticsActionDashboard.pending, (state) => {
+        state.loading = true;
+      })
+      .addCase(adminStatisticsActionDashboard.fulfilled, (state, action) => {
+        state.loading = false;
+        state.dashboardStats = action.payload.data;
+      })
+
+      .addCase(adminStatisticsActionDashboard.rejected, (state, action) => {
+        state.loading = false;
+        state.error = action.payload.message;
+      })
+      .addCase(assignRoleByAdmin.pending, (state, action) => {
         state.loading = true;
       })
       .addCase(assignRoleByAdmin.fulfilled, (state, action) => {

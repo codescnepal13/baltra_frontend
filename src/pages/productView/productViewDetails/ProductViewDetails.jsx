@@ -104,7 +104,7 @@ const RippleButton = ({
 
 const ProductViewDetails = ({ singleProduct, loading }) => {
   const { isFetching, allRelatedProducts, statRatingReview } = useSelector(
-    (state) => state.product
+    (state) => state.product,
   );
   const { isAuthenticated, customer } = useSelector((state) => state.auth);
 
@@ -167,7 +167,7 @@ const ProductViewDetails = ({ singleProduct, loading }) => {
     } else {
       enqueueSnackbar(
         "Personalization is only available for Bottles and Flasks.",
-        { variant: "error" }
+        { variant: "error" },
       );
     }
   };
@@ -379,7 +379,7 @@ const ProductViewDetails = ({ singleProduct, loading }) => {
               <div className="bg-gradient-to-r from-red-50 to-orange-50 p-6 rounded-2xl border border-red-100">
                 <div className="flex items-center justify-between mb-4">
                   <div className="text-4xl font-bold text-red-600">
-                    ₹{singleProduct?.price?.toLocaleString()}
+                    Rs {singleProduct?.price?.toLocaleString()}
                     <span className="text-lg text-gray-600 font-normal ml-2">
                       MRP
                     </span>
