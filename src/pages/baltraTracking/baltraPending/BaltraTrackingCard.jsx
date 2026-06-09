@@ -1,124 +1,158 @@
-import React, { useState } from "react";
-import { AnimatePresence, motion } from "framer-motion";
-import { Link } from "react-router-dom";
+import { motion } from "framer-motion";
 import moment from "moment";
+import { Link } from "react-router-dom";
+
+const STATUS_CONFIG = {
+  "Un-Assigned": { color: "text-red-500", bg: "bg-red-50", dot: "bg-red-500" },
+  Completed: {
+    color: "text-green-600",
+    bg: "bg-green-50",
+    dot: "bg-green-500",
+  },
+  "Service Center Allocated": {
+    color: "text-yellow-600",
+    bg: "bg-yellow-50",
+    dot: "bg-yellow-500",
+  },
+  "Service Center Assigned": {
+    color: "text-yellow-600",
+    bg: "bg-yellow-50",
+    dot: "bg-yellow-500",
+  },
+  "Engineer Allocated": {
+    color: "text-blue-600",
+    bg: "bg-blue-50",
+    dot: "bg-blue-500",
+  },
+  "On Service": {
+    color: "text-blue-600",
+    bg: "bg-blue-50",
+    dot: "bg-blue-500",
+  },
+  Cancelled: { color: "text-gray-500", bg: "bg-gray-100", dot: "bg-gray-400" },
+  "Cancelled Not Approved By Customer": {
+    color: "text-gray-500",
+    bg: "bg-gray-100",
+    dot: "bg-gray-400",
+  },
+  "Cancelled Not Approved By HO": {
+    color: "text-gray-500",
+    bg: "bg-gray-100",
+    dot: "bg-gray-400",
+  },
+  "Product Delivered": {
+    color: "text-gray-500",
+    bg: "bg-gray-100",
+    dot: "bg-gray-400",
+  },
+  "Happy Calling Completed": {
+    color: "text-gray-500",
+    bg: "bg-gray-100",
+    dot: "bg-gray-400",
+  },
+  "Request For Cancel": {
+    color: "text-gray-500",
+    bg: "bg-gray-100",
+    dot: "bg-gray-400",
+  },
+  "Request For Close": {
+    color: "text-gray-500",
+    bg: "bg-gray-100",
+    dot: "bg-gray-400",
+  },
+  "Transfer To Third Party": {
+    color: "text-gray-500",
+    bg: "bg-gray-100",
+    dot: "bg-gray-400",
+  },
+};
+
+const DEFAULT_STATUS = {
+  color: "text-gray-700",
+  bg: "bg-gray-100",
+  dot: "bg-gray-400",
+};
+
+const Row = ({ label, value, valueClass = "" }) => (
+  <div className="flex items-baseline gap-2 text-sm font-gothamNarrow">
+    <span className="font-semibold text-gray-600 w-36 shrink-0">{label}</span>
+    <span className={`text-gray-800 leading-snug ${valueClass}`}>
+      {value || "—"}
+    </span>
+  </div>
+);
 
 const BaltraTrackingCard = ({ item }) => {
-  const [isHovered, setIsHovered] = useState(false);
-  const statusColors = {
-    "Un-Assigned": "text-red-500",
-    "Completed": "text-green-500",
-    "Service Center Allocated": "text-yellow-500",
-    "Engineer Allocated": "text-blue-500",
-    "On Service": "text-blue-500",
-    "Cancelled": "text-gray-500",
-    "Cancelled Not Approved By Customer": "text-gray-500",
-    "Cancelled Not Approved By HO": "text-gray-500",
-    "Product Delivered": "text-gray-500",
-    "Happy Calling Completed": "text-gray-500",
-    "Request For Cancel": "text-gray-500",
-    "Request For Close": "text-gray-500",
-    "Transfer To Third Party": "text-gray-500",
-  };
+  const statusCfg = STATUS_CONFIG[item.status] || DEFAULT_STATUS;
 
   return (
-    <>
-      <Link to={`/baltra-tracking-ProductDetails/${item.id}`}>
-        <AnimatePresence>
-          <motion.div
-            onHoverStart={() => setIsHovered(true)}
-            onHoverEnd={() => setIsHovered(false)}
-            whileHover={{
-              boxShadow:
-                "0px 0px 10px rgba(245, 222, 12, 0.5), 0px 4px 10px rgba(223, 98, 98, 0.5)",
-              transition: {
-                duration: 0.2,
-                ease: "easeInOut",
-              },
-            }}
-            initial={{ opacity: 1 }}
-            exit={{ opacity: 0, transition: { duration: 0.3 } }}
-            animate={isHovered ? { opacity: 0.8 } : { opacity: 1 }}
-          >
-            <div className="p-4 bg-white rounded-md border border-[#DDDDDD] flex flex-col sm:flex-row gap-4 sm:gap-6 mt-2">
-              <img
-                className="w-full sm:w-32 md:w-40 lg:w-56 h-auto sm:h-32 md:h-40 lg:h-56 object-contain"
-                src={item.damaged_image}
-                alt="TrackingCardImg"
-              />
-              <div className="flex flex-col w-full py-2">
-                {/* Container for labels and values */}
-                <div className="flex flex-col space-y-2">
-                  <div className="flex text-black text-sm lg:font-normal font-gothamNarrow">
-                    <div className="font-semibold w-40 sm:w-1/2 lg:w-1/3 whitespace-nowrap">
-                      Model Name:
-                    </div>
-                    <div className="flex-1 lg:ml-14 whitespace-nowrap">
-                      {item.model_name}
-                    </div>
-                  </div>
-                  <div className="flex text-black text-sm lg:font-normal font-gothamNarrow">
-                    <div className="font-semibold w-40 sm:w-1/2 lg:w-1/3 whitespace-nowrap">
-                      Model Code:
-                    </div>
-                    <div className="flex-1 lg:ml-14 whitespace-nowrap">
-                      {item.model_num}
-                    </div>
-                  </div>
-                  <div className="flex text-black text-sm lg:font-normal font-gothamNarrow">
-                    <div className="font-semibold w-40 sm:w-1/2 lg:w-1/3 whitespace-nowrap">
-                      Job ID:
-                    </div>
-                    <div className="flex-1 lg:ml-14 whitespace-nowrap">
-                      {item.job_no ? item.job_no : "-"}
-                    </div>
-                  </div>
-                  <div className="flex text-black text-sm lg:font-normal font-gothamNarrow">
-                    <div className="font-semibold w-40 sm:w-1/2 lg:w-1/3 whitespace-nowrap">
-                      Sent for:
-                    </div>
-                    <div className="flex-1 lg:ml-14 whitespace-nowrap">
-                      {item.problem_type}
-                    </div>
-                  </div>
-                  <div className="flex text-black text-sm lg:font-normal font-gothamNarrow">
-                    <div className="font-semibold w-40 sm:w-1/2 lg:w-1/3 whitespace-nowrap">
-                      Complaint:
-                    </div>
-                    <div className="flex-1 lg:ml-14 whitespace-nowrap">
-                      {item.problem_description}
-                    </div>
-                  </div>
-                  <div className="flex text-black text-sm lg:font-normal font-gothamNarrow">
-                    <div className="font-semibold w-40 sm:w-1/2 lg:w-1/3 whitespace-nowrap">
-                      Complaint Stage:
-                    </div>
-                    <div
-                      className={`flex-1 lg:ml-14 whitespace-nowrap ${
-                        statusColors[item.status] || "text-black"
-                      }`}
-                    >
-                      {item.status}
-                    </div>
-                  </div>
+    <Link to={`/baltra-tracking-ProductDetails/${item.id}`}>
+      <motion.div
+        whileHover={{
+          boxShadow:
+            "0 4px 20px rgba(220, 38, 38, 0.12), 0 1px 6px rgba(0,0,0,0.06)",
+          y: -2,
+          transition: { duration: 0.18, ease: "easeOut" },
+        }}
+        className="mt-2 bg-white rounded-md border border-gray-200 overflow-hidden"
+      >
+        <div className="flex flex-col sm:flex-row gap-0">
+          {/* ── Image panel ── */}
+          <div className="sm:w-44 md:w-48 lg:w-52 shrink-0 bg-gray-50 flex items-center justify-center p-3 border-b sm:border-b-0 sm:border-r border-gray-100">
+            <img
+              className="w-full h-36 sm:h-full object-contain"
+              src={item.damaged_image || item.product_image}
+              alt={item.model_name}
+            />
+          </div>
 
-                  <div className="flex text-black text-sm lg:font-normal font-gothamNarrow">
-                    <div className="font-semibold w-40 sm:w-1/2 lg:w-1/3 whitespace-nowrap">
-                      Complaint Date:
-                    </div>
-                    <div className="flex-1 lg:ml-14 whitespace-nowrap">
-                      {moment(
-                        item?.date_joined ? item?.date_joined : ""
-                      ).format("ddd, MMM D, YYYY")}
-                    </div>
-                  </div>
-                </div>
-              </div>
+          {/* ── Content panel ── */}
+          <div className="flex flex-col justify-between flex-1 px-5 py-4 gap-3">
+            {/* Top: model name + status badge */}
+            <div className="flex items-start justify-between gap-3">
+              <h3 className="text-base font-semibold text-gray-900 font-gothamNarrow leading-tight">
+                {item.model_name}
+              </h3>
+              <span
+                className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[11px] font-semibold font-gothamNarrow whitespace-nowrap shrink-0
+                  ${statusCfg.bg} ${statusCfg.color}`}
+              >
+                <span className={`w-1.5 h-1.5 rounded-full ${statusCfg.dot}`} />
+                {item.status || "Unknown"}
+              </span>
             </div>
-          </motion.div>
-        </AnimatePresence>
-      </Link>
-    </>
+
+            {/* Detail rows */}
+            <div className="flex flex-col gap-1.5">
+              <Row label="Model Code" value={item.model_num} />
+              <Row label="Job ID" value={item.job_no} />
+              <Row label="Sent for" value={item.problem_type} />
+              <Row label="Complaint" value={item.problem_description} />
+              <Row
+                label="Complaint Date"
+                value={moment(item?.date_joined || "").format(
+                  "ddd, MMM D, YYYY",
+                )}
+              />
+            </div>
+
+            {/* Bottom: subtle "View details" cue */}
+            <div className="flex justify-end pt-1">
+              <span className="text-xs text-red-500 font-gothamNarrow font-medium tracking-wide">
+                View details →
+              </span>
+            </div>
+          </div>
+        </div>
+
+        {/* Bottom accent line — red for active, green for completed */}
+        <div
+          className={`h-0.5 w-full ${
+            item.status === "Completed" ? "bg-green-400" : "bg-red-500"
+          }`}
+        />
+      </motion.div>
+    </Link>
   );
 };
 
