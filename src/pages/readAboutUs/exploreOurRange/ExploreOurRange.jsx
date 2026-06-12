@@ -144,9 +144,9 @@ const ExploreOurRange = () => {
               className="mb-10 grid grid-cols-3 gap-4 border-t border-gray-100 pt-8"
             >
               {[
-                { value: "200+", label: "Products" },
-                { value: "50+", label: "Categories" },
-                { value: "10+", label: "Years Trust" },
+                { value: "1000+", label: "Products" },
+                { value: "30+", label: "Categories" },
+                { value: "30+", label: "Years Trust" },
               ].map(({ value, label }) => (
                 <div key={label} className="flex flex-col">
                   <span className="font-gothamNarrow font-bold text-2xl sm:text-3xl text-gray-900 leading-none mb-1">
@@ -215,7 +215,7 @@ const ExploreOurRange = () => {
                   Trusted Since
                 </div>
                 <div className="text-lg font-bold text-gray-900 font-gothamNarrow leading-none">
-                  2014
+                  1994
                 </div>
               </div>
             </div>

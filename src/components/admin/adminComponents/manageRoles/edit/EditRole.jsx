@@ -2,6 +2,7 @@ import { useSnackbar } from "notistack";
 import { useEffect } from "react";
 import { Controller, useForm } from "react-hook-form";
 import { FaSyncAlt, FaUserShield } from "react-icons/fa";
+import { MdAdminPanelSettings, MdBuild, MdInventory2 } from "react-icons/md";
 import { useDispatch, useSelector } from "react-redux";
 import { Link, useNavigate, useParams } from "react-router-dom";
 import {
@@ -16,7 +17,7 @@ const ROLES = [
     value: "admin",
     label: "Admin",
     desc: "Full system access",
-    icon: "🔐",
+    icon: MdAdminPanelSettings,
     color: "text-red-500",
     bg: "bg-red-50",
     border: "border-red-400",
@@ -28,7 +29,7 @@ const ROLES = [
     value: "product_incharge",
     label: "Product Incharge",
     desc: "Manage products & inventory",
-    icon: "📦",
+    icon: MdInventory2,
     color: "text-emerald-600",
     bg: "bg-emerald-50",
     border: "border-emerald-400",
@@ -39,7 +40,7 @@ const ROLES = [
     value: "service_incharge",
     label: "Service Incharge",
     desc: "Handle service operations",
-    icon: "🛠️",
+    icon: MdBuild,
     color: "text-orange-500",
     bg: "bg-orange-50",
     border: "border-orange-400",
@@ -378,20 +379,22 @@ const EditRole = () => {
                 <div className="grid grid-cols-2 gap-2">
                   {ROLES.map((role) => {
                     const isActive = field.value === role.value;
+                    const Icon = role.icon;
+
                     return (
                       <label
                         key={role.value}
                         className={`
-                          flex items-center gap-3 px-3 py-2.5 rounded-lg border-[1.5px]
-                          cursor-pointer transition-all select-none
-                          ${
-                            isActive
-                              ? `${role.border} ${role.activeBg}`
-                              : errors.role
-                                ? "border-red-300 hover:border-red-400 bg-red-50/20"
-                                : "border-gray-200 hover:border-gray-300 hover:bg-gray-50"
-                          }
-                        `}
+        flex items-center gap-3 px-3 py-2.5 rounded-lg border-[1.5px]
+        cursor-pointer transition-all select-none
+        ${
+          isActive
+            ? `${role.border} ${role.activeBg}`
+            : errors.role
+              ? "border-red-300 hover:border-red-400 bg-red-50/20"
+              : "border-gray-200 hover:border-gray-300 hover:bg-gray-50"
+        }
+      `}
                       >
                         <input
                           type="radio"
@@ -400,26 +403,30 @@ const EditRole = () => {
                           onChange={() => field.onChange(role.value)}
                           className="sr-only"
                         />
+
                         <div
-                          className={`w-7 h-7 rounded-lg ${role.bg} flex items-center justify-center text-sm flex-shrink-0`}
+                          className={`w-7 h-7 rounded-lg ${role.bg} flex items-center justify-center flex-shrink-0`}
                         >
-                          {role.icon}
+                          <Icon className={`text-sm ${role.color}`} />
                         </div>
+
                         <div className="flex flex-col min-w-0">
                           <span
                             className={`text-[12px] font-semibold ${role.color}`}
                           >
                             {role.label}
                           </span>
+
                           <span className="text-[10.5px] text-gray-400 mt-0.5 truncate">
                             {role.desc}
                           </span>
                         </div>
+
                         <div
                           className={`
-                            ml-auto w-3 h-3 rounded-full border-2 flex-shrink-0 transition-all
-                            ${isActive ? role.dot : "border-gray-300 bg-white"}
-                          `}
+          ml-auto w-3 h-3 rounded-full border-2 flex-shrink-0 transition-all
+          ${isActive ? role.dot : "border-gray-300 bg-white"}
+        `}
                         />
                       </label>
                     );
