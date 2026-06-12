@@ -179,7 +179,7 @@ const AddRole = () => {
         {/* Card header */}
         <div className="flex items-center gap-3 px-5 py-4 border-b border-gray-100">
           <div className="w-8 h-8 rounded-lg bg-red-50 flex items-center justify-center text-sm">
-            🛡️
+            <FaUserShield />
           </div>
           <div>
             <p className="text-[13px] font-semibold text-gray-800 tracking-[-0.01em]">
