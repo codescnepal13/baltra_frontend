@@ -1,10 +1,10 @@
-import React, { useState } from "react";
-import UserAddProductModal from "../../userAddProductModal/UserAddProductModal";
+import { useState } from "react";
 import { FaArrowRight } from "react-icons/fa";
-import UserProductHeader from "../../userProductHeader/UserProductHeader";
-import UserProductBannerImg from "../../../../assets/images/userProductBannerImg.png";
-import userNewStarImage from "../../../../assets/images/userImageInStar.png";
 import userCartImg from "../../../../assets/images/cartBagImg.png";
+import userNewStarImage from "../../../../assets/images/userImageInStar.png";
+import UserProductBannerImg from "../../../../assets/images/userProductBannerImg.png";
+import TopHeader from "../../../../components/topHeader/TopHeader";
+import UserAddProductModal from "../../userAddProductModal/UserAddProductModal";
 
 const UserRegisteredProductBanner = () => {
   const [openModal, setOpenModal] = useState(false);
@@ -23,7 +23,7 @@ const UserRegisteredProductBanner = () => {
         }}
       >
         <div>
-          <UserProductHeader />
+          <TopHeader />
         </div>
 
         <div className="absolute inset-0 flex flex-col lg:flex-row items-center justify-center lg:justify-between px-4 sm:px-8 lg:px-24 mt-8 lg:mt-24 space-y-8 lg:space-y-0 lg:space-x-8">

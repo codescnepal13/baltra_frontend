@@ -2,12 +2,11 @@ import { AnimatePresence, motion } from "framer-motion";
 import { enqueueSnackbar } from "notistack";
 import { useEffect, useState } from "react";
 import { CiShare2 } from "react-icons/ci";
-import { FaEye, FaHeart, FaTimes } from "react-icons/fa";
+import { FaEye, FaLinkedin, FaTimes } from "react-icons/fa";
 import {
   FaArrowRight,
   FaFacebook,
   FaInstagram,
-  FaTwitter,
   FaYoutube,
 } from "react-icons/fa6";
 import { useDispatch, useSelector } from "react-redux";
@@ -360,13 +359,6 @@ const ProductViewDetails = ({ singleProduct, loading }) => {
                   <motion.button
                     whileHover={{ scale: 1.1 }}
                     whileTap={{ scale: 0.95 }}
-                    className="p-3 rounded-full bg-gray-100 hover:bg-red-100 text-gray-600 hover:text-red-600 transition-colors"
-                  >
-                    <FaHeart size={20} />
-                  </motion.button>
-                  <motion.button
-                    whileHover={{ scale: 1.1 }}
-                    whileTap={{ scale: 0.95 }}
                     className="p-3 rounded-full bg-gray-100 hover:bg-blue-100 text-gray-600 hover:text-blue-600 transition-colors"
                     onClick={handleTogglePopup}
                   >
@@ -543,7 +535,7 @@ const ProductViewDetails = ({ singleProduct, loading }) => {
                   <div className="flex justify-center gap-6">
                     <motion.a
                       whileHover={{ scale: 1.2 }}
-                      href="https://www.facebook.com"
+                      href="https://www.facebook.com/BaltraHomeAppliancesNepal"
                       target="_blank"
                       rel="noopener noreferrer"
                       className="p-3 rounded-full bg-blue-50 hover:bg-blue-100 transition-colors"
@@ -552,7 +544,7 @@ const ProductViewDetails = ({ singleProduct, loading }) => {
                     </motion.a>
                     <motion.a
                       whileHover={{ scale: 1.2 }}
-                      href="https://www.instagram.com"
+                      href="https://www.instagram.com/baltra.nepal/"
                       target="_blank"
                       rel="noopener noreferrer"
                       className="p-3 rounded-full bg-pink-50 hover:bg-pink-100 transition-colors"
@@ -561,16 +553,16 @@ const ProductViewDetails = ({ singleProduct, loading }) => {
                     </motion.a>
                     <motion.a
                       whileHover={{ scale: 1.2 }}
-                      href="https://www.twitter.com"
+                      href="https://www.linkedin.com/company/baltra-nepal/"
                       target="_blank"
                       rel="noopener noreferrer"
                       className="p-3 rounded-full bg-blue-50 hover:bg-blue-100 transition-colors"
                     >
-                      <FaTwitter size={32} className="text-blue-400" />
+                      <FaLinkedin size={32} className="text-blue-400" />
                     </motion.a>
                     <motion.a
                       whileHover={{ scale: 1.2 }}
-                      href="https://www.youtube.com"
+                      href="https://www.youtube.com/@BaltraHomeProducts"
                       target="_blank"
                       rel="noopener noreferrer"
                       className="p-3 rounded-full bg-red-50 hover:bg-red-100 transition-colors"

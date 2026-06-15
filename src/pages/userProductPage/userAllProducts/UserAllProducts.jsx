@@ -33,8 +33,8 @@ const RippleButton = ({ label, rippleColor, onClick, children }) => {
 
   return (
     <motion.button
-      whileTap={{ scale: 0.95 }}
-      className="w-full py-3 sm:py-3 border border-[#d2d0d0] flex justify-center items-center relative overflow-hidden"
+      whileTap={{ scale: 0.97 }}
+      className="w-full py-3 border border-[#d2d0d0] flex justify-center items-center relative overflow-hidden rounded-lg"
       onMouseEnter={handleMouseEnter}
       onMouseLeave={handleMouseLeave}
       onClick={onClick}
@@ -71,7 +71,7 @@ const RippleButton = ({ label, rippleColor, onClick, children }) => {
 
       {/* Button Text and Children */}
       <span
-        className={`relative z-10 text-center text-sm sm:text-base lg:text-lg font-normal font-gothamNarrow flex items-center ${
+        className={`relative z-10 text-center text-sm sm:text-base font-normal font-gothamNarrow flex items-center transition-colors ${
           isHovered ? "text-white" : "text-black"
         }`}
       >
@@ -81,9 +81,17 @@ const RippleButton = ({ label, rippleColor, onClick, children }) => {
     </motion.button>
   );
 };
+
+const STATUS_STYLES = {
+  Pending: "bg-gray-600",
+  Approved: "bg-green-600",
+  Discount: "bg-amber-600",
+  Rejected: "bg-red-600",
+};
+
 const UserAllProducts = () => {
   const { isLoading, error, customerAddedList } = useSelector(
-    (state) => state.product
+    (state) => state.product,
   );
   const dispatch = useDispatch();
   const navigate = useNavigate();
@@ -91,7 +99,6 @@ const UserAllProducts = () => {
   const [openDeleteModal, setOpenDeleteModal] = useState(false);
   const [selectedComplaintDetails, setSelectedComplaintDetails] =
     useState(null);
-  const [isHovered, setIsHovered] = useState(false);
 
   const handleOpenDeleteModal = (id) => {
     setOpenDeleteModal(id);
@@ -106,7 +113,7 @@ const UserAllProducts = () => {
       dispatch(deleteCustomerProduct({ id, enqueueSnackbar }));
       handleClose();
     },
-    [dispatch, enqueueSnackbar]
+    [dispatch, enqueueSnackbar],
   );
 
   useEffect(() => {
@@ -134,7 +141,7 @@ const UserAllProducts = () => {
         "You can only register a complaint for products with 'Approved' or 'Discount' status.",
         {
           variant: "error",
-        }
+        },
       );
     }
   };
@@ -154,154 +161,139 @@ const UserAllProducts = () => {
       {isLoading ? (
         <CustomerAddSkeleton />
       ) : (
-        <div className="w-full h-auto px-4 sm:px-8 md:px-16 lg:px-32 py-4">
-          <h1 className="text-center text-2xl lg:text-5xl font-bold my-4 sm:my-8 font-gothamNarrow">
-            My <span className="text-red-600 font-gothamNarrow">Products</span>
-          </h1>
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-8">
-            <>
-              {customerAddedList && customerAddedList.length > 0 ? (
-                customerAddedList.map((customer) => (
-                  <AnimatePresence key={customer.id}>
-                    <motion.div
-                      onHoverStart={() => setIsHovered(true)}
-                      onHoverEnd={() => setIsHovered(false)}
-                      whileHover={{
-                        boxShadow:
-                          "0px 0px 10px rgba(245, 222, 12, 0.5), 0px 4px 10px rgba(223, 98, 98, 0.5)",
-                        transition: {
-                          duration: 0.2,
-                          ease: "easeInOut",
-                        },
-                      }}
-                      initial={{ opacity: 1 }}
-                      exit={{ opacity: 0, transition: { duration: 0.3 } }}
-                      animate={isHovered ? { opacity: 10 } : { opacity: 1 }}
+        <div className="w-full min-h-screen px-4 sm:px-8 md:px-12 lg:px-20 py-6 sm:py-10 bg-slate-50">
+          <div className="max-w-7xl mx-auto">
+            <h1 className="text-center text-2xl sm:text-3xl lg:text-4xl font-bold mb-2 font-gothamNarrow">
+              My <span className="text-red-600">Products</span>
+            </h1>
+            <p className="text-center text-sm text-gray-500 mb-8 sm:mb-10 font-gothamNarrow">
+              Track warranty status, register complaints, and extend coverage
+              for your registered products.
+            </p>
+
+            {customerAddedList && customerAddedList.length > 0 ? (
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5 sm:gap-6 lg:gap-8 items-stretch">
+                {customerAddedList.map((customer) => (
+                  <motion.div
+                    key={customer.id}
+                    whileHover={{
+                      boxShadow:
+                        "0px 0px 10px rgba(245, 222, 12, 0.5), 0px 4px 10px rgba(223, 98, 98, 0.5)",
+                      y: -2,
+                    }}
+                    transition={{ duration: 0.2, ease: "easeInOut" }}
+                    className="relative w-full h-full border border-gray-200 bg-white rounded-2xl p-4 sm:p-5 flex flex-col"
+                  >
+                    <button
+                      className="absolute top-3 right-3 w-8 h-8 bg-gray-100 cursor-pointer hover:bg-red-50 hover:text-red-600 rounded-full flex justify-center items-center transition-colors z-10"
+                      onClick={() => handleOpenDeleteModal(customer.id)}
+                      title="Delete product"
                     >
-                      <div
+                      <GoTrash />
+                    </button>
+                    {openDeleteModal === customer.id && (
+                      <DeletePopUpModal
                         key={customer.id}
-                        className="relative w-full border border-gray-200 p-4 sm:p-6 rounded-sm flex flex-col"
-                      >
-                        <button
-                          className="absolute top-2 right-2 w-8 h-8 p-1 bg-gray-200 cursor-pointer hover:text-red-600 rounded-full flex justify-center items-center"
-                          onClick={() => handleOpenDeleteModal(customer.id)}
-                        >
-                          <GoTrash />
-                        </button>
-                        {openDeleteModal === customer.id && (
-                          <DeletePopUpModal
-                            key={customer.id}
-                            onClose={handleClose}
-                            handleDelete={handleDeleteConfirm(customer.id)}
-                          />
-                        )}
-                        <Link
-                          to={`/baltra-user-registered-ProductPage/${customer.id}`}
-                        >
-                          <div className="w-full flex justify-center mt-4 sm:mt-6">
-                            <img
-                              className="w-40 h-40 sm:w-56 sm:h-56 object-cover"
-                              src={customer.product_image}
-                              alt="Image"
-                            />
-                          </div>
-                        </Link>
-                        <div className="mt-4 sm:mt-8 space-y-2 flex-1 font-gothamNarrow">
-                          <div className="flex justify-between text-[#4A4A4A] font-normal">
-                            <span>Model Name :</span>
-                            <span className="font-semibold text-sm">
-                              {customer.model_name}
-                            </span>
-                          </div>
-                          <div className="flex justify-between text-[#4A4A4A] font-normal">
-                            <span>Model Number :</span>
-                            <span className="font-semibold text-sm">
-                              {customer.model_num}
-                            </span>
-                          </div>
-                          <div className="flex justify-between text-[#4A4A4A] font-normal">
-                            <span>Purchase Date :</span>
-                            <span className="font-semibold text-sm">
-                              {moment(customer.purchase_date).format(
-                                "Do MMM, YYYY"
-                              )}
-                            </span>
-                          </div>
-                          <div className="flex justify-between text-[#4A4A4A] font-normal">
-                            <span>Serial Number :</span>
-                            <span className="font-semibold text-sm">
-                              {customer.serial_number}
-                            </span>
-                          </div>
+                        onClose={handleClose}
+                        handleDelete={handleDeleteConfirm(customer.id)}
+                      />
+                    )}
 
-                          <div className="flex justify-between text-[#4A4A4A] font-normal">
-                            <span>Status :</span>
-                            <span className="font-semibold text-sm">
-                              {customer?.status === "Pending" ? (
-                                <span className="bg-gray-600 text-white px-3 py-1 rounded-full cursor-pointer font-gothamNarrow">
-                                  Pending
-                                </span>
-                              ) : customer?.status === "Approved" ? (
-                                <span className="bg-green-600 text-white px-3 py-1 rounded-full cursor-pointer font-gothamNarrow">
-                                  Approved
-                                </span>
-                              ) : (
-                                <span className="bg-gray-600 text-white px-3 py-1 rounded-full cursor-pointer font-gothamNarrow">
-                                  {customer?.status}
-                                </span>
-                              )}
-                            </span>
-                          </div>
-                        </div>
-                        <div className="mt-4 flex flex-col gap-2 sm:gap-4">
-                          <RippleButton
-                            label="Register a Complaint"
-                            rippleColor="#202D31"
-                            className="flex justify-center font-gothamNarrow items-center w-full py-4 px-4 border border-gray-500 text-center text-[#000000] font-normal"
-                            onClick={() => handleRegisteredComplaint(customer)}
-                          >
-                            <FaArrowRight className="ml-2" />
-                          </RippleButton>
-                          {/* <button
-                            className="w-full flex justify-center items-center gap-2 py-4 bg-[#202D31] rounded-sm"
-                            onClick={() =>
-                              handleRegisteredComplaint(
-                                customer.id,
-                                customer.status
-                              )
-                            }
-                          >
-                            <div className="text-center text-white font-normal font-gothamNarrow">
-                              Register a Complaint
-                            </div>
-                            <FaArrowRight className="text-white" />
-                          </button> */}
-
-                          <RippleButton
-                            label="Extend warranty"
-                            rippleColor="#202D31"
-                            className="flex justify-center font-gothamNarrow items-center w-full py-4 px-4 border border-gray-500 text-center text-[#000000] font-normal"
-                            onClick={() => handleExtendWarranty(customer)}
-                          >
-                            <FaArrowRight className="ml-2" />
-                          </RippleButton>
-                        </div>
+                    {/* Image */}
+                    <Link
+                      to={`/baltra-user-registered-ProductPage/${customer.id}`}
+                      className="w-full flex justify-center items-center"
+                    >
+                      <div className="w-full aspect-square max-w-[180px] flex items-center justify-center">
+                        <img
+                          className="w-full h-full object-contain"
+                          src={customer.product_image}
+                          alt={customer.model_name || "Product"}
+                        />
                       </div>
-                    </motion.div>
-                  </AnimatePresence>
-                ))
-              ) : (
-                <div className="col-span-1 text-center text-gray-500">
-                  No Data Found
+                    </Link>
+
+                    {/* Details */}
+                    <div className="mt-4 space-y-2 flex-1 font-gothamNarrow">
+                      <div className="flex justify-between gap-2 text-[#4A4A4A] font-normal text-sm">
+                        <span>Model Name :</span>
+                        <span className="font-semibold text-sm text-right truncate">
+                          {customer.model_name}
+                        </span>
+                      </div>
+                      <div className="flex justify-between gap-2 text-[#4A4A4A] font-normal text-sm">
+                        <span>Model Number :</span>
+                        <span className="font-semibold text-sm text-right truncate">
+                          {customer.model_num}
+                        </span>
+                      </div>
+                      <div className="flex justify-between gap-2 text-[#4A4A4A] font-normal text-sm">
+                        <span>Purchase Date :</span>
+                        <span className="font-semibold text-sm text-right">
+                          {moment(customer.purchase_date).format(
+                            "Do MMM, YYYY",
+                          )}
+                        </span>
+                      </div>
+                      <div className="flex justify-between gap-2 text-[#4A4A4A] font-normal text-sm">
+                        <span>Serial Number :</span>
+                        <span className="font-semibold text-sm text-right truncate">
+                          {customer.serial_number}
+                        </span>
+                      </div>
+                      <div className="flex justify-between items-center gap-2 text-[#4A4A4A] font-normal text-sm pt-1">
+                        <span>Status :</span>
+                        <span
+                          className={`text-white text-xs font-semibold px-3 py-1 rounded-full font-gothamNarrow ${
+                            STATUS_STYLES[customer?.status] || "bg-gray-600"
+                          }`}
+                        >
+                          {customer?.status}
+                        </span>
+                      </div>
+                    </div>
+
+                    {/* Actions */}
+                    <div className="mt-4 flex flex-col gap-2 sm:gap-3">
+                      <RippleButton
+                        label="Register a Complaint"
+                        rippleColor="#202D31"
+                        onClick={() => handleRegisteredComplaint(customer)}
+                      >
+                        <FaArrowRight className="ml-2" />
+                      </RippleButton>
+
+                      <RippleButton
+                        label="Extend warranty"
+                        rippleColor="#202D31"
+                        onClick={() => handleExtendWarranty(customer)}
+                      >
+                        <FaArrowRight className="ml-2" />
+                      </RippleButton>
+                    </div>
+                  </motion.div>
+                ))}
+              </div>
+            ) : (
+              <div className="flex flex-col items-center justify-center text-center py-20 sm:py-28">
+                <div className="w-14 h-14 rounded-full bg-gray-100 flex items-center justify-center mb-3">
+                  <GoTrash className="text-gray-300" size={22} />
                 </div>
-              )}
-              {openModal && (
-                <AddRegisteredComplaintModal
-                  handleClose={() => setOpenModal(false)}
-                  complaintDetails={selectedComplaintDetails}
-                />
-              )}
-            </>
+                <p className="text-base font-semibold text-gray-600 font-gothamNarrow">
+                  No products found
+                </p>
+                <p className="text-sm text-gray-400 mt-1 font-gothamNarrow">
+                  Products you register will show up here.
+                </p>
+              </div>
+            )}
+
+            {openModal && (
+              <AddRegisteredComplaintModal
+                handleClose={() => setOpenModal(false)}
+                complaintDetails={selectedComplaintDetails}
+              />
+            )}
           </div>
         </div>
       )}

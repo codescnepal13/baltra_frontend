@@ -1,103 +1,113 @@
 import moment from "moment";
 
-/* ──────────────────────────────────────────────────────────
-   STATUS MESSAGE MAP
-   Keys = exact newServiceStatusName values from the API.
-   Add/adjust keys here if the API ever returns new variants.
-────────────────────────────────────────────────────────── */
+/* ── Canonical status messages (all keys lowercase) ── */
 const STATUS_MESSAGES = {
   // a. Unassigned variants
-  "Un-Assigned":
+  unassigned:
     "Your complaint has been registered and will be reviewed by our service department shortly. Thank you for your patience.",
-  Unassigned:
+  "un-assigned":
     "Your complaint has been registered and will be reviewed by our service department shortly. Thank you for your patience.",
 
   // b. Service Center Assigned / Engineer Allocated variants
-  "Service Center Assigned":
+  "service center assigned":
     "Your complaint has been assigned to our technician. Our service department will contact you shortly. Thank you for your patience.",
-  "Service Center Allocated":
+  "service center allocated":
     "Your complaint has been assigned to our technician. Our service department will contact you shortly. Thank you for your patience.",
-  "Engineer Allocated":
+  "engineer allocated":
     "Your complaint has been assigned to our technician. Our service department will contact you shortly. Thank you for your patience.",
 
   // c. Part Approval Pending from ASM
-  "Part Approval Pending from ASM":
+  "part approval pending from asm":
     "Your complaint has been verified by the technician, and the required parts have been requested. Thank you for your patience.",
 
   // d. Part Pending from HO
-  "Part Pending from HO":
+  "part pending from ho":
     "The requested parts will be dispatched soon from the Head Office. Thank you for your patience.",
 
   // e. Parts in Transit
-  "Parts in Transit":
+  "parts in transit":
     "The requested parts have been dispatched and are on their way to the technician. Thank you for your patience.",
 
-  // f. Part Consumed by Service Center
-  "Part Consumed by Service Center":
+  // f. Part Consumed — all CRM variants map to the same message
+  "part consumed by service center":
+    "The requested parts have been received by the technician, and your issue will be resolved shortly. Thank you for your patience.",
+  "parts consumed by technician":
+    "The requested parts have been received by the technician, and your issue will be resolved shortly. Thank you for your patience.",
+  "parts issued by branch":
+    "The requested parts have been received by the technician, and your issue will be resolved shortly. Thank you for your patience.",
+  "parts consumed":
     "The requested parts have been received by the technician, and your issue will be resolved shortly. Thank you for your patience.",
 
   // g. On Service
-  "On Service":
+  "on service":
     "Our service department is currently reviewing your complaint. Thank you for your patience.",
 
   // h. Completed
-  Completed:
-    "Your repaired item is ready for collection. Please pick it up from the location where it was dropped off or contact our service center for assistance.",
+  completed:
+    "Your repaired item is ready for collection. Please collect it from the location where it was dropped off or contact our service center for assistance.",
 };
 
 const DEFAULT_MESSAGE =
   "Our team is working on your request. Thank you for your patience.";
 
-/* Lookup: exact match first, then case-insensitive fallback */
+/* ── Normalised lookup — always lowercased + trimmed ── */
 const getMessage = (statusName = "") => {
-  const trimmed = statusName.trim();
-  if (STATUS_MESSAGES[trimmed]) return STATUS_MESSAGES[trimmed];
-  const key = Object.keys(STATUS_MESSAGES).find(
-    (k) => k.toLowerCase() === trimmed.toLowerCase(),
-  );
-  return key ? STATUS_MESSAGES[key] : DEFAULT_MESSAGE;
+  const key = statusName.trim().toLowerCase();
+  return STATUS_MESSAGES[key] ?? DEFAULT_MESSAGE;
 };
 
-/* ──────────────────────────────────────────────────────────
-   STEPPER  (design unchanged from original)
-   + one status message line shown below the current step label
-────────────────────────────────────────────────────────── */
+/* ── CRM display label overrides ── */
+const CRM_DISPLAY_LABEL = {
+  "parts consumed by technician": "Part Consumed by Service Center",
+  "parts issued by branch": "Part Consumed by Service Center",
+  "parts consumed": "Part Consumed by Service Center",
+};
+
+const getDisplayLabel = (statusName = "") => {
+  const key = statusName.trim().toLowerCase();
+  return CRM_DISPLAY_LABEL[key] ?? statusName;
+};
+
+/* ── UserRegisteredStepper ── */
 const UserRegisteredStepper = ({ singleAddedProduct }) => {
   if (!singleAddedProduct?.job_no) return null;
 
   const steps = singleAddedProduct?.stepper || [];
   const latestIndex = steps.length - 1;
   const latestStatus = steps[latestIndex]?.newServiceStatusName || "";
-  const isCompleted = latestStatus.toLowerCase().includes("completed");
+  const latestDisplayLabel = getDisplayLabel(latestStatus);
+  const isCompleted = latestStatus.trim().toLowerCase() === "completed";
 
   return (
     <div className="relative py-4 w-full">
-      {/* ── Stepper track (original design) ── */}
+      {/* ── Stepper track ── */}
       <div className="overflow-x-auto scrollbar-hide">
         <div className="flex items-center w-max px-4 space-x-4 sm:space-x-6">
-          {steps.map((step, index) => (
-            <div key={index} className="flex items-center">
-              {index > 0 && (
-                <div className="h-[2px] sm:h-[4px] w-8 sm:w-12 bg-red-500" />
-              )}
-
-              <div className="flex flex-col items-center">
-                <div className="w-6 h-6 sm:w-8 sm:h-8 flex items-center justify-center rounded-full text-xs sm:text-sm font-semibold text-white bg-red-500">
-                  {index + 1}
-                </div>
-                <div className="text-[10px] sm:text-sm font-medium text-center mt-2 font-gothamNarrow">
-                  {step?.newServiceStatusName}
-                </div>
-                <div className="text-[8px] sm:text-xs text-gray-500 mt-1 font-gothamNarrow">
-                  {moment(step?.dateAdded).format("ddd, MMM D, YYYY")}
+          {steps.map((step, index) => {
+            const displayLabel = getDisplayLabel(step?.newServiceStatusName);
+            return (
+              <div key={index} className="flex items-center">
+                {index > 0 && (
+                  <div className="h-[2px] sm:h-[4px] w-8 sm:w-12 bg-red-500" />
+                )}
+                <div className="flex flex-col items-center">
+                  <div className="w-6 h-6 sm:w-8 sm:h-8 flex items-center justify-center rounded-full text-xs sm:text-sm font-semibold text-white bg-red-500">
+                    {index + 1}
+                  </div>
+                  <div className="text-[10px] sm:text-sm font-medium text-center mt-2 font-gothamNarrow">
+                    {displayLabel}
+                  </div>
+                  <div className="text-[8px] sm:text-xs text-gray-500 mt-1 font-gothamNarrow">
+                    {moment(step?.dateAdded).format("ddd, MMM D, YYYY")}
+                  </div>
                 </div>
               </div>
-            </div>
-          ))}
+            );
+          })}
         </div>
       </div>
 
-      {/* ── Status message for current/latest step ── */}
+      {/* ── Status message banner ── */}
       {latestStatus && (
         <div
           className={`mt-5 mx-4 p-4 rounded border-l-4 flex items-start gap-3
@@ -112,7 +122,7 @@ const UserRegisteredStepper = ({ singleAddedProduct }) => {
               className={`text-[11px] font-semibold uppercase tracking-widest font-gothamNarrow
                 ${isCompleted ? "text-green-700" : "text-red-600"}`}
             >
-              {latestStatus}
+              {latestDisplayLabel}
             </span>
             <p className="text-sm text-gray-700 font-gothamNarrow leading-relaxed">
               {getMessage(latestStatus)}

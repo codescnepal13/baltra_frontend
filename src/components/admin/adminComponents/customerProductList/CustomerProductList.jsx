@@ -89,6 +89,8 @@ const CustomerProductList = () => {
 
   // ── Update modal ─────────────────────────────────────────────────────────
   const handleOpenUpdateModal = (item) => {
+    if (item?.is_verified) return; // Already verified, do nothing
+
     setSelectedItem(item);
     setOpenUpdateModal(true);
   };
@@ -300,7 +302,9 @@ const CustomerProductList = () => {
                         {/* isVerified */}
                         <Td>
                           <button
-                            onClick={() => handleOpenUpdateModal(item)}
+                            onClick={() =>
+                              !item?.is_verified && handleOpenUpdateModal(item)
+                            }
                             className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-semibold border transition-all hover:scale-105 active:scale-95 ${
                               item?.is_verified
                                 ? "bg-green-50 text-green-700 border-green-200 hover:bg-green-100"
@@ -308,7 +312,11 @@ const CustomerProductList = () => {
                             }`}
                           >
                             <span
-                              className={`w-1.5 h-1.5 rounded-full ${item?.is_verified ? "bg-green-500" : "bg-red-400"}`}
+                              className={`w-1.5 h-1.5 rounded-full ${
+                                item?.is_verified
+                                  ? "bg-green-500"
+                                  : "bg-red-400"
+                              }`}
                             />
                             {item?.is_verified ? "Verified" : "Unverified"}
                           </button>
@@ -338,12 +346,6 @@ const CustomerProductList = () => {
                             >
                               <FaTrash size={11} />
                             </button>
-                            {selectedCustomerId === item.id && (
-                              <DeleteCustomerModal
-                                onClose={handleCloseModal}
-                                onConfirm={handleDeleteConfirm}
-                              />
-                            )}
                           </div>
                         </Td>
                       </tr>
@@ -406,6 +408,13 @@ const CustomerProductList = () => {
           item={selectedItem}
           onClose={handleCloseUpdateModal}
           onSuccess={() => fetchPage(page)}
+        />
+      )}
+
+      {selectedCustomerId !== null && (
+        <DeleteCustomerModal
+          onClose={handleCloseModal}
+          onConfirm={handleDeleteConfirm}
         />
       )}
     </div>

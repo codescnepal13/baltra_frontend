@@ -415,7 +415,7 @@ const TrackingComplaintStatusList = () => {
                       <Td>
                         <div className="flex items-center gap-0.5">
                           <button
-                            onClick={() => setViewId(item.id)}
+                            onClick={() => setViewId(item.complaint_id)}
                             className="w-7 h-7 rounded-md text-slate-400 hover:text-blue-600 hover:bg-blue-50 flex items-center justify-center transition-all"
                             title="View"
                           >

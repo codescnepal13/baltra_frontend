@@ -62,16 +62,16 @@ const InfoCell = ({
 const SingleViewContact = ({ contact, isOpen, onClose }) => {
   const formattedDate = useMemo(
     () =>
-      contact?.created_at
-        ? moment(contact.created_at).format("dddd, D MMM YYYY")
+      contact?.date_joined
+        ? moment(contact.date_joined).format("dddd, D MMM YYYY")
         : "Date unavailable",
-    [contact?.created_at],
+    [contact?.date_joined],
   );
 
   const formattedTime = useMemo(
     () =>
-      contact?.created_at ? moment(contact.created_at).format("h:mm A") : "",
-    [contact?.created_at],
+      contact?.date_joined ? moment(contact.date_joined).format("h:mm A") : "",
+    [contact?.date_joined],
   );
 
   if (!isOpen || !contact) return null;
@@ -98,7 +98,7 @@ const SingleViewContact = ({ contact, isOpen, onClose }) => {
           {/* Timestamp */}
           <div className="hidden sm:inline-flex items-center gap-1.5 px-2 py-1 rounded-lg bg-gray-50 border border-gray-100 text-[10.5px] text-gray-400 tracking-[0.02em] flex-shrink-0">
             <HiOutlineClock size={11} />
-            {formattedTime} · {moment(contact.created_at).format("D MMM YYYY")}
+            {formattedTime} · {moment(contact.date_joined).format("D MMM YYYY")}
           </div>
           {/* Close */}
           <button

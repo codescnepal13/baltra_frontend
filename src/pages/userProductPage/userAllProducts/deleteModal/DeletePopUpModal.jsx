@@ -141,7 +141,7 @@ const DeletePopUpModal = ({ onClose, handleDelete }) => {
                            shadow-red-500/25 hover:shadow-red-500/40"
                   onClick={handleConfirm}
                 >
-                  Delete Forever
+                  Delete
                 </button>
               </div>
             )}

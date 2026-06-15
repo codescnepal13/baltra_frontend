@@ -3,89 +3,12 @@ import { useEffect } from "react";
 import { FaArrowLeftLong } from "react-icons/fa6";
 import { useDispatch, useSelector } from "react-redux";
 import { Link, useParams } from "react-router-dom";
-import RedRepairImg from "../../../../assets/images/redRapairImg.png";
 import BaltraSpinner from "../../../../components/layout/baltraSpinner/BaltraSpinner";
 import {
   clearProductError,
   SingleUserProductPage,
 } from "../../../../redux/features/product/productSlice";
 import UserRegisteredStepper from "../userRegisteredStepper/UserRegisteredStepper";
-
-/* ── Status messages ── */
-const STATUS_MESSAGES = {
-  "Un-Assigned":
-    "Your complaint has been registered and will be reviewed by our service department shortly. Thank you for your patience.",
-  Unassigned:
-    "Your complaint has been registered and will be reviewed by our service department shortly. Thank you for your patience.",
-  "Service Center Assigned":
-    "Your complaint has been assigned to our technician. Our service department will contact you shortly. Thank you for your patience.",
-  "Service Center Allocated":
-    "Your complaint has been assigned to our technician. Our service department will contact you shortly. Thank you for your patience.",
-  "Engineer Allocated":
-    "Your complaint has been assigned to our technician. Our service department will contact you shortly. Thank you for your patience.",
-  "Part Approval Pending from ASM":
-    "Your complaint has been verified by the technician, and the required parts have been requested. Thank you for your patience.",
-  "Part Pending from HO":
-    "The requested parts will be dispatched soon from the Head Office. Thank you for your patience.",
-  "Parts in Transit":
-    "The requested parts have been dispatched and are on their way to the technician. Thank you for your patience.",
-  "Part Consumed by Service Center":
-    "The requested parts have been received by the technician, and your issue will be resolved shortly. Thank you for your patience.",
-  "On Service":
-    "Our service department is currently reviewing your complaint. Thank you for your patience.",
-  Completed:
-    "Your repaired item is ready for collection. Please pick it up from the location where it was dropped off or contact our service center for assistance.",
-};
-
-const DEFAULT_MESSAGE =
-  "Our team is working on your request. Thank you for your patience.";
-
-const getMessage = (statusName = "") => {
-  const trimmed = statusName.trim();
-  if (STATUS_MESSAGES[trimmed]) return STATUS_MESSAGES[trimmed];
-  const key = Object.keys(STATUS_MESSAGES).find(
-    (k) => k.toLowerCase() === trimmed.toLowerCase(),
-  );
-  return key ? STATUS_MESSAGES[key] : DEFAULT_MESSAGE;
-};
-
-/* ── Status badge config ── */
-const STATUS_CONFIG = {
-  "Un-Assigned": { color: "text-red-600", bg: "bg-red-50", dot: "bg-red-500" },
-  Unassigned: { color: "text-red-600", bg: "bg-red-50", dot: "bg-red-500" },
-  "Service Center Assigned": {
-    color: "text-yellow-700",
-    bg: "bg-yellow-50",
-    dot: "bg-yellow-500",
-  },
-  "Service Center Allocated": {
-    color: "text-yellow-700",
-    bg: "bg-yellow-50",
-    dot: "bg-yellow-500",
-  },
-  "Engineer Allocated": {
-    color: "text-blue-600",
-    bg: "bg-blue-50",
-    dot: "bg-blue-500",
-  },
-  "On Service": {
-    color: "text-blue-600",
-    bg: "bg-blue-50",
-    dot: "bg-blue-500",
-  },
-  Completed: {
-    color: "text-green-700",
-    bg: "bg-green-50",
-    dot: "bg-green-500",
-  },
-  Cancelled: { color: "text-gray-600", bg: "bg-gray-100", dot: "bg-gray-400" },
-};
-
-const DEFAULT_STATUS_CFG = {
-  color: "text-gray-700",
-  bg: "bg-gray-100",
-  dot: "bg-gray-400",
-};
 
 const UserRegisteredViewDetails = () => {
   const { loading, error, singleAddedProduct } = useSelector(
@@ -102,7 +25,6 @@ const UserRegisteredViewDetails = () => {
 
   const currentStatus = singleAddedProduct?.status || "";
   const isCompleted = currentStatus.toLowerCase().includes("completed");
-  const statusCfg = STATUS_CONFIG[currentStatus] || DEFAULT_STATUS_CFG;
 
   const handleDownload = (src, label, type) => {
     if (type === "image") {
@@ -295,58 +217,6 @@ const UserRegisteredViewDetails = () => {
               />
             </div>
           ))}
-        </div>
-
-        {/* ── Current Stage ── */}
-        <div className="w-full mx-auto p-6 bg-[#D0D5DD]/20 rounded-lg my-5">
-          <div className="flex flex-col mb-5">
-            <h3 className="text-[#1A1A1A] text-xl md:text-2xl font-semibold font-gothamNarrow">
-              Current Stage
-            </h3>
-            <p className="text-gray-500 text-sm font-gothamNarrow">
-              Find out which stage your product is in.
-            </p>
-          </div>
-
-          <div className="flex items-center space-x-4">
-            <img
-              className="w-[70px] md:w-[90px] h-[70px] md:h-[90px] rounded-lg object-cover"
-              src={RedRepairImg}
-              alt="Stage"
-            />
-            <div>
-              {/* Status badge */}
-              <span
-                className={`inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-sm font-semibold font-gothamNarrow
-                  ${statusCfg.bg} ${statusCfg.color}`}
-              >
-                <span className={`w-2 h-2 rounded-full ${statusCfg.dot}`} />
-                {currentStatus || "—"}
-              </span>
-              {/* Warranty expiry date */}
-              {warrantyExpiryDate && (
-                <p className="text-[#667085] text-sm font-gothamNarrow mt-1">
-                  Warranty: {warrantyExpiryDate.format("ddd, MMM D, YYYY")}
-                </p>
-              )}
-            </div>
-          </div>
-
-          {/* Dynamic message based on current status */}
-          <p
-            className={`mt-5 text-sm md:text-base font-gothamNarrow leading-relaxed
-              ${isCompleted ? "text-green-700" : "text-[#1A1A1A]"}`}
-          >
-            {getMessage(currentStatus)}
-          </p>
-
-          {/* Warranty expiry warning */}
-          {isExpired && (
-            <p className="mt-3 text-red-600 text-sm font-gothamNarrow">
-              Note: Your product warranty has expired. Please contact our
-              service center for further assistance.
-            </p>
-          )}
         </div>
       </div>
     </div>

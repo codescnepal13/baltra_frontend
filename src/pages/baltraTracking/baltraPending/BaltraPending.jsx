@@ -154,10 +154,37 @@ const BaltraPending = () => {
   const isSearchActive =
     searchQuery.trim().length > 0 || activeStatus.length > 0;
 
+  /* ── Shared empty-state UI ── */
+  const EmptyState = () => (
+    <div className="col-span-2 flex flex-col items-center py-16 text-gray-400">
+      <span className="text-4xl mb-3">
+        <FaSearch />
+      </span>
+      <p className="font-semibold font-gothamNarrow text-lg text-gray-600">
+        {isSearchActive ? "No results found" : "No Data Found"}
+      </p>
+      {isSearchActive && (
+        <p className="text-sm mt-1">
+          Try a different {searchField.label} or clear the filters
+        </p>
+      )}
+    </div>
+  );
+
+  /* ── Shared skeleton loader UI ── */
+  const SkeletonLoader = () => (
+    <div className="px-4 md:px-16 lg:px-24 xl:px-32 2xl:px-48 py-4 grid grid-cols-1 sm:grid-cols-2 gap-4 sm:gap-6">
+      {Array.from({ length: 4 }).map((_, i) => (
+        <BaltraPendingSkeleton key={i} />
+      ))}
+    </div>
+  );
+
   return (
     <>
       {/* ── Hero banner ── */}
-      <div className="pt-4 w-full bg-gradient-to-r from-[#E91C1C] to-[#831010]">
+      <div className="w-full bg-gradient-to-r from-[#E91C1C] to-[#831010]">
+        {/* Header sits at the top of the red block, with its own row */}
         <BaltraApplianceCareHeader />
         <div className="flex flex-col md:flex-row justify-between items-center h-auto md:h-[278px] px-4 sm:px-8 lg:px-16 2xl:px-24">
           <img
@@ -356,7 +383,15 @@ const BaltraPending = () => {
 
       {/* ── Results ── */}
       {activeTab === "completed" ? (
-        <BaltraCompleted trackingProducts={trackingProducts} />
+        loading ? (
+          <SkeletonLoader />
+        ) : trackingProducts && trackingProducts.length > 0 ? (
+          <BaltraCompleted trackingProducts={trackingProducts} />
+        ) : (
+          <div className="flex flex-col items-center py-16 text-gray-400">
+            <EmptyState />
+          </div>
+        )
       ) : (
         <div className="px-4 md:px-16 lg:px-24 xl:px-32 2xl:px-48 py-4 grid grid-cols-1 sm:grid-cols-2 gap-4 sm:gap-6">
           {loading ? (
@@ -368,19 +403,7 @@ const BaltraPending = () => {
               <BaltraTrackingCard key={item.id} item={item} />
             ))
           ) : (
-            <div className="col-span-2 flex flex-col items-center py-16 text-gray-400">
-              <span className="text-4xl mb-3">
-                <FaSearch />
-              </span>
-              <p className="font-semibold font-gothamNarrow text-lg text-gray-600">
-                {isSearchActive ? "No results found" : "No Data Found"}
-              </p>
-              {isSearchActive && (
-                <p className="text-sm mt-1">
-                  Try a different {searchField.label} or clear the filters
-                </p>
-              )}
-            </div>
+            <EmptyState />
           )}
         </div>
       )}

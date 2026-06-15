@@ -17,13 +17,12 @@ const BaltraSubCategoryBanner = () => {
   );
 
   useEffect(() => {
-    if (category_id) {
-      if (error) {
-        dispatch(clearProductError());
-      }
-      dispatch(baltraSubCategoryProducts(category_id));
-    }
-  }, [dispatch, category_id, error]);
+    if (!category_id) return;
+
+    dispatch(clearProductError());
+    dispatch(baltraSubCategoryProducts(category_id));
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [dispatch, category_id]); // <-- removed `error` from deps
 
   if (loading) {
     return <BaltraSubCategorySkeleton />;
@@ -31,17 +30,14 @@ const BaltraSubCategoryBanner = () => {
 
   return (
     <div>
-      {/* Banner Section */}
       <div
         className="w-full h-[300px] sm:h-[400px] md:h-[500px] lg:h-[580px] flex justify-center items-center bg-cover bg-center relative"
         style={{ backgroundImage: `url(${categoryInfo?.category_banner})` }}
       >
-        {/* Header Overlay */}
         <div className="absolute top-0 left-0 w-full z-10">
           <ProductHeader />
         </div>
 
-        {/* Category Information */}
         <div className="flex flex-col justify-center items-center gap-2 px-4">
           <div className="text-center text-[#000000] text-2xl sm:text-3xl md:text-4xl lg:text-5xl font-semibold font-gothamNarrow">
             {categoryInfo?.category_name}
@@ -52,7 +48,6 @@ const BaltraSubCategoryBanner = () => {
         </div>
       </div>
 
-      {/* Slider Section */}
       <BaltraSubCategorySlider subCategoryProducts={subCategoryProducts} />
     </div>
   );

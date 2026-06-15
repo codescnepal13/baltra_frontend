@@ -32,7 +32,7 @@ const ProductDetailsVideo = ({ singleProduct }) => {
           }
         });
       },
-      { threshold: 0.5 } // video plays when at least 50% visible
+      { threshold: 0.5 },
     );
 
     observer.observe(videoElement);
@@ -42,8 +42,10 @@ const ProductDetailsVideo = ({ singleProduct }) => {
     };
   }, []);
 
+  if (!singleProduct?.product_video) return null;
+
   return (
-    <div className="relative">
+    <div className="w-full h-64 md:h-80 rounded-lg overflow-hidden border border-gray-200 shadow-sm">
       <video
         ref={videoRef}
         src={singleProduct?.product_video}

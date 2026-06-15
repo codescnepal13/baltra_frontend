@@ -23,10 +23,20 @@ const STATUS_MAP = {
   "Not Verified": "Not Verified",
 };
 
+// If already Approved & verified, hide "Not Verified" option
+const getStatusOptions = (item) => {
+  if (item.status === "Approved" && item.is_verified) {
+    return STATUS_OPTIONS.filter((opt) => opt.value !== "Not Verified");
+  }
+  return STATUS_OPTIONS;
+};
+
 const UpdateModal = ({ item, onClose, verificationSuccess }) => {
   const { isLoading, error } = useSelector((state) => state.customer);
   const dispatch = useDispatch();
   const [status, setStatus] = useState(item.status || "");
+
+  const statusOptions = getStatusOptions(item);
 
   const handleUpdate = async (id) => {
     if (!status || !STATUS_MAP[status]) return;
@@ -94,7 +104,7 @@ const UpdateModal = ({ item, onClose, verificationSuccess }) => {
               value={status}
               onChange={(e) => setStatus(e.target.value)}
             >
-              {STATUS_OPTIONS.map((opt) => (
+              {statusOptions.map((opt) => (
                 <option key={opt.value} value={opt.value}>
                   {opt.label}
                 </option>

@@ -1,3 +1,4 @@
+import { useEffect } from "react";
 import { AiOutlineMail, AiOutlinePhone } from "react-icons/ai";
 import {
   FaFacebook,
@@ -6,10 +7,15 @@ import {
   FaTiktok,
   FaYoutube,
 } from "react-icons/fa";
+import { useDispatch, useSelector } from "react-redux";
 import { Link } from "react-router-dom";
 import FooterImg from "../../assets/images/BALTRALOGO.png";
+import {
+  baltraCategoryProducts,
+  clearProductError,
+} from "../../redux/features/product/productSlice";
 
-const NAV_COLUMNS = [
+const STATIC_NAV_COLUMNS = [
   {
     title: "Who We Are",
     links: [
@@ -18,22 +24,10 @@ const NAV_COLUMNS = [
     ],
   },
   {
-    title: "Products",
-    links: [
-      { label: "Kitchen Essentials", to: "/baltra-allProducts" },
-      { label: "Winter Essentials", to: "/baltra-allProducts" },
-      { label: "Summer Essentials", to: "/baltra-allProducts" },
-      { label: "Pressure Cooker & Cookware", to: "/baltra-allProducts" },
-      { label: "Personal Care", to: "/baltra-allProducts" },
-      { label: "Bottles & Flasks", to: "/baltra-allProducts" },
-      { label: "Home Solutions", to: "/baltra-allProducts" },
-    ],
-  },
-  {
     title: "Appliance Care",
     links: [
       { label: "Register a Complaint", to: "/baltra-user-ProductPage" },
-      { label: "Track Your Product", to: "/baltra-trackingProducts" },
+      { label: "Track Your Product", to: "/baltra-user-ProductPage" },
     ],
   },
   {
@@ -83,7 +77,6 @@ const SOCIAL_LINKS = [
   },
 ];
 
-/* Reusable animated underline link */
 const FooterLink = ({ to, children }) => (
   <Link
     to={to}
@@ -102,14 +95,63 @@ const FooterLink = ({ to, children }) => (
 );
 
 const Footer = () => {
+  const { error, categoryProducts, subcategoryData } = useSelector(
+    (state) => state.product,
+  );
+
+  const dispatch = useDispatch();
+
+  useEffect(() => {
+    if (error) dispatch(clearProductError());
+  }, [dispatch, error]);
+
+  useEffect(() => {
+    dispatch(baltraCategoryProducts());
+  }, [dispatch]);
+
   const currentYear = new Date().getFullYear();
+
+  /* Dynamic Products column — categories → /baltra-subCategoryProducts/:id */
+  const productsColumn = {
+    title: "Products",
+    links:
+      categoryProducts?.length > 0
+        ? categoryProducts.map((cat) => ({
+            label: cat.name,
+            to: `/baltra-subCategoryProducts/${cat.id}`,
+          }))
+        : [{ label: "All Products", to: "/baltra-allProducts" }],
+  };
+
+  /* Dynamic Best Sellers column — subcategories of first category from API */
+  const staticBestSellers = STATIC_NAV_COLUMNS.find(
+    (c) => c.title === "Best Sellers",
+  );
+  const bestSellersColumn = {
+    title: "Best Sellers",
+    links:
+      subcategoryData?.length > 0
+        ? subcategoryData.map((sub) => ({
+            label: sub.name,
+            to: `/baltra-allProducts?subcategory=${sub.id}`,
+          }))
+        : staticBestSellers.links,
+  };
+
+  /* Final column order */
+  const allColumns = [
+    STATIC_NAV_COLUMNS[0], // Who We Are
+    productsColumn, // Dynamic categories
+    STATIC_NAV_COLUMNS[1], // Appliance Care
+    bestSellersColumn, // Dynamic subcategories
+    STATIC_NAV_COLUMNS[3], // E-Catalog
+  ];
 
   return (
     <footer className="bg-[#000C13] w-full">
-      {/* ── Main grid ── */}
       <div className="py-12 px-6 md:px-12 lg:px-24 xl:px-32">
         <div className="flex flex-wrap justify-between gap-x-8 gap-y-10">
-          {NAV_COLUMNS.map((col) => (
+          {allColumns.map((col) => (
             <div
               key={col.title}
               className="flex flex-col font-gothamNarrow w-full sm:w-[calc(50%-1rem)] md:w-[calc(33%-1rem)] lg:w-auto"
@@ -162,22 +204,18 @@ const Footer = () => {
         </div>
       </div>
 
-      {/* ── Divider ── */}
       <div className="px-6 md:px-12 lg:px-24 xl:px-32">
         <hr className="border-gray-800" />
       </div>
 
-      {/* ── Copyright bar ── */}
       <div className="px-6 md:px-12 lg:px-24 xl:px-32 py-6 font-gothamNarrow">
         <div className="flex flex-col lg:flex-row items-center justify-between gap-4">
-          {/* Left: copyright */}
           <p className="text-gray-500 text-xs order-3 lg:order-1 text-center lg:text-left">
             &copy; {currentYear}{" "}
             <span className="text-gray-300 font-semibold">Baltra&reg;</span> —
             All rights reserved.
           </p>
 
-          {/* Center: logo */}
           <Link to="/" className="order-1 lg:order-2 flex-shrink-0">
             <img
               src={FooterImg}
@@ -186,7 +224,6 @@ const Footer = () => {
             />
           </Link>
 
-          {/* Right: social icons */}
           <div className="flex items-center gap-4 order-2 lg:order-3">
             {SOCIAL_LINKS.map(({ icon: Icon, href, label }) => (
               <a
@@ -195,10 +232,7 @@ const Footer = () => {
                 target="_blank"
                 rel="noopener noreferrer"
                 aria-label={`Baltra on ${label}`}
-                className="
-                  text-gray-500 transition-all duration-200
-                  hover:text-white hover:scale-110
-                "
+                className="text-gray-500 transition-all duration-200 hover:text-white hover:scale-110"
               >
                 <Icon size={20} />
               </a>
@@ -206,7 +240,6 @@ const Footer = () => {
           </div>
         </div>
 
-        {/* Legal links row */}
         <div className="flex flex-wrap justify-center lg:justify-start gap-x-5 gap-y-1 mt-4 pt-4 border-t border-gray-800">
           {[
             { label: "Privacy Policy", to: "/baltra/privacy-policy" },

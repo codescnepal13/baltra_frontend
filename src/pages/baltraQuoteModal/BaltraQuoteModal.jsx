@@ -1,6 +1,7 @@
 import { enqueueSnackbar } from "notistack";
 import React, { useEffect, useState } from "react";
 import { FaTimes } from "react-icons/fa";
+import { HiOutlineMinus, HiOutlinePlus } from "react-icons/hi2";
 import { useDispatch, useSelector } from "react-redux";
 import {
   addBulkQuote,
@@ -44,8 +45,8 @@ const BaltraQuoteModal = ({
         description,
         quantity,
       };
-      dispatch(addBulkQuote({ data, enqueueSnackbar })).then((error) => {
-        if (!result.error) {
+      dispatch(addBulkQuote({ data, enqueueSnackbar })).then((result) => {
+        if (!result?.error) {
           QuoteCloseModal();
         }
       });
@@ -65,101 +66,116 @@ const BaltraQuoteModal = ({
     }
   }, [error, dispatch]);
 
-  return (
-    <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50 z-50 font-gothamNarrow">
-      <div className="relative bg-white w-full max-w-2xl mx-4 p-6 rounded-lg shadow-lg overflow-y-auto max-h-[90vh]">
-        {/* Close Icon */}
-        <button
-          className="absolute top-3 right-3 text-gray-600 hover:text-gray-900 focus:outline-none"
-          onClick={QuoteCloseModal}
-        >
-          <FaTimes size={20} />
-        </button>
+  const readOnlyFields = [
+    {
+      id: "customerName",
+      label: "Customer Name",
+      value: `${firstname || ""} ${lastname || ""}`.trim(),
+    },
+    { id: "modelName", label: "Model Name", value: model_name },
+    { id: "model_num", label: "Model Number", value: model_num },
+    { id: "contact", label: "Contact Number", value: contact },
+  ];
 
-        {/* Heading */}
-        <h2 className="text-xl font-semibold text-gray-800 mb-4 font-gothamNarrow">
-          Request a Bulk Quote
-        </h2>
+  return (
+    <div className="fixed inset-0 flex items-center justify-center bg-black/50 z-50 font-gothamNarrow px-4">
+      <div className="relative bg-white w-full max-w-2xl rounded-2xl shadow-xl overflow-hidden max-h-[90vh] flex flex-col">
+        {/* Header */}
+        <div className="flex items-center justify-between px-6 py-5 border-b border-stone-100">
+          <div>
+            <h2 className="text-xl font-semibold text-gray-900 font-gothamNarrow">
+              Request a Bulk Quote
+            </h2>
+            <p className="text-sm text-gray-500 mt-0.5">
+              Fill in the details below and our team will get back to you
+            </p>
+          </div>
+          <button
+            className="text-gray-400 hover:text-[#E91C1C] transition-colors p-1 rounded-full hover:bg-stone-50"
+            onClick={QuoteCloseModal}
+            aria-label="Close"
+          >
+            <FaTimes size={18} />
+          </button>
+        </div>
 
         {/* Form */}
-        <form className="space-y-4" onSubmit={handleSubmit}>
+        <form
+          className="space-y-5 px-6 py-6 overflow-y-auto"
+          onSubmit={handleSubmit}
+        >
           {/* Bulk Image */}
           {bulkImage && (
-            <div className="mt-6">
-              <h3 className="font-medium text-gray-700 font-gothamNarrow mb-2">
+            <div>
+              <h3 className="text-sm font-medium text-gray-700 font-gothamNarrow mb-2">
                 Selected Image
               </h3>
-              <div className="h-48 overflow-y-auto border border-stone-200 rounded-md p-2">
+              <div className="h-40 bg-slate-50 border border-stone-200 rounded-xl p-2 flex items-center justify-center">
                 <img
                   src={bulkImage}
-                  alt="Bulk"
-                  className="w-full rounded-md object-contain"
+                  alt="Selected product"
+                  className="max-h-full rounded-lg object-contain"
                 />
               </div>
             </div>
           )}
 
           {/* Read-only Inputs */}
-          {[
-            {
-              id: "customerName",
-              label: "Customer Name",
-              value: `${firstname} ${lastname}`,
-            },
-            { id: "modelName", label: "Model Name", value: model_name },
-            { id: "model_num", label: "Model Number", value: model_num },
-            { id: "contact", label: "Contact Number", value: contact },
-          ].map(({ id, label, value }) => (
-            <div key={id}>
-              <label
-                htmlFor={id}
-                className="block text-sm font-medium text-gray-700 font-gothamNarrow"
-              >
-                {label}
-              </label>
-              <input
-                type="text"
-                id={id}
-                value={value}
-                readOnly
-                className="mt-1 block w-full border border-stone-200 rounded-sm py-4 px-4 focus:outline-none focus:border-red-600"
-              />
-            </div>
-          ))}
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            {readOnlyFields.map(({ id, label, value }) => (
+              <div key={id}>
+                <label
+                  htmlFor={id}
+                  className="block text-sm font-medium text-gray-700 font-gothamNarrow mb-1.5"
+                >
+                  {label}
+                </label>
+                <input
+                  type="text"
+                  id={id}
+                  value={value}
+                  readOnly
+                  className="block w-full bg-slate-50 border border-stone-200 rounded-xl py-3 px-4 text-gray-600 text-sm focus:outline-none cursor-default"
+                />
+              </div>
+            ))}
+          </div>
 
           {/* Quantity */}
           <div>
             <label
               htmlFor="quantity"
-              className="block text-sm font-medium text-gray-700 font-gothamNarrow"
+              className="block text-sm font-medium text-gray-700 font-gothamNarrow mb-1.5"
             >
               Quantity
             </label>
-            <div className="mt-1 flex items-center space-x-2">
+            <div className="flex items-center gap-3">
               <button
                 type="button"
                 onClick={() => setQuantity((prev) => Math.max(1, prev - 1))}
-                className="px-4 py-2 bg-gray-200 text-gray-700 rounded-md hover:bg-gray-300"
+                className="w-10 h-10 flex items-center justify-center bg-slate-50 text-gray-600 rounded-full border border-stone-200 hover:border-[#E91C1C] hover:text-[#E91C1C] transition-colors"
+                aria-label="Decrease quantity"
               >
-                -
+                <HiOutlineMinus size={16} />
               </button>
               <input
                 type="number"
                 id="quantity"
                 value={quantity}
                 readOnly
-                className="w-16 text-center border border-stone-200 rounded-sm py-2 focus:outline-none"
+                className="w-20 text-center border border-stone-200 rounded-xl py-2.5 font-semibold text-gray-800 focus:outline-none"
               />
               <button
                 type="button"
                 onClick={() => setQuantity((prev) => prev + 1)}
-                className="px-4 py-2 bg-gray-200 text-gray-700 rounded-md hover:bg-gray-300"
+                className="w-10 h-10 flex items-center justify-center bg-slate-50 text-gray-600 rounded-full border border-stone-200 hover:border-[#E91C1C] hover:text-[#E91C1C] transition-colors"
+                aria-label="Increase quantity"
               >
-                +
+                <HiOutlinePlus size={16} />
               </button>
             </div>
             {errors.quantity && (
-              <p className="text-sm text-red-600 mt-1">{errors.quantity}</p>
+              <p className="text-sm text-red-600 mt-1.5">{errors.quantity}</p>
             )}
           </div>
 
@@ -167,37 +183,45 @@ const BaltraQuoteModal = ({
           <div>
             <label
               htmlFor="description"
-              className="block text-sm font-medium text-gray-700 font-gothamNarrow"
+              className="block text-sm font-medium text-gray-700 font-gothamNarrow mb-1.5"
             >
               Description
             </label>
             <textarea
               id="description"
               rows="4"
-              placeholder="Enter a brief description"
-              className="mt-1 block w-full border border-stone-200 rounded-sm py-4 px-4 focus:outline-none focus:border-red-600"
+              placeholder="Tell us more about your bulk order requirements"
+              className={`block w-full border rounded-xl py-3 px-4 text-sm focus:outline-none transition-colors resize-none ${
+                errors.description
+                  ? "border-red-500"
+                  : "border-stone-200 focus:border-[#E91C1C]"
+              }`}
               value={description}
               onChange={(e) => setDescription(e.target.value)}
             />
             {errors.description && (
-              <p className="text-sm text-red-600 mt-1">{errors.description}</p>
+              <p className="text-sm text-red-600 mt-1.5">
+                {errors.description}
+              </p>
             )}
           </div>
-
-          {/* Submit Button */}
-          <button
-            type="submit"
-            className={`relative w-full py-3 rounded-md text-white font-gothamNarrow bg-red-600 hover:bg-red-700`}
-            disabled={loading}
-          >
-            {loading && (
-              <span className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2">
-                <div className="animate-spin rounded-full h-4 w-4 border-t-2 border-b-2 border-white"></div>
-              </span>
-            )}
-            Submit
-          </button>
         </form>
+
+        {/* Footer */}
+        <div className="px-6 py-4 border-t border-stone-100">
+          <button
+            type="button"
+            onClick={handleSubmit}
+            disabled={loading}
+            className="relative w-full py-3.5 rounded-xl text-white font-gothamNarrow font-semibold bg-[#E91C1C] hover:bg-red-700 transition-colors disabled:opacity-60 flex items-center justify-center"
+          >
+            {loading ? (
+              <div className="animate-spin rounded-full h-5 w-5 border-t-2 border-b-2 border-white" />
+            ) : (
+              "Submit Request"
+            )}
+          </button>
+        </div>
       </div>
     </div>
   );

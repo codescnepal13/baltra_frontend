@@ -1,14 +1,13 @@
-import React from "react";
-import RiceCookerImg from "../../../assets/images/RiceCookerImg.png";
 import FanImg from "../../../assets/images/FanImg.png";
-import ExtendedWarrantyHeader from "./extendedWarrantyHeader/ExtendedWarrantyHeader";
+import RiceCookerImg from "../../../assets/images/RiceCookerImg.png";
+import BaltraApplianceCareHeader from "../../baltraTracking/baltraApplianceCare/BaltraApplianceCareHeader";
 
 const BalltraExtendWarrantyBanner = () => {
   return (
     <>
       <div className="w-full bg-gradient-to-r from-[#E91C1C] to-[#831010] bg-opacity-60 relative">
         <div className="absolute top-0 left-0 w-full z-10">
-          <ExtendedWarrantyHeader />
+          <BaltraApplianceCareHeader />
         </div>
         <div className="flex flex-col md:flex-row justify-between items-center h-auto md:h-[268px] px-4 sm:px-8 lg:px-16 2xl:px-24 pt-16">
           <img

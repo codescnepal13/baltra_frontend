@@ -5,11 +5,11 @@ import { useDispatch, useSelector } from "react-redux";
 import baltraBoyImg from "../../../assets/images/baltraBoyImg.png";
 import rewardMedalImg from "../../../assets/images/rewardMedalImg.png";
 import UserProductBannerImg from "../../../assets/images/userProductBannerImg.png";
+import TopHeader from "../../../components/topHeader/TopHeader";
 import {
   addRedeemPoint,
   clearProductError,
 } from "../../../redux/features/product/productSlice";
-import UserProductHeader from "../../userProductPage/userProductHeader/UserProductHeader";
 
 const BaltraRewardBanner = ({
   rewardPointValue,
@@ -48,7 +48,7 @@ const BaltraRewardBanner = ({
         }}
       >
         <div>
-          <UserProductHeader />
+          <TopHeader />
         </div>
 
         <div className="absolute inset-0 flex flex-col lg:flex-row items-center lg:justify-between px-4 sm:px-8 lg:px-36 mt-5 lg:mt-10 space-y-8 lg:space-y-0 lg:space-x-8">

@@ -9,6 +9,11 @@ import {
   clearProductError,
 } from "../../redux/features/product/productSlice";
 
+const FONT_OPTIONS = [
+  { value: "gothamNarrow", label: "Gotham Narrow" },
+  { value: "arial", label: "Arial" },
+];
+
 const BaltraPersonalization = ({
   selectedColor,
   selectedSize,
@@ -29,7 +34,7 @@ const BaltraPersonalization = ({
 
   const validatedForm = () => {
     let newErrors = {};
-    if (!addText) {
+    if (!addText.trim()) {
       newErrors.addText = "Please enter your text";
     }
 
@@ -37,50 +42,60 @@ const BaltraPersonalization = ({
     return Object.keys(newErrors).length === 0;
   };
 
-  // Function to get the vertical text
-
-  const getVerticalText = (text) => {
-    return text.split("").map((char, index) => (
-      <span key={index} className="block leading-tight font-inter">
-        {char}
-      </span>
-    ));
-  };
-
   // Ensure text is within limits
-  const verticalText = addText.slice(0, 13);
-  const horizontalText = addText.slice(0, 8);
+  const maxLength = orientation === "vertical" ? 13 : 8;
+  const displayText =
+    orientation === "vertical" ? addText.slice(0, 13) : addText.slice(0, 8);
 
   const urlToFile = async (url) => {
-    const response = await fetch(url);
-    const blob = await response.blob();
-    const file = new File([blob], "image.jpg", { type: blob.type });
-    return file;
+    try {
+      const response = await fetch(url, { mode: "cors" });
+      if (!response.ok) {
+        throw new Error(`Failed to fetch image: ${response.status}`);
+      }
+      const blob = await response.blob();
+      const extension = blob.type.split("/")[1] || "jpg";
+      const file = new File([blob], `image.${extension}`, {
+        type: blob.type || "image/jpeg",
+      });
+      return file;
+    } catch (err) {
+      console.error("urlToFile error:", err);
+      return null;
+    }
   };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    if (validatedForm()) {
-      const formData = new FormData();
-      formData.append("text", addText);
-      formData.append("font_style", selectedFont);
-      formData.append("placement", orientation);
-      formData.append("color", selectedColor);
-      formData.append("size", selectedSize);
-      formData.append("product_id", productId);
-
-      const file = await urlToFile(mainImage);
-      formData.append("main_image", file);
-      try {
-        await dispatch(addBaltraPersonalization({ formData, enqueueSnackbar }));
-        closeModal();
-      } catch (error) {
-        enqueueSnackbar("An error occurred while submitting", {
-          variant: "error",
-        });
-      }
-    } else {
+    if (!validatedForm()) {
       enqueueSnackbar("Please enter valid input", {
+        variant: "error",
+      });
+      return;
+    }
+
+    const formData = new FormData();
+    formData.append("text", addText);
+    formData.append("font_style", selectedFont);
+    formData.append("placement", orientation);
+    formData.append("color", selectedColor);
+    formData.append("size", selectedSize);
+    formData.append("product_id", productId);
+
+    const file = await urlToFile(mainImage);
+    if (!file) {
+      enqueueSnackbar("Could not load product image. Please try again.", {
+        variant: "error",
+      });
+      return;
+    }
+    formData.append("main_image", file);
+
+    try {
+      await dispatch(addBaltraPersonalization({ formData, enqueueSnackbar }));
+      closeModal();
+    } catch (error) {
+      enqueueSnackbar("An error occurred while submitting", {
         variant: "error",
       });
     }
@@ -98,70 +113,134 @@ const BaltraPersonalization = ({
   return (
     <>
       <MetaData title="Baltra personalization" />
-      <div className="w-full h-auto flex flex-col items-center px-4 md:px-8">
+      <div className="w-full h-auto flex flex-col items-center bg-white">
+        {/* Header */}
         <div className="w-full flex justify-between items-center p-6 md:p-8 bg-gradient-to-r from-[#C871CA] to-[#6F2CFF]">
-          <div className="text-white text-lg md:text-2xl font-gothamNarrow uppercase text-center flex-grow">
+          <div className="text-white text-lg md:text-2xl font-gothamNarrow font-semibold uppercase text-center flex-grow tracking-wide">
             Give your product your personal touch
           </div>
-          <button className="flex-shrink-0" onClick={handleClose}>
-            <FaTimes className="text-white w-6 h-6" />
+          <button
+            className="flex-shrink-0 hover:opacity-80 transition-opacity"
+            onClick={handleClose}
+            aria-label="Close"
+          >
+            <FaTimes className="text-white w-5 h-5 md:w-6 md:h-6" />
           </button>
         </div>
 
-        <div className="mt-10 text-black text-xl md:text-2xl font-gothamNarrow font-semibold uppercase">
-          Preview
-        </div>
-        <div className="flex flex-col md:flex-row justify-center items-start gap-6 p-6 w-full max-w-5xl">
-          <div className="flex justify-center items-center w-full md:w-1/2">
-            <div className="bg-gray-200 w-full h-[300px] md:h-[500px] flex justify-center items-center relative">
+        <div className="flex flex-col md:flex-row justify-center items-stretch gap-8 p-6 md:p-8 w-full max-w-5xl">
+          {/* Preview */}
+          <div className="flex flex-col items-center w-full md:w-1/2">
+            <div className="text-black text-lg md:text-xl font-gothamNarrow font-semibold uppercase mb-4 self-start">
+              Preview
+            </div>
+            <div className="relative bg-gradient-to-b from-gray-100 to-gray-200 rounded-2xl w-full h-[320px] md:h-[460px] flex justify-center items-center overflow-hidden">
               <img
-                className="w-32 md:w-48 h-auto"
+                className="w-36 md:w-52 h-auto drop-shadow-xl select-none"
                 src={mainImage}
-                alt="PreviewImg"
+                alt="Bottle preview"
+                draggable={false}
               />
-              <div className="absolute inset-0 flex justify-center items-center">
-                {orientation === "horizontal" ? (
-                  <div
-                    className={`absolute text-[#ffffff] text-base md:text-lg font-semibold font-${selectedFont}`}
-                  >
-                    {horizontalText}
+
+              {/* Text overlay on bottle */}
+              <div className="absolute inset-0 flex justify-center items-center pointer-events-none">
+                {displayText &&
+                  (orientation === "horizontal" ? (
+                    <span
+                      className={`text-sm md:text-base font-bold font-${selectedFont} tracking-wider uppercase drop-shadow-md`}
+                      style={{ color: "#ffffff" }}
+                    >
+                      {displayText}
+                    </span>
+                  ) : (
+                    <div
+                      className={`flex flex-col items-center leading-[1.15] font-bold font-${selectedFont} uppercase drop-shadow-md`}
+                      style={{ color: "#ffffff" }}
+                    >
+                      {displayText.split("").map((char, index) => (
+                        <span key={index} className="text-sm md:text-base">
+                          {char}
+                        </span>
+                      ))}
+                    </div>
+                  ))}
+              </div>
+            </div>
+
+            {(selectedColor || selectedSize) && (
+              <div className="flex items-center gap-3 mt-4 font-gothamNarrow self-start">
+                {selectedColor && (
+                  <div className="relative w-8 h-8 rounded-full border border-gray-300 shadow-sm">
+                    <div
+                      className="w-full h-full rounded-full"
+                      style={{ backgroundColor: selectedColor }}
+                    />
+                    <div className="absolute inset-0 flex items-center justify-center">
+                      <svg
+                        className="w-4 h-4 text-white drop-shadow"
+                        fill="none"
+                        stroke="currentColor"
+                        viewBox="0 0 24 24"
+                        xmlns="http://www.w3.org/2000/svg"
+                      >
+                        <path
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                          strokeWidth="2"
+                          d="M5 13l4 4L19 7"
+                        />
+                      </svg>
+                    </div>
                   </div>
-                ) : (
-                  <div
-                    className={`absolute text-[#ffffff] text-base md:text-lg font-semibold font-${selectedFont} flex flex-col items-center`}
-                  >
-                    {getVerticalText(verticalText)}
+                )}
+                {selectedSize && (
+                  <div className="border border-gray-300 rounded-md px-4 py-1.5 text-sm font-medium text-gray-700">
+                    {selectedSize}
                   </div>
                 )}
               </div>
-            </div>
+            )}
           </div>
 
-          <div className="flex flex-col gap-4 w-full md:w-1/2">
+          {/* Form */}
+          <div className="flex flex-col gap-6 w-full md:w-1/2">
+            {/* Text input */}
             <div className="flex flex-col gap-2">
-              <div className="text-[#4F4F4F] font-gothamNarrow font-semibold">
+              <label
+                htmlFor="personalize-text"
+                className="text-[#4F4F4F] font-gothamNarrow font-semibold"
+              >
                 Enter your text
-              </div>
+              </label>
               <input
+                id="personalize-text"
                 type="text"
-                className="w-full outline-none py-2 px-3 border border-[#C2C2C2] hover:border-orange-500 rounded-sm text-base font-gothamNarrow"
+                className={`w-full outline-none py-2.5 px-3 border rounded-md text-base font-gothamNarrow transition-colors ${
+                  personalizeErr.addText
+                    ? "border-red-500"
+                    : "border-[#C2C2C2] hover:border-orange-500 focus:border-orange-500"
+                }`}
                 placeholder="eg. Baltra"
                 value={addText}
                 onChange={(e) => setAddText(e.target.value)}
+                maxLength={maxLength}
               />
-              {personalizeErr && (
-                <span className="text-red-500 text-sm font-gothamNarrow">
-                  {personalizeErr.addText}
+              <div className="flex justify-between items-center">
+                {personalizeErr.addText ? (
+                  <span className="text-red-500 text-sm font-gothamNarrow">
+                    {personalizeErr.addText}
+                  </span>
+                ) : (
+                  <p className="text-[#4F4F4F] text-sm font-gothamNarrow">
+                    Type the word you want to show on your product
+                  </p>
+                )}
+                <span className="text-[#9CA3AF] text-xs font-gothamNarrow whitespace-nowrap ml-2">
+                  {displayText.length}/{maxLength}
                 </span>
-              )}
-              <p className="text-[#4F4F4F] text-sm font-gothamNarrow">
-                Type the word you want to show on your product
-              </p>
-              <p className="text-[#4F4F4F] text-sm font-gothamNarrow">
-                (Vertical max 13 characters)
-              </p>
-              <p className="text-[#4F4F4F] text-sm font-gothamNarrow">
-                (Horizontal max 8 characters)
+              </div>
+              <p className="text-[#9CA3AF] text-xs font-gothamNarrow">
+                Vertical: max 13 characters · Horizontal: max 8 characters
               </p>
             </div>
 
@@ -171,113 +250,98 @@ const BaltraPersonalization = ({
                 Placement
               </div>
               <div className="flex gap-4">
-                <div
-                  className={`cursor-pointer flex flex-col items-center gap-2 ${
-                    orientation === "vertical"
-                      ? "border-orange-500"
-                      : "border-[#808080]"
-                  }`}
+                <button
+                  type="button"
+                  className="cursor-pointer flex flex-col items-center gap-2"
                   onClick={() => setOrientation("vertical")}
                 >
                   <div
-                    className={`border w-16 h-16 p-2 flex justify-center items-center ${
-                      orientation === "vertical" ? "border-orange-500" : ""
+                    className={`rounded-lg w-16 h-16 p-2 flex justify-center items-center transition-colors ${
+                      orientation === "vertical"
+                        ? "border-2 border-orange-500 bg-orange-50"
+                        : "border border-[#C2C2C2]"
                     }`}
                   >
-                    <div className="texto text-black text-base font-gothamNarrow font-light">
+                    <div className="text-black text-sm font-gothamNarrow font-light leading-tight">
                       <span className="block leading-none">A</span>
                       <span className="block leading-none">B</span>
                       <span className="block leading-none">C</span>
                     </div>
                   </div>
-                  <div className="text-sm text-black font-gothamNarrow">
+                  <div
+                    className={`text-sm font-gothamNarrow ${
+                      orientation === "vertical"
+                        ? "text-orange-500 font-semibold"
+                        : "text-black"
+                    }`}
+                  >
                     Vertical
                   </div>
-                </div>
+                </button>
 
-                <div
-                  className={`cursor-pointer flex flex-col items-center gap-2 ${
-                    orientation === "horizontal"
-                      ? "border-orange-500"
-                      : "border-[#808080]"
-                  }`}
+                <button
+                  type="button"
+                  className="cursor-pointer flex flex-col items-center gap-2"
                   onClick={() => setOrientation("horizontal")}
                 >
                   <div
-                    className={`border w-16 h-16 p-2 font-gothamNarrow flex justify-center items-center ${
-                      orientation === "horizontal" ? "border-orange-500" : ""
+                    className={`rounded-lg w-16 h-16 p-2 font-gothamNarrow flex justify-center items-center transition-colors ${
+                      orientation === "horizontal"
+                        ? "border-2 border-orange-500 bg-orange-50"
+                        : "border border-[#C2C2C2]"
                     }`}
                   >
                     ABC
                   </div>
-                  <div className="text-sm text-black font-gothamNarrow">
+                  <div
+                    className={`text-sm font-gothamNarrow ${
+                      orientation === "horizontal"
+                        ? "text-orange-500 font-semibold"
+                        : "text-black"
+                    }`}
+                  >
                     Horizontal
                   </div>
-                </div>
+                </button>
               </div>
             </div>
 
-            {selectedColor && selectedSize && (
-              <div className="flex items-center space-x-4 font-gothamNarrow">
-                <div className="relative w-8 h-8 rounded-full border border-gray-400">
-                  <div
-                    className="w-full h-full rounded-full"
-                    style={{ backgroundColor: selectedColor }}
-                  ></div>
-
-                  {/* Checkmark icon overlay */}
-                  <div className="absolute inset-0 flex items-center justify-center">
-                    <svg
-                      className="w-4 h-4 text-white"
-                      fill="none"
-                      stroke="currentColor"
-                      viewBox="0 0 24 24"
-                      xmlns="http://www.w3.org/2000/svg"
-                    >
-                      <path
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                        strokeWidth="2"
-                        d="M5 13l4 4L19 7"
-                      ></path>
-                    </svg>
-                  </div>
-                </div>
-
-                <div className="border border-gray-400 px-4 py-2 text-sm font-medium font-gothamNarrow">
-                  {selectedSize}
-                </div>
-              </div>
-            )}
-
             {/* Font Selection */}
             <div className="flex flex-col gap-2">
-              <div className="text-[#4F4F4F] font-gothamNarrow font-semibold">
-                Select Font Style
-              </div>
+              <label
+                htmlFor="font-style"
+                className="text-[#4F4F4F] font-gothamNarrow font-semibold"
+              >
+                Select font style
+              </label>
               <select
-                className="w-full p-2 border border-[#808080] bg-[#FAFAFA] text-base font-bold font-gothamNarrow"
+                id="font-style"
+                className="w-full p-2.5 border border-[#C2C2C2] hover:border-orange-500 focus:border-orange-500 outline-none rounded-md bg-[#FAFAFA] text-base font-semibold font-gothamNarrow transition-colors"
                 value={selectedFont}
                 onChange={(e) => setSelectedFont(e.target.value)}
               >
-                <option value="gothamNarrow">Gotham Narrow</option>
-                <option value="arial">Arial</option>
+                {FONT_OPTIONS.map((font) => (
+                  <option key={font.value} value={font.value}>
+                    {font.label}
+                  </option>
+                ))}
               </select>
             </div>
 
             <button
-              className="relative flex font-gothamNarrow justify-center items-center gap-2 w-full py-3 bg-gradient-to-r from-[#C871CA] to-[#6F2CFF] text-white rounded-md"
-              type="submit"
+              className="relative flex font-gothamNarrow justify-center items-center gap-2 w-full py-3.5 mt-2 bg-gradient-to-r from-[#C871CA] to-[#6F2CFF] text-white font-semibold rounded-md hover:opacity-90 transition-opacity disabled:opacity-60"
+              type="button"
               onClick={handleSubmit}
               disabled={isLoading}
             >
-              {isLoading && (
-                <span className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2">
-                  <div className="animate-spin rounded-full h-4 w-4 border-t-2 border-b-2 border-white"></div>
-                </span>
+              {isLoading ? (
+                <div className="animate-spin rounded-full h-5 w-5 border-t-2 border-b-2 border-white" />
+              ) : (
+                <>
+                  PERSONALIZE
+                  <FaArrowRightLong />
+                </>
               )}
-              PERSONALIZE
-              <FaArrowRightLong />
             </button>
           </div>
         </div>

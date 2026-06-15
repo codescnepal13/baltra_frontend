@@ -8,16 +8,15 @@ const RelatedProducts = ({ allRelatedProducts, isFetching }) => {
       allRelatedProducts?.map((item) => (
         <RelatedProductCard key={item.id} item={item} />
       )),
-    [allRelatedProducts]
+    [allRelatedProducts],
   );
 
-  // Memoize the list of skeleton loaders
   const skeletonLoaders = useMemo(
     () =>
       Array.from({ length: 5 }).map((_, index) => (
         <RelatedProductSkeleton key={index} />
       )),
-    []
+    [],
   );
 
   return (
@@ -25,13 +24,15 @@ const RelatedProducts = ({ allRelatedProducts, isFetching }) => {
       <div className="text-center text-[#101623] text-3xl font-semibold capitalize leading-[52px] font-gothamNarrow">
         Related products
       </div>
-      <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 lg:gap-4 px-4 sm:px-0 mt-5">
+      <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4 px-4 sm:px-0 mt-5 items-stretch">
         {isFetching ? (
           skeletonLoaders
         ) : allRelatedProducts?.length > 0 ? (
           relatedProductCards
         ) : (
-          <span>No Data Found</span>
+          <span className="col-span-full text-center text-gray-500 py-10">
+            No Data Found
+          </span>
         )}
       </div>
     </div>

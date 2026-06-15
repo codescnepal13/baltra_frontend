@@ -1,44 +1,48 @@
-import React, { useEffect, useRef, useState } from "react";
-import { AiOutlineRightCircle, AiOutlineLeftCircle } from "react-icons/ai";
+import { useEffect, useRef, useState } from "react";
+import { AiOutlineLeftCircle, AiOutlineRightCircle } from "react-icons/ai";
 import { FaArrowLeft } from "react-icons/fa6";
-import BaltraSubCategorySliderCard from "./BaltraSubCategorySliderCard";
-import BaltraSubCategoryProductList from "../baltraSubCategoryProducts/BaltraSubCategoryProductList";
-import { Link } from "react-router-dom";
 import { useDispatch, useSelector } from "react-redux";
+import { Link } from "react-router-dom";
 import { baltraSubCategoryRelatedProducts } from "../../../redux/features/product/productSlice";
+import BaltraSubCategoryProductList from "../baltraSubCategoryProducts/BaltraSubCategoryProductList";
 import "./BaltraSlider.css";
+import BaltraSubCategorySliderCard from "./BaltraSubCategorySliderCard";
 
 const BaltraSubCategorySlider = ({ subCategoryProducts = [] }) => {
   const { isLoading, subCategoryRelatedProducts } = useSelector(
-    (state) => state.product
+    (state) => state.product,
   );
   const dispatch = useDispatch();
   const sliderRef = useRef(null);
-  const [selectedSubCategory, setSelectedSubCategory] = useState(
-    subCategoryProducts[0] || null
-  );
+
+  // Store only the selected ID, not the object reference
+  const [selectedSubCategoryId, setSelectedSubCategoryId] = useState(null);
 
   const scrollNext = () => {
-    if (sliderRef.current) {
-      sliderRef.current.scrollBy({ left: 300, behavior: "smooth" });
-    }
+    sliderRef.current?.scrollBy({ left: 300, behavior: "smooth" });
   };
 
   const scrollPrevious = () => {
-    if (sliderRef.current) {
-      sliderRef.current.scrollBy({ left: -300, behavior: "smooth" });
-    }
+    sliderRef.current?.scrollBy({ left: -300, behavior: "smooth" });
   };
 
   const handleCardClick = (subCategory) => {
-    setSelectedSubCategory(subCategory);
+    setSelectedSubCategoryId(subCategory.id);
   };
 
+  // Initialize selection once data first arrives
   useEffect(() => {
-    if (selectedSubCategory) {
-      dispatch(baltraSubCategoryRelatedProducts(selectedSubCategory.id));
+    if (subCategoryProducts.length > 0 && selectedSubCategoryId === null) {
+      setSelectedSubCategoryId(subCategoryProducts[0].id);
     }
-  }, [dispatch, selectedSubCategory]);
+  }, [subCategoryProducts, selectedSubCategoryId]);
+
+  // Fetch related products only when the selected ID actually changes
+  useEffect(() => {
+    if (selectedSubCategoryId !== null) {
+      dispatch(baltraSubCategoryRelatedProducts(selectedSubCategoryId));
+    }
+  }, [dispatch, selectedSubCategoryId]);
 
   return (
     <div className="bg-gray-50 px-4 sm:px-8 md:px-16 lg:px-28">
@@ -54,7 +58,6 @@ const BaltraSubCategorySlider = ({ subCategoryProducts = [] }) => {
             <FaArrowLeft size={20} md={24} />
           </Link>
 
-          {/* Left Scroll Button */}
           <button
             onClick={scrollPrevious}
             className="absolute left-0 top-1/2 transform -translate-y-1/2 p-1 md:p-2 z-10"
@@ -62,7 +65,6 @@ const BaltraSubCategorySlider = ({ subCategoryProducts = [] }) => {
             <AiOutlineLeftCircle size={24} md={28} />
           </button>
 
-          {/* Scrollable Subcategory Products */}
           <div
             className="flex overflow-x-scroll scrollbar-hide px-4 sm:px-6"
             ref={sliderRef}
@@ -72,16 +74,14 @@ const BaltraSubCategorySlider = ({ subCategoryProducts = [] }) => {
                 <div
                   key={item.id}
                   className={`flex-none w-1/3 sm:w-1/4 md:w-[14.28%] px-2 md:px-4 cursor-pointer ${
-                    index === 0 ? "ml-0" : ""
-                  } ${index === subCategoryProducts.length - 1 ? "mr-4" : ""}`}
+                    index === subCategoryProducts.length - 1 ? "mr-4" : ""
+                  }`}
                   onClick={() => handleCardClick(item)}
                 >
                   <BaltraSubCategorySliderCard
                     item={item}
                     index={index}
-                    isSelected={
-                      selectedSubCategory && selectedSubCategory.id === item.id
-                    }
+                    isSelected={selectedSubCategoryId === item.id}
                   />
                 </div>
               ))
@@ -90,7 +90,6 @@ const BaltraSubCategorySlider = ({ subCategoryProducts = [] }) => {
             )}
           </div>
 
-          {/* Right Scroll Button */}
           <button
             onClick={scrollNext}
             className="absolute right-0 top-1/2 transform -translate-y-1/2 p-1 md:p-2 z-10"
@@ -99,7 +98,6 @@ const BaltraSubCategorySlider = ({ subCategoryProducts = [] }) => {
           </button>
         </div>
 
-        {/* SubCategory Product List */}
         <div className="px-0 md:px-8 py-6 sm:py-8">
           <BaltraSubCategoryProductList
             products={subCategoryRelatedProducts}
