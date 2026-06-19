@@ -75,8 +75,10 @@ const DEFAULT_STATUS = {
 
 const Row = ({ label, value, valueClass = "" }) => (
   <div className="flex items-baseline gap-2 text-sm font-gothamNarrow">
-    <span className="font-semibold text-gray-600 w-36 shrink-0">{label}</span>
-    <span className={`text-gray-800 leading-snug ${valueClass}`}>
+    <span className="font-semibold text-gray-600 w-28 sm:w-32 shrink-0">
+      {label}
+    </span>
+    <span className={`text-gray-800 leading-snug line-clamp-1 ${valueClass}`}>
       {value || "—"}
     </span>
   </div>
@@ -96,21 +98,21 @@ const BaltraTrackingCard = ({ item }) => {
         }}
         className="mt-2 bg-white rounded-md border border-gray-200 overflow-hidden"
       >
-        <div className="flex flex-col sm:flex-row gap-0">
+        <div className="flex flex-col sm:flex-row">
           {/* ── Image panel ── */}
-          <div className="sm:w-44 md:w-48 lg:w-52 shrink-0 bg-gray-50 flex items-center justify-center p-3 border-b sm:border-b-0 sm:border-r border-gray-100">
+          <div className="sm:w-36 md:w-40 lg:w-44 shrink-0 bg-gray-50 flex items-center justify-center p-2.5 border-b sm:border-b-0 sm:border-r border-gray-100">
             <img
-              className="w-full h-36 sm:h-full object-contain"
+              className="w-full h-28 sm:h-full object-contain"
               src={item.damaged_image || item.product_image}
               alt={item.model_name}
             />
           </div>
 
           {/* ── Content panel ── */}
-          <div className="flex flex-col justify-between flex-1 px-5 py-4 gap-3">
+          <div className="flex flex-col justify-between flex-1 px-4 py-3 gap-2">
             {/* Top: model name + status badge */}
             <div className="flex items-start justify-between gap-3">
-              <h3 className="text-base font-semibold text-gray-900 font-gothamNarrow leading-tight">
+              <h3 className="text-base font-semibold text-gray-900 font-gothamNarrow leading-tight line-clamp-1">
                 {item.model_name}
               </h3>
               <span
@@ -123,9 +125,13 @@ const BaltraTrackingCard = ({ item }) => {
             </div>
 
             {/* Detail rows */}
-            <div className="flex flex-col gap-1.5">
+            <div className="flex flex-col gap-1">
               <Row label="Model Code" value={item.model_num} />
-              <Row label="Job ID" value={item.job_no} />
+              <Row
+                label="Job ID"
+                value={item.job_no}
+                valueClass="text-red-500 font-semibold"
+              />
               <Row label="Sent for" value={item.problem_type} />
               <Row label="Complaint" value={item.problem_description} />
               <Row
@@ -137,7 +143,7 @@ const BaltraTrackingCard = ({ item }) => {
             </div>
 
             {/* Bottom: subtle "View details" cue */}
-            <div className="flex justify-end pt-1">
+            <div className="flex justify-end">
               <span className="text-xs text-red-500 font-gothamNarrow font-medium tracking-wide">
                 View details →
               </span>

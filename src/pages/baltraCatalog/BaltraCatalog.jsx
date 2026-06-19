@@ -84,13 +84,12 @@ const CatalogCard = memo(
       initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.4, ease: "easeOut" }}
-      className="flex flex-col items-center gap-4"
+      className="flex flex-col h-full items-center gap-4" // ← h-full + flex col
     >
-      {/* Catalog Image */}
+      {/* Catalog Image — grows to fill available height */}
       <div
-        className="relative group cursor-pointer w-full"
+        className="relative group cursor-pointer w-full flex-1 min-h-0" // ← flex-1 min-h-0
         onClick={() => onPreview(catalog)}
-        style={{ aspectRatio: "3/4" }}
       >
         <img
           src={catalog.catalogue_image}
@@ -117,16 +116,18 @@ const CatalogCard = memo(
         </div>
       </div>
 
-      {/* Title */}
+      {/* Title — fixed min-height so 1-line vs 2-line titles don't shift buttons */}
       <h3
-        className="text-center text-sm sm:text-base font-medium tracking-wide font-gothamNarrow"
-        style={{ color: "#202D31" }}
+        className="text-center text-sm sm:text-base font-medium tracking-wide font-gothamNarrow w-full"
+        style={{ color: "#202D31", minHeight: "2.5rem" }} // ← minHeight
       >
         {catalog.catalogue_type}
       </h3>
 
-      {/* Buttons */}
-      <div className="flex flex-col w-full gap-2">
+      {/* Buttons — always at bottom */}
+      <div className="flex flex-col w-full gap-2 mt-auto">
+        {" "}
+        {/* ← mt-auto */}
         <RippleButton label="Explore" onClick={() => onExplore(catalog.file)} />
         <RippleButton
           label={isDownloading ? "Downloading…" : "Download"}
@@ -243,6 +244,7 @@ const BaltraCatalog = () => {
                     delay: index * 0.07,
                     ease: "easeOut",
                   }}
+                  className="h-full" // ← add this
                 >
                   <CatalogCard
                     catalog={catalog}

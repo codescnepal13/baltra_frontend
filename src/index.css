@@ -121,3 +121,14 @@ input[type="password"]::-webkit-inner-spin-button {
 .ql-editor .ql-indent-3 {
   margin-left: 4.5rem;
 }
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}

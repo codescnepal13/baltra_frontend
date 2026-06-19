@@ -12,12 +12,6 @@ const BaltraCard = ({ item, index }) => {
             index === 0 ? "border border-slate-300" : "border-none"
           }`}
         >
-          {/* <img
-            className="w-full h-36 object-contain"
-            src={item.image_url}
-            alt={item.name}
-          /> */}
-
           {item?.image_url && <LazyImage url={item?.image_url} />}
           <div className="text-black font-normal font-gothamNarrow leading-snug text-center">
             {item.name}
@@ -31,7 +25,7 @@ const BaltraCard = ({ item, index }) => {
 BaltraCard.propTypes = {
   item: PropTypes.shape({
     id: PropTypes.number.isRequired,
-    image_url: PropTypes.string.isRequired,
+    image_url: PropTypes.string,
     name: PropTypes.string.isRequired,
   }),
   index: PropTypes.number.isRequired,

@@ -36,18 +36,18 @@ const UnAuthorize = () => {
   return (
     <div className="font-gothamNarrow min-h-screen bg-[#f8f6f3] flex items-center justify-center p-4">
       <div className="bg-white rounded-3xl border border-[#e8e3dc] p-10 max-w-[480px] w-full text-center relative overflow-hidden">
-        {/* Amber top accent bar */}
-        <div className="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-amber-600 via-amber-400 to-amber-600 rounded-t-3xl" />
+        {/* red top accent bar */}
+        <div className="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-red-600 via-red-400 to-red-600 rounded-t-3xl" />
 
         {/* Error badge */}
-        <div className="inline-flex items-center gap-1.5 bg-amber-50 border border-amber-200 text-amber-700 text-[11px] font-semibold tracking-widest uppercase px-3 py-1.5 rounded-full mb-6">
-          <span className="w-1.5 h-1.5 rounded-full bg-amber-500 animate-pulse" />
+        <div className="inline-flex items-center gap-1.5 bg-red-50 border border-red-200 text-red-700 text-[11px] font-semibold tracking-widest uppercase px-3 py-1.5 rounded-full mb-6">
+          <span className="w-1.5 h-1.5 rounded-full bg-red-500 animate-pulse" />
           Unauthorized
         </div>
 
         {/* 401 */}
         <div className="text-[88px] font-bold leading-none tracking-tighter text-slate-900 mb-0">
-          4<span className="text-amber-500">0</span>1
+          4<span className="text-red-500">0</span>1
         </div>
 
         {/* SVG illustration */}
@@ -161,7 +161,7 @@ const UnAuthorize = () => {
         <div className="flex items-center justify-center gap-2.5 flex-wrap mb-7">
           <Link
             to="/baltra-aboutUs-Page"
-            className="inline-flex items-center gap-2 bg-amber-500 hover:bg-amber-600 active:scale-95 text-white text-sm font-semibold px-5 py-2.5 rounded-xl transition-all"
+            className="inline-flex items-center gap-2 bg-red-500 hover:bg-red-600 active:scale-95 text-white text-sm font-semibold px-5 py-2.5 rounded-xl transition-all"
           >
             <HiArrowLeft size={15} />
             Back to home
@@ -215,7 +215,7 @@ const UnAuthorize = () => {
             disabled={reported}
             className={`inline-flex items-center gap-1.5 text-xs font-medium px-3 py-1.5 rounded-lg border transition-all disabled:opacity-50 disabled:cursor-not-allowed ${
               reported
-                ? "bg-amber-50 border-amber-200 text-amber-700"
+                ? "bg-red-50 border-red-200 text-red-700"
                 : "border-[#e0dbd4] text-slate-500 hover:bg-[#f8f6f3] hover:text-slate-800"
             }`}
           >
