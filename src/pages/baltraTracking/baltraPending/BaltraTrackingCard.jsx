@@ -73,12 +73,15 @@ const DEFAULT_STATUS = {
   dot: "bg-gray-400",
 };
 
+// min-h-[20px] keeps every row the same height even when value is "—"
 const Row = ({ label, value, valueClass = "" }) => (
-  <div className="flex items-baseline gap-2 text-sm font-gothamNarrow">
+  <div className="flex items-baseline gap-2 text-sm font-gothamNarrow min-h-[20px]">
     <span className="font-semibold text-gray-600 w-28 sm:w-32 shrink-0">
       {label}
     </span>
-    <span className={`text-gray-800 leading-snug line-clamp-1 ${valueClass}`}>
+    <span
+      className={`text-gray-800 leading-snug line-clamp-1 break-all ${valueClass}`}
+    >
       {value || "—"}
     </span>
   </div>
@@ -88,7 +91,10 @@ const BaltraTrackingCard = ({ item }) => {
   const statusCfg = STATUS_CONFIG[item.status] || DEFAULT_STATUS;
 
   return (
-    <Link to={`/baltra-tracking-ProductDetails/${item.id}`}>
+    <Link
+      to={`/baltra-tracking-ProductDetails/${item.id}`}
+      className="h-full block"
+    >
       <motion.div
         whileHover={{
           boxShadow:
@@ -96,9 +102,11 @@ const BaltraTrackingCard = ({ item }) => {
           y: -2,
           transition: { duration: 0.18, ease: "easeOut" },
         }}
-        className="mt-2 bg-white rounded-md border border-gray-200 overflow-hidden"
+        // slightly taller + flex-col so the footer line always has room to breathe
+        // before the bottom accent bar
+        className="mt-2 h-full sm:h-[196px] bg-white rounded-md border border-gray-200 overflow-hidden flex flex-col"
       >
-        <div className="flex flex-col sm:flex-row">
+        <div className="flex flex-col sm:flex-row flex-1 min-h-0">
           {/* ── Image panel ── */}
           <div className="sm:w-36 md:w-40 lg:w-44 shrink-0 bg-gray-50 flex items-center justify-center p-2.5 border-b sm:border-b-0 sm:border-r border-gray-100">
             <img
@@ -109,18 +117,20 @@ const BaltraTrackingCard = ({ item }) => {
           </div>
 
           {/* ── Content panel ── */}
-          <div className="flex flex-col justify-between flex-1 px-4 py-3 gap-2">
+          <div className="flex flex-col flex-1 min-w-0 px-4 pt-3 pb-2.5 gap-1.5">
             {/* Top: model name + status badge */}
             <div className="flex items-start justify-between gap-3">
-              <h3 className="text-base font-semibold text-gray-900 font-gothamNarrow leading-tight line-clamp-1">
+              <h3 className="text-base font-semibold text-gray-900 font-gothamNarrow leading-tight line-clamp-1 min-w-0">
                 {item.model_name}
               </h3>
               <span
-                className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[11px] font-semibold font-gothamNarrow whitespace-nowrap shrink-0
+                className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[11px] font-semibold font-gothamNarrow whitespace-nowrap shrink-0 max-w-[140px] truncate
                   ${statusCfg.bg} ${statusCfg.color}`}
               >
-                <span className={`w-1.5 h-1.5 rounded-full ${statusCfg.dot}`} />
-                {item.status || "Unknown"}
+                <span
+                  className={`w-1.5 h-1.5 rounded-full shrink-0 ${statusCfg.dot}`}
+                />
+                <span className="truncate">{item.status || "Unknown"}</span>
               </span>
             </div>
 
@@ -142,9 +152,9 @@ const BaltraTrackingCard = ({ item }) => {
               />
             </div>
 
-            {/* Bottom: subtle "View details" cue */}
-            <div className="flex justify-end">
-              <span className="text-xs text-red-500 font-gothamNarrow font-medium tracking-wide">
+            {/* Bottom: subtle "View details" cue — pinned to bottom with its own breathing room */}
+            <div className="flex justify-end mt-auto pt-1 shrink-0">
+              <span className="text-xs text-red-500 font-gothamNarrow font-medium tracking-wide leading-none">
                 View details →
               </span>
             </div>
@@ -153,7 +163,7 @@ const BaltraTrackingCard = ({ item }) => {
 
         {/* Bottom accent line — red for active, green for completed */}
         <div
-          className={`h-0.5 w-full ${
+          className={`h-0.5 w-full shrink-0 ${
             item.status === "Completed" ? "bg-green-400" : "bg-red-500"
           }`}
         />

@@ -156,7 +156,7 @@ const BaltraPending = () => {
 
   /* ── Shared empty-state UI ── */
   const EmptyState = () => (
-    <div className="col-span-2 flex flex-col items-center py-16 text-gray-400">
+    <div className="col-span-1 sm:col-span-2 flex flex-col items-center py-16 text-gray-400">
       <span className="text-4xl mb-3">
         <FaSearch />
       </span>
@@ -388,12 +388,10 @@ const BaltraPending = () => {
         ) : trackingProducts && trackingProducts.length > 0 ? (
           <BaltraCompleted trackingProducts={trackingProducts} />
         ) : (
-          <div className="flex flex-col items-center py-16 text-gray-400">
-            <EmptyState />
-          </div>
+          <EmptyState />
         )
       ) : (
-        <div className="px-4 md:px-16 lg:px-24 xl:px-32 2xl:px-48 py-4 grid grid-cols-1 sm:grid-cols-2 gap-4 sm:gap-6">
+        <div className="px-4 md:px-16 lg:px-24 xl:px-32 2xl:px-48 py-4 grid grid-cols-1 sm:grid-cols-2 gap-4 sm:gap-6 items-stretch">
           {loading ? (
             Array.from({ length: 4 }).map((_, i) => (
               <BaltraPendingSkeleton key={i} />
