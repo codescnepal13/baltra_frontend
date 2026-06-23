@@ -1,19 +1,17 @@
-import { useCallback, useRef, useState } from "react";
+import * as pdfjsLib from "pdfjs-dist";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { GrCaretNext, GrCaretPrevious } from "react-icons/gr";
 import HTMLFlipBook from "react-pageflip";
 import flipSound from "../../../assets/videos/flipSound.mp3";
 
-const images = import.meta.glob("../../../assets/book/*.png", { eager: true });
+// Point the worker at the bundled worker file (Vite copies it to /public automatically
+// when you add the alias below — see vite.config.js note at the bottom of this file)
+pdfjsLib.GlobalWorkerOptions.workerSrc = new URL(
+  "pdfjs-dist/build/pdf.worker.min.mjs",
+  import.meta.url,
+).toString();
 
-const imageArray = Object.entries(images)
-  .sort(([a], [b]) => {
-    const aIdx = parseInt(a.match(/(\d+)\.png$/)?.[1] ?? "0", 10);
-    const bIdx = parseInt(b.match(/(\d+)\.png$/)?.[1] ?? "0", 10);
-    return aIdx - bIdx;
-  })
-  .map(([, mod]) => mod.default);
-
-const TOTAL_PAGES = imageArray.length;
+// ─── Constants ───────────────────────────────────────────────────────────────
 
 const FLIP_SETTINGS = {
   width: 300,
@@ -33,12 +31,107 @@ const FLIP_SETTINGS = {
   disableFlipByClick: false,
 };
 
-const MyBook = () => {
+// Render scale — higher = sharper pages but more memory.
+// 1.5 is a good balance for a 300×400 flipbook at retina displays.
+const RENDER_SCALE = 1.5;
+
+// ─── PDF page renderer ────────────────────────────────────────────────────────
+
+/**
+ * Renders a single PDF page to a data-URL string.
+ * @param {import("pdfjs-dist").PDFDocumentProxy} pdfDoc
+ * @param {number} pageNum  1-based
+ * @param {number} scale
+ * @returns {Promise<string>} data URL (image/png)
+ */
+async function renderPageToDataUrl(pdfDoc, pageNum, scale) {
+  const page = await pdfDoc.getPage(pageNum);
+  const viewport = page.getViewport({ scale });
+
+  const canvas = document.createElement("canvas");
+  canvas.width = viewport.width;
+  canvas.height = viewport.height;
+
+  const ctx = canvas.getContext("2d");
+  await page.render({ canvasContext: ctx, viewport }).promise;
+
+  return canvas.toDataURL("image/png");
+}
+
+// ─── MyBook ───────────────────────────────────────────────────────────────────
+
+/**
+ * @param {{ pdfUrl: string }} props
+ *   pdfUrl — direct URL to the PDF file
+ *             (must allow CORS — configure Django or use a Vite proxy)
+ */
+const MyBook = ({ pdfUrl }) => {
   const flipBookRef = useRef(null);
   const audioRef = useRef(new Audio(flipSound));
+
+  // Rendered page images (data URLs)
+  const [pages, setPages] = useState([]);
+  const [loadProgress, setLoadProgress] = useState(0); // 0-100
+  const [loadError, setLoadError] = useState(null);
+
   const [currentPage, setCurrentPage] = useState(0);
 
-  const isAtEnd = currentPage >= TOTAL_PAGES - 1;
+  // ── Load & render PDF ──
+  useEffect(() => {
+    if (!pdfUrl) return;
+
+    let cancelled = false;
+
+    const load = async () => {
+      setPages([]);
+      setLoadProgress(0);
+      setLoadError(null);
+      setCurrentPage(0);
+
+      try {
+        const loadingTask = pdfjsLib.getDocument({
+          url: pdfUrl,
+          // withCredentials: false (default) — flip to true if Django uses
+          // session cookies for auth AND you've set CORS_ALLOW_CREDENTIALS=True
+        });
+
+        const pdfDoc = await loadingTask.promise;
+        if (cancelled) return;
+
+        const totalPages = pdfDoc.numPages;
+        const rendered = [];
+
+        for (let i = 1; i <= totalPages; i++) {
+          if (cancelled) return;
+          const dataUrl = await renderPageToDataUrl(pdfDoc, i, RENDER_SCALE);
+          rendered.push(dataUrl);
+          setLoadProgress(Math.round((i / totalPages) * 100));
+          // Yield after each page so the browser stays responsive
+          await new Promise((r) => requestAnimationFrame(r));
+        }
+
+        if (!cancelled) setPages(rendered);
+      } catch (err) {
+        if (!cancelled) {
+          console.error("[MyBook] PDF load error:", err);
+          setLoadError(
+            err?.message?.includes("fetch")
+              ? "Could not fetch the PDF. Check that the server allows CORS (see README)."
+              : `Failed to load PDF: ${err.message}`,
+          );
+        }
+      }
+    };
+
+    load();
+    return () => {
+      cancelled = true;
+    };
+  }, [pdfUrl]);
+
+  // ── Flipbook controls ──
+  const totalPages = pages.length;
+  const isAtEnd = currentPage >= totalPages - 1;
   const isAtStart = currentPage === 0;
 
   const playFlipSound = useCallback(() => {
@@ -48,19 +141,13 @@ const MyBook = () => {
     audio.play().catch(() => {});
   }, []);
 
-  const handleFlip = useCallback((e) => {
-    const page = e.data;
-    setCurrentPage(page);
-  }, []);
+  const handleFlip = useCallback((e) => setCurrentPage(e.data), []);
 
   const handleNextPage = useCallback(() => {
     if (!flipBookRef.current || isAtEnd) return;
     flipBookRef.current.pageFlip().flipNext();
-    // Sound disabled at last page — only play if NOT going to the last page
-    if (currentPage < TOTAL_PAGES - 2) {
-      playFlipSound();
-    }
-  }, [isAtEnd, currentPage, playFlipSound]);
+    if (currentPage < totalPages - 2) playFlipSound();
+  }, [isAtEnd, currentPage, totalPages, playFlipSound]);
 
   const handlePreviousPage = useCallback(() => {
     if (!flipBookRef.current || isAtStart) return;
@@ -69,8 +156,59 @@ const MyBook = () => {
   }, [isAtStart, playFlipSound]);
 
   const progressPercent =
-    TOTAL_PAGES > 1 ? Math.round((currentPage / (TOTAL_PAGES - 1)) * 100) : 0;
+    totalPages > 1 ? Math.round((currentPage / (totalPages - 1)) * 100) : 0;
 
+  // ── Loading state ──
+  if (loadError) {
+    return (
+      <div className="flex flex-col items-center justify-center gap-3 py-16 px-4 text-center">
+        <span className="text-3xl opacity-30">⚠️</span>
+        <p className="text-sm font-medium" style={{ color: "#90C4D0" }}>
+          {loadError}
+        </p>
+      </div>
+    );
+  }
+
+  if (pages.length === 0) {
+    return (
+      <div className="flex flex-col items-center justify-center gap-4 py-16">
+        {/* Animated progress ring */}
+        <svg width="64" height="64" viewBox="0 0 64 64">
+          <circle
+            cx="32"
+            cy="32"
+            r="26"
+            fill="none"
+            stroke="rgba(74,122,138,0.15)"
+            strokeWidth="4"
+          />
+          <circle
+            cx="32"
+            cy="32"
+            r="26"
+            fill="none"
+            stroke="#4A7A8A"
+            strokeWidth="4"
+            strokeLinecap="round"
+            strokeDasharray={`${(loadProgress / 100) * 163} 163`}
+            transform="rotate(-90 32 32)"
+            style={{ transition: "stroke-dasharray 0.3s ease" }}
+          />
+        </svg>
+        <p
+          className="text-xs font-medium tracking-widest uppercase"
+          style={{ color: "#6A90A0" }}
+        >
+          {loadProgress < 100
+            ? `Rendering pages… ${loadProgress}%`
+            : "Almost there…"}
+        </p>
+      </div>
+    );
+  }
+
+  // ── Flipbook ──
   return (
     <div className="flex flex-col items-center gap-4">
       {/* Flipbook + Nav Row */}
@@ -101,11 +239,11 @@ const MyBook = () => {
             onFlip={handleFlip}
             className="baltra-flipbook"
           >
-            {imageArray.map((src, index) => (
+            {pages.map((src, index) => (
               <div
                 key={index}
                 className="w-full h-full bg-white"
-                aria-label={`Page ${index + 1} of ${TOTAL_PAGES}`}
+                aria-label={`Page ${index + 1} of ${totalPages}`}
               >
                 <img
                   src={src}
@@ -181,7 +319,7 @@ const MyBook = () => {
             Page {currentPage + 1}
           </span>
           <span className="text-xs text-[#6A90A0] font-medium tracking-wider uppercase">
-            {TOTAL_PAGES} pages
+            {totalPages} pages
           </span>
         </div>
         <div className="w-full h-0.5 bg-[#1A3040] rounded-full overflow-hidden">
@@ -196,3 +334,57 @@ const MyBook = () => {
 };
 
 export default MyBook;
+
+/*
+ * ─── SETUP NOTES ─────────────────────────────────────────────────────────────
+ *
+ * 1. WORKER — add this to vite.config.js so the worker file is bundled correctly:
+ *
+ *    import { viteStaticCopy } from "vite-plugin-static-copy";   // npm i -D vite-plugin-static-copy
+ *
+ *    plugins: [
+ *      ...,
+ *      viteStaticCopy({
+ *        targets: [
+ *          {
+ *            src: "node_modules/pdfjs-dist/build/pdf.worker.min.mjs",
+ *            dest: "",   // copies to dist/ root
+ *          },
+ *        ],
+ *      }),
+ *    ],
+ *
+ *    OR — simpler approach using new URL() (already in this file):
+ *    Vite automatically resolves `new URL("pdfjs-dist/build/pdf.worker.min.mjs", import.meta.url)`
+ *    and emits the worker as a separate chunk. No plugin needed with Vite ≥ 3.
+ *
+ * 2. CORS — the PDF lives at http://192.168.1.123:8000/media/...
+ *    pdfjs-dist fetches it with a regular XHR/fetch, so Django must return:
+ *
+ *      Access-Control-Allow-Origin: http://localhost:5173   (or * for dev)
+ *
+ *    Install django-cors-headers and in settings.py:
+ *
+ *      INSTALLED_APPS += ["corsheaders"]
+ *      MIDDLEWARE = ["corsheaders.middleware.CorsMiddleware", ...rest...]
+ *      CORS_ALLOWED_ORIGINS = ["http://localhost:5173"]
+ *      # or for dev only:
+ *      CORS_ALLOW_ALL_ORIGINS = True
+ *
+ *    Alternatively proxy via Vite (no Django changes needed in dev):
+ *
+ *      // vite.config.js
+ *      server: {
+ *        proxy: {
+ *          "/media": {
+ *            target: "http://192.168.1.123:8000",
+ *            changeOrigin: true,
+ *          },
+ *        },
+ *      },
+ *
+ *    Then pass the proxied URL to MyBook:
+ *      pdfUrl={catalog.file.replace("http://192.168.1.123:8000", "")}
+ *
+ * ─────────────────────────────────────────────────────────────────────────────
+ */

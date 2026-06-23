@@ -2,7 +2,14 @@ import { AnimatePresence, motion } from "framer-motion";
 import { useCallback, useEffect } from "react";
 import MyBook from "./MyBook";
 
-const PdfModal = ({ isOpen, onClose }) => {
+/**
+ * @param {{
+ *   isOpen: boolean,
+ *   onClose: () => void,
+ *   catalog: { catalogue_type: string, file: string } | null
+ * }} props
+ */
+const PdfModal = ({ isOpen, onClose, catalog }) => {
   // Close on Escape key
   useEffect(() => {
     if (!isOpen) return;
@@ -88,7 +95,8 @@ const PdfModal = ({ isOpen, onClose }) => {
                   className="text-sm font-medium tracking-widest uppercase"
                   style={{ color: "#6A90A0", letterSpacing: "0.12em" }}
                 >
-                  Product Catalog
+                  {/* Show the specific catalog name when available */}
+                  {catalog?.catalogue_type ?? "Product Catalog"}
                 </p>
               </div>
 
@@ -129,9 +137,9 @@ const PdfModal = ({ isOpen, onClose }) => {
               </div>
             </div>
 
-            {/* Book Content */}
+            {/* Book Content — only mount MyBook when the modal is open */}
             <div className="p-4 sm:p-6">
-              <MyBook />
+              {isOpen && catalog?.file && <MyBook pdfUrl={catalog.file} />}
             </div>
 
             {/* Subtle bottom glow */}
