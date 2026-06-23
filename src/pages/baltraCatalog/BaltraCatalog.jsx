@@ -13,7 +13,7 @@ import PdfModal from "./pdfModal/PdfModal";
 
 // ─── RippleButton ────────────────────────────────────────────────────────────
 const RippleButton = memo(
-  ({ label, onClick, disabled = false, variant = "dark" }) => {
+  ({ label, onClick, disabled = false, variant = "primary" }) => {
     const [ripple, setRipple] = useState(null);
     const [hovered, setHovered] = useState(false);
 
@@ -28,6 +28,10 @@ const RippleButton = memo(
       setRipple(null);
     }, []);
 
+    // Primary = solid red fill that fades to deep red on hover ripple
+    // Secondary = outlined red, ripple fills with dark charcoal
+    const isPrimary = variant === "primary";
+
     return (
       <motion.button
         whileTap={disabled ? {} : { scale: 0.97 }}
@@ -37,8 +41,14 @@ const RippleButton = memo(
         onMouseLeave={handleMouseLeave}
         className="w-full py-3 relative overflow-hidden transition-colors duration-200"
         style={{
-          border: "1px solid rgba(74, 122, 138, 0.4)",
-          background: hovered ? "transparent" : "transparent",
+          border: isPrimary
+            ? "1px solid #C0161F"
+            : "1px solid rgba(192, 22, 31, 0.55)",
+          background: isPrimary
+            ? hovered
+              ? "#8B0000"
+              : "#C0161F"
+            : "transparent",
           cursor: disabled ? "not-allowed" : "pointer",
           opacity: disabled ? 0.5 : 1,
         }}
@@ -54,7 +64,7 @@ const RippleButton = memo(
                 left: ripple.x,
                 translateX: "-50%",
                 translateY: "-50%",
-                backgroundColor: variant === "dark" ? "#071C2E" : "#0D2233",
+                backgroundColor: isPrimary ? "#6B0000" : "#1A0C0C",
               }}
               initial={{ width: 0, height: 0, opacity: 0.8 }}
               animate={{ width: 700, height: 700, opacity: 1 }}
@@ -66,7 +76,9 @@ const RippleButton = memo(
 
         <span
           className="relative z-10 text-sm font-semibold tracking-widest uppercase font-gothamNarrow transition-colors duration-200"
-          style={{ color: hovered ? "#90C4D0" : "#202D31" }}
+          style={{
+            color: isPrimary ? "#F2EAEA" : hovered ? "#F2EAEA" : "#C0161F",
+          }}
         >
           {label}
         </span>
@@ -84,11 +96,18 @@ const CatalogCard = memo(
       initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.4, ease: "easeOut" }}
-      className="flex flex-col h-full items-center gap-4" // ← h-full + flex col
+      className="flex flex-col h-full items-center gap-4"
+      style={{
+        background: "rgba(15, 10, 10, 0.72)",
+        border: "1px solid rgba(192, 22, 31, 0.22)",
+        borderRadius: "4px",
+        padding: "14px",
+        backdropFilter: "blur(6px)",
+      }}
     >
-      {/* Catalog Image — grows to fill available height */}
+      {/* Catalog Image */}
       <div
-        className="relative group cursor-pointer w-full flex-1 min-h-0" // ← flex-1 min-h-0
+        className="relative group cursor-pointer w-full flex-1 min-h-0"
         onClick={() => onPreview(catalog)}
       >
         <img
@@ -96,40 +115,56 @@ const CatalogCard = memo(
           alt={catalog.catalogue_type}
           className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-[1.02]"
           style={{
-            boxShadow: "0 8px 32px rgba(0,0,0,0.35), 0 2px 8px rgba(0,0,0,0.2)",
-            padding: "6px",
+            boxShadow: "0 8px 32px rgba(0,0,0,0.55), 0 2px 8px rgba(0,0,0,0.3)",
+            padding: "4px",
             background: "#fff",
           }}
           loading="lazy"
         />
-        {/* Hover overlay */}
+        {/* Red hover overlay */}
         <div
           className="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity duration-300"
-          style={{ background: "rgba(7, 24, 36, 0.55)" }}
+          style={{ background: "rgba(120, 8, 12, 0.62)" }}
         >
           <span
             className="text-xs font-semibold tracking-widest uppercase"
-            style={{ color: "#90C4D0" }}
+            style={{ color: "#F2EAEA", letterSpacing: "0.2em" }}
           >
             Preview
           </span>
         </div>
       </div>
 
-      {/* Title — fixed min-height so 1-line vs 2-line titles don't shift buttons */}
+      {/* Title */}
       <h3
         className="text-center text-sm sm:text-base font-medium tracking-wide font-gothamNarrow w-full"
-        style={{ color: "#202D31", minHeight: "2.5rem" }} // ← minHeight
+        style={{ color: "#F2EAEA", minHeight: "2.5rem" }}
       >
         {catalog.catalogue_type}
       </h3>
 
-      {/* Buttons — always at bottom */}
+      {/* Red accent divider */}
+      <div
+        style={{
+          width: "40px",
+          height: "2px",
+          background: "linear-gradient(90deg, #C0161F, #FF4D55)",
+          borderRadius: "2px",
+          marginTop: "-8px",
+        }}
+      />
+
+      {/* Buttons */}
       <div className="flex flex-col w-full gap-2 mt-auto">
-        {" "}
-        {/* ← mt-auto */}
-        <RippleButton label="Explore" onClick={() => onExplore(catalog.file)} />
+        {/* Explore = solid red (primary) */}
         <RippleButton
+          variant="primary"
+          label="Explore"
+          onClick={() => onExplore(catalog.file)}
+        />
+        {/* Download = outlined red (secondary) */}
+        <RippleButton
+          variant="secondary"
           label={isDownloading ? "Downloading…" : "Download"}
           onClick={() => onDownload(catalog.file)}
           disabled={isDownloading}
@@ -206,9 +241,8 @@ const BaltraCatalog = () => {
     <>
       <MetaData title="Baltra Products Catalog" />
 
-      {/* Page wrapper with bg image */}
       <div className="relative min-h-screen">
-        {/* Background image — full-bleed, no dim, matches About page pattern */}
+        {/* Background image */}
         <img
           src={ArtCoverImg}
           alt=""
@@ -217,6 +251,9 @@ const BaltraCatalog = () => {
           style={{ maxWidth: "none" }}
           loading="lazy"
         />
+
+        {/* Dark red–black gradient scrim over background */}
+        <div className="absolute inset-0 z-0" />
 
         {/* Header */}
         <div className="absolute top-0 left-0 w-full z-50">
@@ -227,13 +264,48 @@ const BaltraCatalog = () => {
         </div>
 
         {/* Page Content */}
-        <main className="relative z-10 px-4 sm:px-8 md:px-16 lg:px-24 pt-20 md:pt-24 pb-16 min-h-screen">
-          {/* Soft scrim — keeps catalog cards readable over the bright image */}
-          <div className="absolute inset-0 bg-white/20 -z-10" />
+        <main className="relative z-10 px-4 sm:px-8 md:px-16 lg:px-24 pt-20 md:pt-28 pb-16 min-h-screen">
+          {/* ── Section heading ── */}
+          <div className="mb-10 md:mb-14 text-center">
+            <h1 className="text-3xl sm:text-4xl md:text-5xl font-bold tracking-tight font-gothamNarrow">
+              <span className="text-black">Baltra</span>{" "}
+              <span
+                className="text-red-700"
+                style={{
+                  textShadow: "0 2px 24px rgba(192,22,31,0.35)",
+                }}
+              >
+                Catalogs
+              </span>
+            </h1>
+
+            {/* Red underline accent */}
+            <div className="flex justify-center mt-3">
+              <div
+                style={{
+                  width: 64,
+                  height: 3,
+                  background:
+                    "linear-gradient(90deg, #8B0000, #C0161F, #FF4D55)",
+                  borderRadius: 3,
+                }}
+              />
+            </div>
+
+            <p
+              className="mt-4 text-sm tracking-wide max-w-xl mx-auto"
+              style={{ color: "#C47A7A" }}
+            >
+              Browse and download the full range of Baltra household &amp;
+              kitchen solutions
+            </p>
+          </div>
+
+          {/* ── Grid ── */}
           {loading ? (
             <CatalogSkeleton />
           ) : allProductsCatalogList?.length > 0 ? (
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-8 lg:gap-10">
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 lg:gap-8">
               {allProductsCatalogList.map((catalog, index) => (
                 <motion.div
                   key={catalog.id}
@@ -244,7 +316,7 @@ const BaltraCatalog = () => {
                     delay: index * 0.07,
                     ease: "easeOut",
                   }}
-                  className="h-full" // ← add this
+                  className="h-full"
                 >
                   <CatalogCard
                     catalog={catalog}
@@ -261,7 +333,7 @@ const BaltraCatalog = () => {
               <span className="text-4xl opacity-20">📂</span>
               <p
                 className="text-sm tracking-widest uppercase"
-                style={{ color: "#6A90A0" }}
+                style={{ color: "#C47A7A" }}
               >
                 No catalogs available
               </p>
@@ -269,9 +341,8 @@ const BaltraCatalog = () => {
           )}
         </main>
       </div>
-      {/* end page wrapper */}
 
-      {/* PDF Modal — outside wrapper so it overlays the full viewport */}
+      {/* PDF Modal */}
       <PdfModal
         isOpen={modalOpen}
         onClose={handleCloseModal}
