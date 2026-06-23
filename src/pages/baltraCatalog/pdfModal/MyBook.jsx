@@ -4,120 +4,133 @@ import { GrCaretNext, GrCaretPrevious } from "react-icons/gr";
 import HTMLFlipBook from "react-pageflip";
 import flipSound from "../../../assets/videos/flipSound.mp3";
 
-// Point the worker at the bundled worker file (Vite copies it to /public automatically
-// when you add the alias below — see vite.config.js note at the bottom of this file)
 pdfjsLib.GlobalWorkerOptions.workerSrc = new URL(
   "pdfjs-dist/build/pdf.worker.min.mjs",
   import.meta.url,
 ).toString();
 
-// ─── Constants ───────────────────────────────────────────────────────────────
-
-const FLIP_SETTINGS = {
-  width: 300,
-  height: 400,
-  size: "fixed",
-  drawShadow: true,
-  showCover: true,
-  maxShadowOpacity: 0.5,
-  flippingTime: 900,
-  usePortrait: true,
-  startZIndex: 0,
-  autoSize: false,
-  clickEventForward: true,
-  useMouseEvents: true,
-  swipeDistance: 30,
-  showPageCorners: true,
-  disableFlipByClick: false,
-};
-
-// Render scale — higher = sharper pages but more memory.
-// 1.5 is a good balance for a 300×400 flipbook at retina displays.
-const RENDER_SCALE = 1.5;
-
-// ─── PDF page renderer ────────────────────────────────────────────────────────
-
-/**
- * Renders a single PDF page to a data-URL string.
- * @param {import("pdfjs-dist").PDFDocumentProxy} pdfDoc
- * @param {number} pageNum  1-based
- * @param {number} scale
- * @returns {Promise<string>} data URL (image/png)
- */
-async function renderPageToDataUrl(pdfDoc, pageNum, scale) {
+// ─── Render one PDF page → PNG data-URL, scaled for retina sharpness ─────────
+async function renderPageToDataUrl(pdfDoc, pageNum) {
   const page = await pdfDoc.getPage(pageNum);
+  const dpr = typeof window !== "undefined" ? window.devicePixelRatio || 1 : 1;
+  const scale = Math.min(3, Math.max(2.2, dpr * 1.75));
   const viewport = page.getViewport({ scale });
-
   const canvas = document.createElement("canvas");
   canvas.width = viewport.width;
   canvas.height = viewport.height;
+  await page.render({ canvasContext: canvas.getContext("2d"), viewport })
+    .promise;
+  return {
+    dataUrl: canvas.toDataURL("image/png"),
+    aspectRatio: viewport.width / viewport.height, // w ÷ h
+  };
+}
 
-  const ctx = canvas.getContext("2d");
-  await page.render({ canvasContext: ctx, viewport }).promise;
+// ─── Layout constants ─────────────────────────────────────────────────────────
+// Arrows now float OVER the page edges (absolute, no layout width reserved).
+// The bottom strip is just a one-line page counter + hairline bar, so this
+// is the only vertical space we give up — everything else goes to the page.
+const RESERVE_H = 34;
 
-  return canvas.toDataURL("image/png");
+const isDesktopViewport = () => window.matchMedia("(min-width: 768px)").matches;
+
+// ─── Fit-to-box book sizing ───────────────────────────────────────────────────
+// Measures the real available box (the modal's body element) and fits the
+// book to whichever axis — width or height — actually binds, using nearly
+// 100% of both since arrows/HUD no longer take dedicated layout space.
+function calcBookSize(containerEl, aspectRatio) {
+  if (!containerEl) return { pageW: 280, pageH: 373 };
+
+  const box = containerEl.parentElement || containerEl;
+  const isMd = isDesktopViewport();
+
+  const availW = box.clientWidth || 320;
+  const availH = box.clientHeight || 480;
+  const bookAvailH = Math.max(140, availH - RESERVE_H);
+
+  if (isMd) {
+    // Two-page spread — full available width, split in half.
+    const hIfWidthBound = availW / 2 / aspectRatio;
+    let pageW, pageH;
+    if (hIfWidthBound <= bookAvailH) {
+      pageW = Math.floor(availW / 2);
+      pageH = Math.floor(hIfWidthBound);
+    } else {
+      pageH = Math.floor(bookAvailH);
+      pageW = Math.floor(pageH * aspectRatio);
+    }
+    return { pageW, pageH };
+  }
+
+  // Mobile: single page, full available width.
+  const hIfWidthBound = availW / aspectRatio;
+  let pageW, pageH;
+  if (hIfWidthBound <= bookAvailH) {
+    pageW = Math.floor(availW);
+    pageH = Math.floor(hIfWidthBound);
+  } else {
+    pageH = Math.floor(bookAvailH);
+    pageW = Math.floor(pageH * aspectRatio);
+  }
+  return { pageW, pageH };
 }
 
 // ─── MyBook ───────────────────────────────────────────────────────────────────
-
-/**
- * @param {{ pdfUrl: string }} props
- *   pdfUrl — direct URL to the PDF file
- *             (must allow CORS — configure Django or use a Vite proxy)
- */
 const MyBook = ({ pdfUrl }) => {
   const flipBookRef = useRef(null);
   const audioRef = useRef(new Audio(flipSound));
+  const containerRef = useRef(null);
+  const aspectRatioRef = useRef(null);
 
-  // Rendered page images (data URLs)
   const [pages, setPages] = useState([]);
-  const [loadProgress, setLoadProgress] = useState(0); // 0-100
+  const [bookSize, setBookSize] = useState(null);
+  const [loadProgress, setLoadProgress] = useState(0);
   const [loadError, setLoadError] = useState(null);
-
   const [currentPage, setCurrentPage] = useState(0);
+  const [isDesktop, setIsDesktop] = useState(isDesktopViewport());
 
-  // ── Load & render PDF ──
+  // ── Load & render PDF ──────────────────────────────────────────────────────
   useEffect(() => {
     if (!pdfUrl) return;
-
     let cancelled = false;
 
     const load = async () => {
       setPages([]);
+      setBookSize(null);
       setLoadProgress(0);
       setLoadError(null);
       setCurrentPage(0);
+      aspectRatioRef.current = null;
 
       try {
-        const loadingTask = pdfjsLib.getDocument({
-          url: pdfUrl,
-          // withCredentials: false (default) — flip to true if Django uses
-          // session cookies for auth AND you've set CORS_ALLOW_CREDENTIALS=True
-        });
-
-        const pdfDoc = await loadingTask.promise;
+        const pdfDoc = await pdfjsLib.getDocument({ url: pdfUrl }).promise;
         if (cancelled) return;
 
-        const totalPages = pdfDoc.numPages;
+        const total = pdfDoc.numPages;
         const rendered = [];
 
-        for (let i = 1; i <= totalPages; i++) {
+        for (let i = 1; i <= total; i++) {
           if (cancelled) return;
-          const dataUrl = await renderPageToDataUrl(pdfDoc, i, RENDER_SCALE);
+          const { dataUrl, aspectRatio } = await renderPageToDataUrl(pdfDoc, i);
           rendered.push(dataUrl);
-          setLoadProgress(Math.round((i / totalPages) * 100));
-          // Yield after each page so the browser stays responsive
+
+          if (i === 1) {
+            aspectRatioRef.current = aspectRatio;
+            setBookSize(calcBookSize(containerRef.current, aspectRatio));
+          }
+
+          setLoadProgress(Math.round((i / total) * 100));
           await new Promise((r) => requestAnimationFrame(r));
         }
 
         if (!cancelled) setPages(rendered);
       } catch (err) {
         if (!cancelled) {
-          console.error("[MyBook] PDF load error:", err);
+          console.error("[MyBook] PDF error:", err);
           setLoadError(
             err?.message?.includes("fetch")
-              ? "Could not fetch the PDF. Check that the server allows CORS (see README)."
-              : `Failed to load PDF: ${err.message}`,
+              ? "Could not fetch the PDF — check CORS headers on the Django server."
+              : `PDF error: ${err.message}`,
           );
         }
       }
@@ -129,36 +142,93 @@ const MyBook = ({ pdfUrl }) => {
     };
   }, [pdfUrl]);
 
-  // ── Flipbook controls ──
+  // ── Keep the book fit to its box live ──────────────────────────────────────
+  useEffect(() => {
+    if (!aspectRatioRef.current || !containerRef.current) return;
+
+    let frame = null;
+    const recalc = () => {
+      if (frame) cancelAnimationFrame(frame);
+      frame = requestAnimationFrame(() => {
+        setIsDesktop(isDesktopViewport());
+        if (containerRef.current && aspectRatioRef.current) {
+          setBookSize(
+            calcBookSize(containerRef.current, aspectRatioRef.current),
+          );
+        }
+      });
+    };
+
+    const box = containerRef.current.parentElement;
+    let ro = null;
+    if (box && typeof ResizeObserver !== "undefined") {
+      ro = new ResizeObserver(recalc);
+      ro.observe(box);
+    }
+    window.addEventListener("resize", recalc);
+    window.addEventListener("orientationchange", recalc);
+
+    return () => {
+      if (ro) ro.disconnect();
+      window.removeEventListener("resize", recalc);
+      window.removeEventListener("orientationchange", recalc);
+      if (frame) cancelAnimationFrame(frame);
+    };
+  }, [pages.length > 0]);
+
+  // ── Controls ───────────────────────────────────────────────────────────────
   const totalPages = pages.length;
   const isAtEnd = currentPage >= totalPages - 1;
   const isAtStart = currentPage === 0;
 
-  const playFlipSound = useCallback(() => {
-    const audio = audioRef.current;
-    if (!audio) return;
-    audio.currentTime = 0;
-    audio.play().catch(() => {});
+  const playFlip = useCallback(() => {
+    const a = audioRef.current;
+    if (!a) return;
+    a.currentTime = 0;
+    a.play().catch(() => {});
   }, []);
 
   const handleFlip = useCallback((e) => setCurrentPage(e.data), []);
 
-  const handleNextPage = useCallback(() => {
+  const handleNext = useCallback(() => {
     if (!flipBookRef.current || isAtEnd) return;
     flipBookRef.current.pageFlip().flipNext();
-    if (currentPage < totalPages - 2) playFlipSound();
-  }, [isAtEnd, currentPage, totalPages, playFlipSound]);
+    if (currentPage < totalPages - 2) playFlip();
+  }, [isAtEnd, currentPage, totalPages, playFlip]);
 
-  const handlePreviousPage = useCallback(() => {
+  const handlePrev = useCallback(() => {
     if (!flipBookRef.current || isAtStart) return;
     flipBookRef.current.pageFlip().flipPrev();
-    playFlipSound();
-  }, [isAtStart, playFlipSound]);
+    playFlip();
+  }, [isAtStart, playFlip]);
 
   const progressPercent =
     totalPages > 1 ? Math.round((currentPage / (totalPages - 1)) * 100) : 0;
 
-  // ── Loading state ──
+  // Floating overlay arrow — sits over the edge of the stage, not in the
+  // flex flow, so it never costs the page image any width or height.
+  const arrowBtnStyle = (side, disabled) => ({
+    position: "absolute",
+    [side]: isDesktop ? 8 : 4,
+    top: "50%",
+    transform: "translateY(-50%)",
+    width: isDesktop ? 42 : 34,
+    height: isDesktop ? 42 : 34,
+    borderRadius: "9999px",
+    display: "flex",
+    alignItems: "center",
+    justifyContent: "center",
+    background: "rgba(7, 24, 36, 0.6)",
+    border: "1px solid rgba(144, 196, 208, 0.3)",
+    backdropFilter: "blur(4px)",
+    color: disabled ? "#3A5060" : "#90C4D0",
+    opacity: disabled ? 0.35 : 1,
+    cursor: disabled ? "not-allowed" : "pointer",
+    zIndex: 20,
+    transition: "background-color 0.2s, border-color 0.2s, transform 0.15s",
+  });
+
+  // ── Error ──────────────────────────────────────────────────────────────────
   if (loadError) {
     return (
       <div className="flex flex-col items-center justify-center gap-3 py-16 px-4 text-center">
@@ -170,86 +240,148 @@ const MyBook = ({ pdfUrl }) => {
     );
   }
 
+  // ── Loading ────────────────────────────────────────────────────────────────
+  const r = 26;
+  const circ = 2 * Math.PI * r;
+
   if (pages.length === 0) {
     return (
-      <div className="flex flex-col items-center justify-center gap-4 py-16">
-        {/* Animated progress ring */}
-        <svg width="64" height="64" viewBox="0 0 64 64">
+      <div
+        ref={containerRef}
+        className="w-full h-full flex flex-col items-center justify-center gap-4 py-16"
+      >
+        <svg width="64" height="64" viewBox="0 0 64 64" fill="none">
           <circle
             cx="32"
             cy="32"
-            r="26"
-            fill="none"
+            r={r}
             stroke="rgba(74,122,138,0.15)"
             strokeWidth="4"
           />
           <circle
             cx="32"
             cy="32"
-            r="26"
-            fill="none"
+            r={r}
             stroke="#4A7A8A"
             strokeWidth="4"
             strokeLinecap="round"
-            strokeDasharray={`${(loadProgress / 100) * 163} 163`}
+            strokeDasharray={`${(loadProgress / 100) * circ} ${circ}`}
             transform="rotate(-90 32 32)"
-            style={{ transition: "stroke-dasharray 0.3s ease" }}
+            style={{ transition: "stroke-dasharray 0.35s ease" }}
           />
         </svg>
         <p
-          className="text-xs font-medium tracking-widest uppercase"
+          className="text-xs font-medium tracking-widest uppercase font-gothamNarrow"
           style={{ color: "#6A90A0" }}
         >
           {loadProgress < 100
             ? `Rendering pages… ${loadProgress}%`
-            : "Almost there…"}
+            : "Preparing flipbook…"}
         </p>
       </div>
     );
   }
 
-  // ── Flipbook ──
+  const { pageW, pageH } = bookSize ?? { pageW: 280, pageH: 373 };
+  const bookDisplayWidth = isDesktop ? pageW * 2 : pageW;
+
+  // ── Flipbook ───────────────────────────────────────────────────────────────
   return (
-    <div className="flex flex-col items-center gap-4">
-      {/* Flipbook + Nav Row */}
-      <div className="flex justify-center items-center gap-2 md:gap-4">
-        {/* Prev Button */}
+    <div
+      ref={containerRef}
+      className="w-full h-full flex flex-col items-center justify-center gap-1.5"
+    >
+      {/* Book stage — fills essentially the whole box; arrows float on top */}
+      <div className="relative w-full flex-1 min-h-0 flex items-center justify-center">
         <button
-          onClick={handlePreviousPage}
+          onClick={handlePrev}
           disabled={isAtStart}
           aria-label="Previous page"
-          className={`
-            hidden md:flex items-center justify-center
-            w-10 h-10 rounded-full border transition-all duration-200
-            ${
-              isAtStart
-                ? "border-[#2A3F4B] text-[#3A5060] cursor-not-allowed opacity-40"
-                : "border-[#4A7A8A] text-[#90C4D0] hover:bg-[#1A3040] hover:border-[#90C4D0] active:scale-95"
-            }
-          `}
+          style={arrowBtnStyle("left", isAtStart)}
+          onMouseEnter={(e) => {
+            if (isAtStart) return;
+            e.currentTarget.style.background = "rgba(74,122,138,0.35)";
+            e.currentTarget.style.borderColor = "#90C4D0";
+          }}
+          onMouseLeave={(e) => {
+            e.currentTarget.style.background = "rgba(7, 24, 36, 0.6)";
+            e.currentTarget.style.borderColor = "rgba(144, 196, 208, 0.3)";
+          }}
         >
-          <GrCaretPrevious size={16} />
+          <GrCaretPrevious size={isDesktop ? 17 : 14} />
         </button>
 
-        {/* Book */}
-        <div className="shadow-2xl shadow-black/60 rounded-sm overflow-hidden">
+        {/* Ground shadow */}
+        <div
+          aria-hidden="true"
+          style={{
+            position: "absolute",
+            left: "50%",
+            bottom: "6%",
+            width: "78%",
+            height: 22,
+            transform: "translateX(-50%)",
+            background:
+              "radial-gradient(ellipse at center, rgba(0,0,0,0.5) 0%, rgba(0,0,0,0) 75%)",
+            filter: "blur(3px)",
+            pointerEvents: "none",
+            zIndex: 0,
+          }}
+        />
+
+        <div className="relative overflow-visible" style={{ zIndex: 10 }}>
           <HTMLFlipBook
             ref={flipBookRef}
-            {...FLIP_SETTINGS}
+            width={pageW}
+            height={pageH}
+            size="fixed"
+            minWidth={pageW}
+            maxWidth={pageW}
+            minHeight={pageH}
+            maxHeight={pageH}
+            drawShadow
+            showCover
+            maxShadowOpacity={0.45}
+            flippingTime={700}
+            usePortrait
+            startZIndex={0}
+            autoSize={false}
+            clickEventForward
+            useMouseEvents
+            swipeDistance={20}
+            showPageCorners
+            disableFlipByClick={false}
             onFlip={handleFlip}
             className="baltra-flipbook"
+            style={{ touchAction: "pan-y" }}
           >
-            {pages.map((src, index) => (
+            {pages.map((src, i) => (
               <div
-                key={index}
-                className="w-full h-full bg-white"
-                aria-label={`Page ${index + 1} of ${totalPages}`}
+                key={i}
+                style={{
+                  width: "100%",
+                  height: "100%",
+                  background: "#fff",
+                  overflow: "hidden",
+                  position: "relative",
+                }}
+                aria-label={`Page ${i + 1} of ${totalPages}`}
               >
                 <img
                   src={src}
-                  alt={`Page ${index + 1}`}
-                  className="w-full h-full object-cover"
-                  loading={index > 3 ? "lazy" : "eager"}
+                  alt={`Page ${i + 1}`}
+                  style={{
+                    position: "absolute",
+                    inset: 0,
+                    width: "100%",
+                    height: "100%",
+                    objectFit: "contain",
+                    objectPosition: "center",
+                    display: "block",
+                    willChange: "transform",
+                    backfaceVisibility: "hidden",
+                  }}
+                  loading={i > 3 ? "lazy" : "eager"}
                   draggable={false}
                 />
               </div>
@@ -257,75 +389,61 @@ const MyBook = ({ pdfUrl }) => {
           </HTMLFlipBook>
         </div>
 
-        {/* Next Button */}
         <button
-          onClick={handleNextPage}
+          onClick={handleNext}
           disabled={isAtEnd}
           aria-label="Next page"
-          className={`
-            hidden md:flex items-center justify-center
-            w-10 h-10 rounded-full border transition-all duration-200
-            ${
-              isAtEnd
-                ? "border-[#2A3F4B] text-[#3A5060] cursor-not-allowed opacity-40"
-                : "border-[#4A7A8A] text-[#90C4D0] hover:bg-[#1A3040] hover:border-[#90C4D0] active:scale-95"
-            }
-          `}
+          style={arrowBtnStyle("right", isAtEnd)}
+          onMouseEnter={(e) => {
+            if (isAtEnd) return;
+            e.currentTarget.style.background = "rgba(74,122,138,0.35)";
+            e.currentTarget.style.borderColor = "#90C4D0";
+          }}
+          onMouseLeave={(e) => {
+            e.currentTarget.style.background = "rgba(7, 24, 36, 0.6)";
+            e.currentTarget.style.borderColor = "rgba(144, 196, 208, 0.3)";
+          }}
         >
-          <GrCaretNext size={16} />
+          <GrCaretNext size={isDesktop ? 17 : 14} />
         </button>
       </div>
 
-      {/* Mobile Nav Buttons */}
-      <div className="flex gap-6 md:hidden">
-        <button
-          onClick={handlePreviousPage}
-          disabled={isAtStart}
-          aria-label="Previous page"
-          className={`
-            flex items-center gap-1.5 px-4 py-2 rounded-full border text-sm font-medium transition-all duration-200
-            ${
-              isAtStart
-                ? "border-[#2A3F4B] text-[#3A5060] opacity-40 cursor-not-allowed"
-                : "border-[#4A7A8A] text-[#90C4D0] hover:bg-[#1A3040] active:scale-95"
-            }
-          `}
-        >
-          <GrCaretPrevious size={14} />
-          <span>Prev</span>
-        </button>
-        <button
-          onClick={handleNextPage}
-          disabled={isAtEnd}
-          aria-label="Next page"
-          className={`
-            flex items-center gap-1.5 px-4 py-2 rounded-full border text-sm font-medium transition-all duration-200
-            ${
-              isAtEnd
-                ? "border-[#2A3F4B] text-[#3A5060] opacity-40 cursor-not-allowed"
-                : "border-[#4A7A8A] text-[#90C4D0] hover:bg-[#1A3040] active:scale-95"
-            }
-          `}
-        >
-          <span>Next</span>
-          <GrCaretNext size={14} />
-        </button>
-      </div>
-
-      {/* Progress Bar */}
-      <div className="w-full max-w-[620px] px-2">
-        <div className="flex justify-between items-center mb-1.5">
-          <span className="text-xs text-[#6A90A0] font-medium tracking-wider uppercase">
+      {/* Slim HUD — one line, page counter + hairline progress only */}
+      <div
+        className="w-full shrink-0"
+        style={{ maxWidth: bookDisplayWidth || "100%" }}
+      >
+        <div className="flex justify-between items-center mb-1">
+          <span
+            className="text-[11px] font-medium tracking-widest uppercase font-gothamNarrow"
+            style={{ color: "#6A90A0" }}
+          >
             Page {currentPage + 1}
           </span>
-          <span className="text-xs text-[#6A90A0] font-medium tracking-wider uppercase">
+          <span
+            className="text-[11px] font-medium tracking-widest uppercase font-gothamNarrow"
+            style={{ color: "#6A90A0" }}
+          >
             {totalPages} pages
           </span>
         </div>
-        <div className="w-full h-0.5 bg-[#1A3040] rounded-full overflow-hidden">
+        <div
+          style={{
+            width: "100%",
+            height: "1px",
+            background: "rgba(26,48,64,0.8)",
+            borderRadius: "2px",
+            overflow: "hidden",
+          }}
+        >
           <div
-            className="h-full bg-gradient-to-r from-[#4A7A8A] to-[#90C4D0] rounded-full transition-all duration-500 ease-out"
-            style={{ width: `${progressPercent}%` }}
+            style={{
+              height: "100%",
+              width: `${progressPercent}%`,
+              background: "linear-gradient(90deg, #4A7A8A, #90C4D0)",
+              borderRadius: "2px",
+              transition: "width 0.6s cubic-bezier(0.25, 1, 0.5, 1)",
+            }}
           />
         </div>
       </div>
@@ -334,57 +452,3 @@ const MyBook = ({ pdfUrl }) => {
 };
 
 export default MyBook;
-
-/*
- * ─── SETUP NOTES ─────────────────────────────────────────────────────────────
- *
- * 1. WORKER — add this to vite.config.js so the worker file is bundled correctly:
- *
- *    import { viteStaticCopy } from "vite-plugin-static-copy";   // npm i -D vite-plugin-static-copy
- *
- *    plugins: [
- *      ...,
- *      viteStaticCopy({
- *        targets: [
- *          {
- *            src: "node_modules/pdfjs-dist/build/pdf.worker.min.mjs",
- *            dest: "",   // copies to dist/ root
- *          },
- *        ],
- *      }),
- *    ],
- *
- *    OR — simpler approach using new URL() (already in this file):
- *    Vite automatically resolves `new URL("pdfjs-dist/build/pdf.worker.min.mjs", import.meta.url)`
- *    and emits the worker as a separate chunk. No plugin needed with Vite ≥ 3.
- *
- * 2. CORS — the PDF lives at http://192.168.1.123:8000/media/...
- *    pdfjs-dist fetches it with a regular XHR/fetch, so Django must return:
- *
- *      Access-Control-Allow-Origin: http://localhost:5173   (or * for dev)
- *
- *    Install django-cors-headers and in settings.py:
- *
- *      INSTALLED_APPS += ["corsheaders"]
- *      MIDDLEWARE = ["corsheaders.middleware.CorsMiddleware", ...rest...]
- *      CORS_ALLOWED_ORIGINS = ["http://localhost:5173"]
- *      # or for dev only:
- *      CORS_ALLOW_ALL_ORIGINS = True
- *
- *    Alternatively proxy via Vite (no Django changes needed in dev):
- *
- *      // vite.config.js
- *      server: {
- *        proxy: {
- *          "/media": {
- *            target: "http://192.168.1.123:8000",
- *            changeOrigin: true,
- *          },
- *        },
- *      },
- *
- *    Then pass the proxied URL to MyBook:
- *      pdfUrl={catalog.file.replace("http://192.168.1.123:8000", "")}
- *
- * ─────────────────────────────────────────────────────────────────────────────
- */

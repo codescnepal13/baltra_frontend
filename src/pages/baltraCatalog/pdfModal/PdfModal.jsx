@@ -2,25 +2,16 @@ import { AnimatePresence, motion } from "framer-motion";
 import { useCallback, useEffect } from "react";
 import MyBook from "./MyBook";
 
-/**
- * @param {{
- *   isOpen: boolean,
- *   onClose: () => void,
- *   catalog: { catalogue_type: string, file: string } | null
- * }} props
- */
 const PdfModal = ({ isOpen, onClose, catalog }) => {
-  // Close on Escape key
   useEffect(() => {
     if (!isOpen) return;
-    const handleKey = (e) => {
+    const handler = (e) => {
       if (e.key === "Escape") onClose();
     };
-    document.addEventListener("keydown", handleKey);
-    return () => document.removeEventListener("keydown", handleKey);
+    document.addEventListener("keydown", handler);
+    return () => document.removeEventListener("keydown", handler);
   }, [isOpen, onClose]);
 
-  // Prevent body scroll when modal is open
   useEffect(() => {
     document.body.style.overflow = isOpen ? "hidden" : "";
     return () => {
@@ -40,18 +31,17 @@ const PdfModal = ({ isOpen, onClose, catalog }) => {
       {isOpen && (
         <motion.div
           key="backdrop"
-          className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-4"
-          style={{ backgroundColor: "rgba(4, 14, 20, 0.85)" }}
+          className="fixed inset-0 z-50 flex items-center justify-center p-2 sm:p-5"
+          style={{ backgroundColor: "rgba(4, 14, 20, 0.88)" }}
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           exit={{ opacity: 0 }}
-          transition={{ duration: 0.25 }}
+          transition={{ duration: 0.22 }}
           onClick={handleBackdropClick}
           aria-modal="true"
           role="dialog"
           aria-label="Catalog viewer"
         >
-          {/* Backdrop blur layer */}
           <div
             className="absolute inset-0 backdrop-blur-sm"
             style={{ zIndex: -1 }}
@@ -59,48 +49,47 @@ const PdfModal = ({ isOpen, onClose, catalog }) => {
 
           <motion.div
             key="modal"
-            className="relative w-full"
+            className="relative w-full flex flex-col"
             style={{
-              maxWidth: "820px",
+              maxWidth: "1180px",
+              maxHeight: "98dvh",
               background:
                 "linear-gradient(160deg, #0D2233 0%, #071824 60%, #040E14 100%)",
               border: "1px solid rgba(74, 122, 138, 0.25)",
               borderRadius: "16px",
               boxShadow:
-                "0 32px 80px rgba(0,0,0,0.7), 0 0 0 1px rgba(74,122,138,0.1)",
+                "0 32px 80px rgba(0,0,0,0.75), 0 0 0 1px rgba(74,122,138,0.08)",
             }}
-            initial={{ opacity: 0, scale: 0.95, y: 16 }}
+            initial={{ opacity: 0, scale: 0.95, y: 20 }}
             animate={{ opacity: 1, scale: 1, y: 0 }}
-            exit={{ opacity: 0, scale: 0.95, y: 16 }}
-            transition={{ duration: 0.3, ease: [0.16, 1, 0.3, 1] }}
+            exit={{ opacity: 0, scale: 0.95, y: 20 }}
+            transition={{ duration: 0.28, ease: [0.16, 1, 0.3, 1] }}
           >
-            {/* Header */}
+            {/* Header — tighter on phones so the book gets the space */}
             <div
-              className="flex items-center justify-between px-5 py-4"
+              className="flex items-center justify-between px-3 sm:px-5 py-2 sm:py-2.5 shrink-0"
               style={{ borderBottom: "1px solid rgba(74, 122, 138, 0.15)" }}
             >
-              <div className="flex items-center gap-3">
-                {/* Decorative accent dots */}
-                <div className="flex gap-1.5">
+              <div className="flex items-center gap-3 min-w-0">
+                <div className="hidden sm:flex gap-1.5 shrink-0">
                   <span
-                    className="w-2.5 h-2.5 rounded-full"
+                    className="w-2 h-2 rounded-full"
                     style={{ backgroundColor: "#4A7A8A", opacity: 0.5 }}
                   />
                   <span
-                    className="w-2.5 h-2.5 rounded-full"
+                    className="w-2 h-2 rounded-full"
                     style={{ backgroundColor: "#90C4D0", opacity: 0.3 }}
                   />
                 </div>
                 <p
-                  className="text-sm font-medium tracking-widest uppercase"
+                  className="text-xs font-medium tracking-widest uppercase font-gothamNarrow truncate"
                   style={{ color: "#6A90A0", letterSpacing: "0.12em" }}
                 >
-                  {/* Show the specific catalog name when available */}
                   {catalog?.catalogue_type ?? "Product Catalog"}
                 </p>
               </div>
 
-              <div className="flex items-center gap-3">
+              <div className="flex items-center gap-3 shrink-0 ml-4">
                 <p
                   className="hidden sm:block text-xs"
                   style={{ color: "#3A5060" }}
@@ -110,7 +99,7 @@ const PdfModal = ({ isOpen, onClose, catalog }) => {
                 <button
                   onClick={onClose}
                   aria-label="Close catalog"
-                  className="flex items-center justify-center w-8 h-8 rounded-full transition-all duration-200"
+                  className="flex items-center justify-center w-8 h-8 rounded-full transition-colors duration-200"
                   style={{
                     border: "1px solid rgba(74, 122, 138, 0.3)",
                     color: "#6A90A0",
@@ -137,17 +126,26 @@ const PdfModal = ({ isOpen, onClose, catalog }) => {
               </div>
             </div>
 
-            {/* Book Content — only mount MyBook when the modal is open */}
-            <div className="p-4 sm:p-6">
+            {/*
+              Book body — overflow: hidden (NOT auto/scroll).
+              MyBook is self-contained and sized to fit; it must never cause
+              this container to scroll or show a scrollbar.
+              Padding is intentionally small on phones — every pixel here is
+              a pixel the page image doesn't get.
+            */}
+            <div
+              className="flex-1 min-h-0 p-2 sm:p-4 flex items-center justify-center"
+              style={{ overflow: "hidden" }}
+            >
               {isOpen && catalog?.file && <MyBook pdfUrl={catalog.file} />}
             </div>
 
-            {/* Subtle bottom glow */}
+            {/* Bottom glow */}
             <div
-              className="absolute bottom-0 left-1/2 -translate-x-1/2 w-1/2 h-px"
+              className="absolute bottom-0 left-1/2 -translate-x-1/2 w-2/3 h-px pointer-events-none"
               style={{
                 background:
-                  "linear-gradient(90deg, transparent, rgba(74,122,138,0.4), transparent)",
+                  "linear-gradient(90deg, transparent, rgba(74,122,138,0.35), transparent)",
               }}
             />
           </motion.div>
