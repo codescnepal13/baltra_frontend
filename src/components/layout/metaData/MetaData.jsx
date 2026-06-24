@@ -1,87 +1,87 @@
-import React from "react";
-import { Helmet, HelmetProvider } from "react-helmet-async";
+import { Helmet } from "react-helmet-async";
 
-// MetaData Component to manage SEO data
+const SITE_NAME = "Baltra Nepal";
+const SITE_URL = "https://np.baltra.in";
+const DEFAULT_IMAGE = `${SITE_URL}/images/baltraAllProductsBanner.png`;
+
+// MetaData Component to manage per-page SEO data
 const MetaData = ({
   title,
   description,
   keywords,
-  image,
+  image = DEFAULT_IMAGE,
   url,
   twitterCard = "summary_large_image",
-  twitterSite = "@baltra",
+  twitterSite = "@BaltraOfficial",
   ogTitle,
   ogDescription,
   ogImage,
   ogUrl,
+  breadcrumbs, // optional: [{ name: "Home", url: "/" }, { name: "Products", url: "/products" }]
 }) => {
-  const structuredData = {
+  const canonicalUrl = url || SITE_URL;
+
+  const webPageSchema = {
     "@context": "https://schema.org",
     "@type": "WebPage",
     name: title,
-    description: description,
-    url: url,
-    image: image,
-    publisher: {
-      "@type": "Organization",
-      name: "Baltra",
-      logo: {
-        "@type": "ImageObject",
-        url: "https://www.baltra.com/images/logo.png",
-      },
+    description,
+    url: canonicalUrl,
+    image,
+    inLanguage: "en",
+    isPartOf: {
+      "@type": "WebSite",
+      name: SITE_NAME,
+      url: SITE_URL,
     },
   };
 
-  // JSON-LD for Sitelinks Search Box
-  const sitelinksSearchBox = {
+  const breadcrumbSchema = breadcrumbs && {
     "@context": "https://schema.org",
-    "@type": "WebSite",
-    url: "https://www.baltra.com/",
-    potentialAction: {
-      "@type": "SearchAction",
-      target: "https://www.baltra.com/search?q={search_term_string}",
-      "query-input": "required name=search_term_string",
-    },
+    "@type": "BreadcrumbList",
+    itemListElement: breadcrumbs.map((item, index) => ({
+      "@type": "ListItem",
+      position: index + 1,
+      name: item.name,
+      item: item.url.startsWith("http") ? item.url : `${SITE_URL}${item.url}`,
+    })),
   };
 
   return (
-    <HelmetProvider>
-      <Helmet>
-        {/* Primary Meta Tags */}
-        <title>{title}</title>
-        <meta name="description" content={description} />
-        <meta name="keywords" content={keywords} />
-        <meta name="author" content="Baltra" />
-        <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-        <link rel="canonical" href={url} />
+    <Helmet>
+      <html lang="en" />
+      <title>{title}</title>
+      <meta name="description" content={description} />
+      {keywords && <meta name="keywords" content={keywords} />}
+      <meta name="author" content="Baltra Nepal" />
+      <link rel="canonical" href={canonicalUrl} />
 
-        {/* Open Graph / Facebook */}
-        <meta property="og:type" content="website" />
-        <meta property="og:title" content={ogTitle || title} />
-        <meta
-          property="og:description"
-          content={ogDescription || description}
-        />
-        <meta property="og:image" content={ogImage || image} />
-        <meta property="og:url" content={ogUrl || url} />
-        <meta property="og:site_name" content="Baltra" />
+      {/* Open Graph / Facebook */}
+      <meta property="og:type" content="website" />
+      <meta property="og:title" content={ogTitle || title} />
+      <meta property="og:description" content={ogDescription || description} />
+      <meta property="og:image" content={ogImage || image} />
+      <meta property="og:url" content={ogUrl || canonicalUrl} />
+      <meta property="og:site_name" content={SITE_NAME} />
+      <meta property="og:locale" content="en_US" />
 
-        {/* Twitter */}
-        <meta name="twitter:card" content={twitterCard} />
-        <meta name="twitter:site" content={twitterSite} />
-        <meta name="twitter:title" content={title} />
-        <meta name="twitter:description" content={description} />
-        <meta name="twitter:image" content={image} />
+      {/* Twitter */}
+      <meta name="twitter:card" content={twitterCard} />
+      <meta name="twitter:site" content={twitterSite} />
+      <meta name="twitter:title" content={title} />
+      <meta name="twitter:description" content={description} />
+      <meta name="twitter:image" content={ogImage || image} />
 
-        {/* JSON-LD Structured Data */}
+      {/* Page-level JSON-LD */}
+      <script type="application/ld+json">
+        {JSON.stringify(webPageSchema)}
+      </script>
+      {breadcrumbSchema && (
         <script type="application/ld+json">
-          {JSON.stringify(structuredData)}
+          {JSON.stringify(breadcrumbSchema)}
         </script>
-        <script type="application/ld+json">
-          {JSON.stringify(sitelinksSearchBox)}
-        </script>
-      </Helmet>
-    </HelmetProvider>
+      )}
+    </Helmet>
   );
 };
 

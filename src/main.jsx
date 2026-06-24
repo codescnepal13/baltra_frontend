@@ -1,22 +1,24 @@
 import React from "react";
 import ReactDOM from "react-dom/client";
-import "./index.css";
-import "react-toastify/dist/ReactToastify.css";
-import "react-quill/dist/quill.snow.css";
-import { PersistGate } from "redux-persist/integration/react";
-import { persistor, store } from "./redux/store/store.jsx";
-import { Provider } from "react-redux";
-import App from "./App.jsx";
 import { HelmetProvider } from "react-helmet-async";
+import "react-quill/dist/quill.snow.css";
+import { Provider } from "react-redux";
+import "react-toastify/dist/ReactToastify.css";
+import { PersistGate } from "redux-persist/integration/react";
+import App from "./App.jsx";
+import SiteSchema from "./components/layout/siteSchema/SiteSchema.jsx";
+import "./index.css";
+import { persistor, store } from "./redux/store/store.jsx";
 
 ReactDOM.createRoot(document.getElementById("root")).render(
   <React.StrictMode>
     <Provider store={store}>
       <PersistGate persistor={persistor}>
         <HelmetProvider>
-        <App />
+          <SiteSchema />
+          <App />
         </HelmetProvider>
       </PersistGate>
     </Provider>
-  </React.StrictMode>
+  </React.StrictMode>,
 );

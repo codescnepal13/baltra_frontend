@@ -1,4 +1,3 @@
-import React from "react";
 import MetaData from "../../components/layout/metaData/MetaData";
 import AboutUS from "../aboutUS/AboutUS";
 import ArtOfComfort from "../aboutUS/artOfComfort/ArtOfComfort";
@@ -11,17 +10,16 @@ const Home = () => {
   return (
     <>
       <MetaData
-        title="Home | Baltra - Quality Kitchen Appliances"
-        description="Discover Baltra's journey in providing top-quality kitchen appliances, our milestones, core values, and our commitment to excellence in every product we offer."
-        keywords="Baltra, Home Appliances, Kitchen Appliances, Baltra Products, Quality Appliances, Milestones, Company History, Customer Commitment, Home Cooking"
-        image="https://www.baltra.com/images/baltraAllProductsBanner.png"
-        url="https://www.baltra.com/"
-        twitterCard="summary_large_image"
-        twitterSite="@baltra"
-        ogTitle="Home | Baltra"
-        ogDescription="Explore Baltra's rich history and commitment to providing the best kitchen appliances to enhance your cooking experience."
-        ogImage="https://www.baltra.com/images/baltraAllProductsBanner.png"
-        ogUrl="https://www.baltra.com/"
+        title="Baltra Nepal | Home Appliances Since 1994"
+        description="Baltra is Nepal's original home appliance brand, trusted since 1994. Explore our milestones, distributors, and commitment to quality kitchen and home appliances across Nepal."
+        keywords="Baltra Nepal, Baltra home appliances Nepal, Baltra price in Nepal, Baltra distributor Nepal, Baltra showroom Kathmandu, Baltra since 1994, Nepali home appliance brand"
+        image="https://np.baltra.in/images/baltraAllProductsBanner.png"
+        url="https://np.baltra.in/"
+        ogTitle="Baltra Nepal | Home Appliances Since 1994"
+        ogDescription="Discover Baltra Nepal's journey since 1994, our milestones, and our commitment to quality home and kitchen appliances across Nepal."
+        ogImage="https://np.baltra.in/images/baltraAllProductsBanner.png"
+        ogUrl="https://np.baltra.in/"
+        breadcrumbs={[{ name: "Home", url: "/" }]}
       />
       <AboutUS />
       <ArtOfComfort />

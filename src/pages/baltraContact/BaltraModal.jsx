@@ -3,7 +3,6 @@ import { useEffect } from "react";
 import { useForm } from "react-hook-form";
 import { FiArrowRight, FiMail, FiPhone } from "react-icons/fi";
 import { useDispatch, useSelector } from "react-redux";
-import ContactImg from "../../assets/images/ContactImg.png";
 import {
   addContact,
   clearContactError,
@@ -242,18 +241,23 @@ const BaltraModal = () => {
               {/* Divider */}
               <div className="border-t border-white/20 my-2" />
 
-              {/* Decorative circles */}
-              <div className="relative flex-1 flex items-end justify-center overflow-hidden min-h-[160px]">
-                {/* Background rings */}
-                <div className="absolute bottom-0 right-0 w-48 h-48 rounded-full border border-white/10 translate-x-16 translate-y-16" />
-                <div className="absolute bottom-0 right-0 w-32 h-32 rounded-full border border-white/10 translate-x-10 translate-y-10" />
-
-                {/* Illustration */}
-                <img
-                  src={ContactImg}
-                  alt="Contact illustration"
-                  className="relative z-10 w-full max-w-[220px] h-auto object-contain drop-shadow-lg"
-                />
+              {/* Map — replaces the old decorative illustration */}
+              <div className="relative flex-1 min-h-[180px]">
+                <p className="text-[11px] font-semibold uppercase tracking-widest text-white/60 font-gothamNarrow mb-2">
+                  Find Us Here
+                </p>
+                <div className="rounded-xl overflow-hidden border border-white/15 shadow-lg shadow-black/20 ring-1 ring-white/10">
+                  <iframe
+                    title="Balajee Group location"
+                    src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d3532.3469078794533!2d85.2820953!3d27.7065734!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x39eb1920f0ff3323%3A0xde5c22ad581e394!2sBalajee%20Group!5e0!3m2!1sen!2snp!4v1782295309179!5m2!1sen!2snp"
+                    width="100%"
+                    height="200"
+                    style={{ border: 0, display: "block" }}
+                    allowFullScreen=""
+                    loading="lazy"
+                    referrerPolicy="strict-origin-when-cross-origin"
+                  />
+                </div>
               </div>
             </div>
           </div>

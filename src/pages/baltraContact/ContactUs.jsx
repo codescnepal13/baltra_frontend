@@ -10,17 +10,19 @@ const ContactUs = () => {
   return (
     <>
       <MetaData
-        title="Contact Us | Baltra - Get in Touch"
-        description="Have questions or need support? Contact Baltra for inquiries about our home appliances, warranty, and customer service."
-        keywords="Baltra Contact, Baltra Support, Customer Service, Warranty, Baltra Nepal, Contact Baltra"
-        image="https://www.baltra.com/images/baltraAllProductsBanner.png"
-        url="https://www.baltra.com/baltra-contact-us"
-        twitterCard="summary_large_image"
-        twitterSite="@baltra"
-        ogTitle="Contact Us | Baltra"
-        ogDescription="Reach out to Baltra for any inquiries or support regarding our products and services."
-        ogImage="https://www.baltra.com/images/baltraAllProductsBanner.png"
-        ogUrl="https://www.baltra.com/baltra-contact-us"
+        title="Contact Baltra Nepal | Showroom, Service Center & Support"
+        description="Get in touch with Baltra Nepal for product inquiries, warranty claims, and service support. Find our Kathmandu showroom address, phone number, and dealer locations across Nepal."
+        keywords="Baltra Nepal contact, Baltra Nepal customer service, Baltra showroom Kathmandu, Baltra service center Nepal, Baltra dealer Nepal, Baltra warranty claim Nepal, Baltra phone number Nepal"
+        image="https://np.baltra.in/images/baltraAllProductsBanner.png"
+        url="https://np.baltra.in/baltra-contact-us"
+        ogTitle="Contact Baltra Nepal | Showroom, Service Center & Support"
+        ogDescription="Reach Baltra Nepal for inquiries, warranty support, and service center locations. We're here to help across Kathmandu and Nepal."
+        ogImage="https://np.baltra.in/images/baltraAllProductsBanner.png"
+        ogUrl="https://np.baltra.in/baltra-contact-us"
+        breadcrumbs={[
+          { name: "Home", url: "/" },
+          { name: "Contact Us", url: "/baltra-contact-us" },
+        ]}
       />
 
       <div className="relative w-full min-h-screen bg-[#F6F8FA]">
