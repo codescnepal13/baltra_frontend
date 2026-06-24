@@ -7,20 +7,20 @@ const ProductVaccum = ({ singleProduct }) => {
         </div>
         <div className="p-6 grid grid-cols-1 md:grid-cols-2 gap-6">
           {singleProduct?.galleryimageone && (
-            <div className="w-full h-64 rounded-lg border border-gray-200 overflow-hidden hover:shadow-lg transition-shadow">
+            <div className="w-full h-96 rounded-lg border border-gray-200 overflow-hidden hover:shadow-lg transition-shadow">
               <img
                 src={singleProduct?.galleryimageone}
                 alt="Gallery Image 1"
-                className="w-full h-full object-cover"
+                className="w-full h-full object-contain"
               />
             </div>
           )}
           {singleProduct?.galleryimagetwo && (
-            <div className="w-full h-64 rounded-lg border border-gray-200 overflow-hidden hover:shadow-lg transition-shadow">
+            <div className="w-full h-96 rounded-lg border border-gray-200 overflow-hidden hover:shadow-lg transition-shadow">
               <img
                 src={singleProduct?.galleryimagetwo}
                 alt="Gallery Image 2"
-                className="w-full h-full object-cover"
+                className="w-full h-full object-contain"
               />
             </div>
           )}

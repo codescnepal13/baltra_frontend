@@ -2,11 +2,11 @@ import { enqueueSnackbar } from "notistack";
 import { useCallback, useEffect, useState } from "react";
 import { useForm } from "react-hook-form";
 import {
+  FaArrowRight,
   FaCheck,
   FaEye,
   FaEyeSlash,
   FaLock,
-  FaLongArrowAltRight,
   FaShieldAlt,
   FaTimes,
 } from "react-icons/fa";
@@ -17,6 +17,63 @@ import {
   clearAuthError,
 } from "../../../../redux/features/auth/authSlice";
 
+/* ── Requirement row ───────────────────────────────────────── */
+const RequirementItem = ({ met, text }) => (
+  <div
+    className={`flex items-center gap-2.5 ${met ? "text-green-600" : "text-slate-400"}`}
+  >
+    <span
+      className={`w-4 h-4 rounded-full flex items-center justify-center flex-shrink-0 transition-colors ${
+        met ? "bg-green-100" : "bg-slate-100"
+      }`}
+    >
+      {met ? (
+        <FaCheck className="w-2 h-2 text-green-600" />
+      ) : (
+        <FaTimes className="w-2 h-2 text-slate-400" />
+      )}
+    </span>
+    <span className="text-xs font-gothamNarrow">{text}</span>
+  </div>
+);
+
+/* ── Password input ────────────────────────────────────────── */
+const PasswordField = ({
+  id,
+  label,
+  placeholder,
+  visible,
+  onToggle,
+  registration,
+  error,
+}) => (
+  <div>
+    <label className="block text-xs font-semibold text-slate-500 uppercase tracking-wider mb-2 font-gothamNarrow">
+      {label}
+    </label>
+    <div className="relative">
+      <input
+        id={id}
+        type={visible ? "text" : "password"}
+        placeholder={placeholder}
+        className="block w-full bg-white text-slate-800 border border-slate-200 focus:outline-none rounded-xl py-3 px-4 text-sm font-gothamNarrow focus:border-red-500 focus:ring-0"
+        {...registration}
+      />
+      <button
+        type="button"
+        onClick={onToggle}
+        className="absolute inset-y-0 right-0 px-3.5 flex items-center text-slate-400 hover:text-slate-600 transition-colors"
+      >
+        {visible ? <FaEyeSlash size={14} /> : <FaEye size={14} />}
+      </button>
+    </div>
+    {error && (
+      <p className="text-red-500 text-xs font-gothamNarrow mt-1.5">{error}</p>
+    )}
+  </div>
+);
+
+/* ── Main component ────────────────────────────────────────── */
 const EditPassword = () => {
   const { loading, error } = useSelector((state) => state.auth);
   const dispatch = useDispatch();
@@ -29,59 +86,20 @@ const EditPassword = () => {
     formState: { errors },
   } = useForm();
 
-  const [passwordVisible, setPasswordVisible] = useState(false);
-  const [passwordVisibleOne, setPasswordVisibleOne] = useState(false);
-  const [passwordVisibleTwo, setPasswordVisibleTwo] = useState(false);
+  const [vis, setVis] = useState({ old: false, new: false, confirm: false });
+  const toggle = (key) => setVis((v) => ({ ...v, [key]: !v[key] }));
 
-  const newPassword = watch("new_password");
+  const newPassword = watch("new_password") || "";
 
-  // Password validation checks
-  const passwordChecks = {
-    length: newPassword?.length >= 8,
-    lowercase: /[a-z]/.test(newPassword || ""),
-    uppercase: /[A-Z]/.test(newPassword || ""),
-    number: /\d/.test(newPassword || ""),
-    special: /[@$!%*?&]/.test(newPassword || ""),
+  const checks = {
+    length: newPassword.length >= 8,
+    lowercase: /[a-z]/.test(newPassword),
+    uppercase: /[A-Z]/.test(newPassword),
+    number: /\d/.test(newPassword),
+    special: /[@$!%*?&]/.test(newPassword),
   };
 
-  const togglePasswordVisibility = (setVisibility) => {
-    setVisibility((prev) => !prev);
-  };
-
-  const renderError = useCallback(
-    (fieldName) => {
-      return (
-        errors[fieldName] && (
-          <p className="text-red-500 text-sm font-gothamNarrow tracking-wider mt-1">
-            {errors[fieldName].type === "required" &&
-              `${fieldName.replace("_", " ")} is required`}
-            {errors[fieldName].type === "pattern" &&
-              `Invalid ${fieldName.replace("_", " ")} format`}
-            {errors[fieldName].type === "validate" &&
-              `${fieldName.replace("_", " ")} does not match`}
-            {errors[fieldName].message && errors[fieldName].message}
-          </p>
-        )
-      );
-    },
-    [errors],
-  );
-
-  const onSubmit = (editPasswordData) => {
-    if (Object.keys(errors).length === 0) {
-      dispatch(
-        changePassword({
-          editPasswordData,
-          enqueueSnackbar,
-          navigate,
-        }),
-      );
-    } else {
-      enqueueSnackbar("Invalid Input", {
-        variant: "error",
-      });
-    }
-  };
+  const allMet = Object.values(checks).every(Boolean);
 
   useEffect(() => {
     if (error) {
@@ -90,292 +108,139 @@ const EditPassword = () => {
     }
   }, [dispatch, error]);
 
-  const RequirementItem = ({ met, text }) => (
-    <div
-      className={`flex items-center space-x-3 py-2 ${
-        met ? "text-green-600" : "text-gray-500"
-      }`}
-    >
-      <div
-        className={`w-5 h-5 rounded-full flex items-center justify-center ${
-          met ? "bg-green-100" : "bg-gray-100"
-        }`}
-      >
-        {met ? (
-          <FaCheck className="w-3 h-3 text-green-600" />
-        ) : (
-          <FaTimes className="w-3 h-3 text-gray-400" />
-        )}
-      </div>
-      <span className="text-sm font-gothamNarrow">{text}</span>
-    </div>
+  const getErrorMsg = useCallback(
+    (field) => {
+      const e = errors[field];
+      if (!e) return null;
+      if (e.message) return e.message;
+      if (e.type === "required")
+        return `${field.replace(/_/g, " ")} is required`;
+      if (e.type === "pattern") return "Password does not meet requirements";
+      if (e.type === "validate") return "Passwords do not match";
+      return null;
+    },
+    [errors],
   );
 
+  const onSubmit = (data) => {
+    if (Object.keys(errors).length === 0) {
+      dispatch(
+        changePassword({ editPasswordData: data, enqueueSnackbar, navigate }),
+      );
+    } else {
+      enqueueSnackbar("Please fix the errors before submitting", {
+        variant: "error",
+      });
+    }
+  };
+
   return (
-    <div className="relative w-full min-h-screen bg-gradient-to-br from-gray-50 to-blue-50 flex justify-center items-center p-4">
-      <div className="w-full max-w-7xl bg-white rounded-2xl shadow-2xl overflow-hidden">
-        <div className="grid grid-cols-1 lg:grid-cols-[55%_45%] min-h-[600px] items-center">
-          {/* Left Side - Form */}
-          <div className="p-8 lg:p-12 flex flex-col justify-center border-b lg:border-b-0 lg:border-r border-gray-100">
-            <div className="max-w-md mx-auto w-full">
-              <div className="text-center mb-8">
-                <div className="inline-flex items-center justify-center w-16 h-16 bg-red-100 rounded-full mb-4">
-                  <FaLock className="w-8 h-8 text-red-600" />
-                </div>
-                <h2 className="text-3xl font-bold text-gray-800 mb-2">
-                  Change Password
-                </h2>
-                <p className="text-gray-600">
-                  Update your password to keep your account secure
-                </p>
-              </div>
-
-              <form className="space-y-6" onSubmit={handleSubmit(onSubmit)}>
-                {/* Old Password */}
-                <div>
-                  <label
-                    className="block text-sm font-semibold text-gray-700 mb-2 font-gothamNarrow"
-                    htmlFor="old_password"
-                  >
-                    Current Password
-                  </label>
-                  <div className="relative">
-                    <input
-                      className="block w-full
-                               bg-white text-slate-700
-                                border-2 border-slate-200
-                                rounded-xl py-4 px-5
-                                text-sm leading-tight
-                                appearance-none
-                                outline-none
-                                focus:outline-none
-                                focus-visible:outline-none
-                              focus:border-red-500
-                                focus:ring-0
-                               transition-all duration-300
-                              hover:border-slate-300"
-                      id="old_password"
-                      name="old_password"
-                      type={passwordVisible ? "text" : "password"}
-                      placeholder="Enter your current password"
-                      {...register("old_password", {
-                        required: true,
-                        minLength: 8,
-                        pattern:
-                          /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]{8,}$/,
-                      })}
-                    />
-                    <button
-                      type="button"
-                      className="absolute inset-y-0 right-0 pr-4 flex items-center"
-                      onClick={() =>
-                        togglePasswordVisibility(setPasswordVisible)
-                      }
-                    >
-                      {passwordVisible ? (
-                        <FaEyeSlash className="w-5 h-5 text-gray-400 hover:text-gray-600 transition-colors" />
-                      ) : (
-                        <FaEye className="w-5 h-5 text-gray-400 hover:text-gray-600 transition-colors" />
-                      )}
-                    </button>
-                  </div>
-                  {renderError("old_password")}
-                </div>
-
-                {/* New Password */}
-                <div>
-                  <label
-                    className="block text-sm font-semibold text-gray-700 mb-2 font-gothamNarrow"
-                    htmlFor="new_password"
-                  >
-                    New Password
-                  </label>
-                  <div className="relative">
-                    <input
-                      className="  block w-full
-                               bg-white text-slate-700
-                                border-2 border-slate-200
-                                rounded-xl py-4 px-5
-                                text-sm leading-tight
-                                appearance-none
-                                outline-none
-                                focus:outline-none
-                                focus-visible:outline-none
-                              focus:border-red-500
-                                focus:ring-0
-                               transition-all duration-300
-                              hover:border-slate-300"
-                      id="new_password"
-                      name="new_password"
-                      type={passwordVisibleOne ? "text" : "password"}
-                      placeholder="Enter your new password"
-                      {...register("new_password", {
-                        required: true,
-                        minLength: 8,
-                        pattern:
-                          /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]{8,}$/,
-                      })}
-                    />
-                    <button
-                      type="button"
-                      className="absolute inset-y-0 right-0 pr-4 flex items-center"
-                      onClick={() =>
-                        togglePasswordVisibility(setPasswordVisibleOne)
-                      }
-                    >
-                      {passwordVisibleOne ? (
-                        <FaEyeSlash className="w-5 h-5 text-gray-400 hover:text-gray-600 transition-colors" />
-                      ) : (
-                        <FaEye className="w-5 h-5 text-gray-400 hover:text-gray-600 transition-colors" />
-                      )}
-                    </button>
-                  </div>
-                  {renderError("new_password")}
-                </div>
-
-                {/* Confirm Password */}
-                <div>
-                  <label
-                    className="block text-sm font-semibold text-gray-700 mb-2 font-gothamNarrow"
-                    htmlFor="confirm_newpassword"
-                  >
-                    Confirm New Password
-                  </label>
-                  <div className="relative">
-                    <input
-                      className="  block w-full
-                               bg-white text-slate-700
-                                border-2 border-slate-200
-                                rounded-xl py-4 px-5
-                                text-sm leading-tight
-                                appearance-none
-                                outline-none
-                                focus:outline-none
-                                focus-visible:outline-none
-                              focus:border-red-500
-                                focus:ring-0
-                               transition-all duration-300
-                              hover:border-slate-300"
-                      id="confirm_newpassword"
-                      name="confirm_newpassword"
-                      type={passwordVisibleTwo ? "text" : "password"}
-                      placeholder="Confirm your new password"
-                      {...register("confirm_newpassword", {
-                        required: "Confirm password is required",
-                        validate: (value) =>
-                          value === watch("new_password") ||
-                          "Passwords do not match",
-                      })}
-                    />
-                    <button
-                      type="button"
-                      className="absolute inset-y-0 right-0 pr-4 flex items-center"
-                      onClick={() =>
-                        togglePasswordVisibility(setPasswordVisibleTwo)
-                      }
-                    >
-                      {passwordVisibleTwo ? (
-                        <FaEyeSlash className="w-5 h-5 text-gray-400 hover:text-gray-600 transition-colors" />
-                      ) : (
-                        <FaEye className="w-5 h-5 text-gray-400 hover:text-gray-600 transition-colors" />
-                      )}
-                    </button>
-                  </div>
-                  {renderError("confirm_newpassword")}
-                </div>
-
-                {/* Submit Button */}
-                <button
-                  type="submit"
-                  disabled={loading}
-                  className="w-full bg-gradient-to-r from-red-600 to-red-700 hover:from-red-700 hover:to-red-800 text-white font-semibold py-4 px-6 rounded-xl transition-all duration-200 flex items-center justify-center space-x-3 disabled:opacity-50 disabled:cursor-not-allowed shadow-lg hover:shadow-xl transform hover:-translate-y-0.5"
-                >
-                  {loading && (
-                    <div className="animate-spin rounded-full h-5 w-5 border-t-2 border-b-2 border-white mr-3"></div>
-                  )}
-                  <span className="font-gothamNarrow">Update Password</span>
-                  <FaLongArrowAltRight className="w-4 h-4" />
-                </button>
-              </form>
-            </div>
-          </div>
-
-          {/* Right Side - Illustration & Requirements */}
-          <div className="bg-gradient-to-br from-red-50 to-pink-50 p-8 lg:p-12 flex flex-col justify-center">
-            <div className="max-w-md mx-auto w-full">
-              {/* Illustration */}
-              <div className="text-center mb-8">
-                <div className="relative">
-                  <div className="inline-flex items-center justify-center w-32 h-32 bg-white rounded-full shadow-lg mb-6">
-                    <FaShieldAlt className="w-16 h-16 text-red-500" />
-                  </div>
-                  <div className="absolute -top-2 -right-2 w-8 h-8 bg-green-500 rounded-full flex items-center justify-center">
-                    <FaCheck className="w-4 h-4 text-white" />
-                  </div>
-                </div>
-                <h3 className="text-2xl font-bold text-gray-800 mb-2">
-                  Secure Your Account
-                </h3>
-                <p className="text-gray-600 leading-relaxed">
-                  Create a strong password to protect your personal information
-                  and keep your account safe from unauthorized access.
-                </p>
-              </div>
-
-              {/* Password Requirements */}
-              <div className="bg-white rounded-xl p-6 shadow-sm border border-gray-100">
-                <h4 className="text-lg font-semibold text-gray-800 mb-4 flex items-center">
-                  <FaLock className="w-5 h-5 text-red-500 mr-2" />
-                  Password Requirements
-                </h4>
-                <div className="space-y-1">
-                  <RequirementItem
-                    met={passwordChecks.length}
-                    text="At least 8 characters long"
-                  />
-                  <RequirementItem
-                    met={passwordChecks.lowercase}
-                    text="One lowercase letter (a-z)"
-                  />
-                  <RequirementItem
-                    met={passwordChecks.uppercase}
-                    text="One uppercase letter (A-Z)"
-                  />
-                  <RequirementItem
-                    met={passwordChecks.number}
-                    text="One number (0-9)"
-                  />
-                  <RequirementItem
-                    met={passwordChecks.special}
-                    text="One special character (@$!%*?&)"
-                  />
-                </div>
-              </div>
-
-              {/* Security Tips */}
-              <div className="mt-6 p-4 bg-blue-50 rounded-lg border border-blue-200">
-                <div className="flex items-start space-x-3">
-                  <div className="flex-shrink-0">
-                    <div className="w-6 h-6 bg-blue-500 rounded-full flex items-center justify-center">
-                      <span className="text-white text-xs font-bold">!</span>
-                    </div>
-                  </div>
-                  <div>
-                    <h5 className="text-sm font-semibold text-blue-800 mb-1 font-gothamNarrow">
-                      Security Tip
-                    </h5>
-                    <p className="text-xs text-blue-700 leading-relaxed font-gothamNarrow">
-                      Use a unique password that you don't use anywhere else.
-                      Consider using a password manager to generate and store
-                      strong passwords.
-                    </p>
-                  </div>
-                </div>
-              </div>
-            </div>
-          </div>
+    <div className="space-y-6">
+      {/* Header */}
+      <div className="flex items-center gap-3 pb-5 border-b border-slate-100">
+        <span className="w-9 h-9 rounded-xl bg-red-50 flex items-center justify-center flex-shrink-0">
+          <FaLock size={14} className="text-red-500" />
+        </span>
+        <div>
+          <h3 className="text-xl font-bold text-slate-900 font-gothamNarrow">
+            Change Password
+          </h3>
+          <p className="text-xs text-slate-400 mt-0.5">
+            Update your password to keep your account secure
+          </p>
         </div>
       </div>
+
+      {/* Form */}
+      <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
+        <PasswordField
+          id="old_password"
+          label="Current Password"
+          placeholder="Enter your current password"
+          visible={vis.old}
+          onToggle={() => toggle("old")}
+          registration={register("old_password", {
+            required: true,
+            minLength: 8,
+            pattern:
+              /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]{8,}$/,
+          })}
+          error={getErrorMsg("old_password")}
+        />
+
+        <PasswordField
+          id="new_password"
+          label="New Password"
+          placeholder="Enter your new password"
+          visible={vis.new}
+          onToggle={() => toggle("new")}
+          registration={register("new_password", {
+            required: true,
+            minLength: 8,
+            pattern:
+              /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]{8,}$/,
+          })}
+          error={getErrorMsg("new_password")}
+        />
+
+        {/* Live password requirements — only shown while typing */}
+        {newPassword.length > 0 && (
+          <div className="bg-slate-50 border border-slate-100 rounded-xl p-4 grid grid-cols-1 sm:grid-cols-2 gap-2">
+            <RequirementItem met={checks.length} text="8+ characters" />
+            <RequirementItem met={checks.lowercase} text="Lowercase letter" />
+            <RequirementItem met={checks.uppercase} text="Uppercase letter" />
+            <RequirementItem met={checks.number} text="Number (0–9)" />
+            <RequirementItem
+              met={checks.special}
+              text="Special character (@$!%*?&)"
+            />
+          </div>
+        )}
+
+        <PasswordField
+          id="confirm_newpassword"
+          label="Confirm New Password"
+          placeholder="Confirm your new password"
+          visible={vis.confirm}
+          onToggle={() => toggle("confirm")}
+          registration={register("confirm_newpassword", {
+            required: "Confirm password is required",
+            validate: (value) =>
+              value === watch("new_password") || "Passwords do not match",
+          })}
+          error={getErrorMsg("confirm_newpassword")}
+        />
+
+        {/* Security tip */}
+        <div className="flex items-start gap-3 bg-amber-50 border border-amber-100 rounded-xl px-4 py-3">
+          <FaShieldAlt
+            size={13}
+            className="text-amber-500 mt-0.5 flex-shrink-0"
+          />
+          <p className="text-xs text-amber-700 leading-relaxed font-gothamNarrow">
+            Use a unique password you don't use anywhere else. A password
+            manager can help you generate and remember strong passwords.
+          </p>
+        </div>
+
+        {/* Submit */}
+        <div className="pt-1">
+          <button
+            type="submit"
+            disabled={loading}
+            className="flex items-center gap-2.5 bg-red-600 hover:bg-red-700 disabled:opacity-50 disabled:cursor-not-allowed text-white font-semibold px-7 py-3 rounded-xl text-sm transition-all duration-200 shadow-sm hover:shadow-md font-gothamNarrow"
+          >
+            {loading ? (
+              <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
+            ) : (
+              <>
+                Update Password
+                <FaArrowRight size={12} />
+              </>
+            )}
+          </button>
+        </div>
+      </form>
     </div>
   );
 };

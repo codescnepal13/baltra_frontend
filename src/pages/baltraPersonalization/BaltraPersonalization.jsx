@@ -27,6 +27,7 @@ const BaltraPersonalization = ({
   const [orientation, setOrientation] = useState("horizontal");
   const [selectedFont, setSelectedFont] = useState("gothamNarrow");
   const [personalizeErr, setPersonalizeErr] = useState({});
+  const [quantity, setQuantity] = useState(1); // ✅ NEW
 
   const handleClose = () => {
     closeModal();
@@ -37,15 +38,35 @@ const BaltraPersonalization = ({
     if (!addText.trim()) {
       newErrors.addText = "Please enter your text";
     }
-
     setPersonalizeErr(newErrors);
     return Object.keys(newErrors).length === 0;
   };
 
-  // Ensure text is within limits
   const maxLength = orientation === "vertical" ? 13 : 8;
   const displayText =
     orientation === "vertical" ? addText.slice(0, 13) : addText.slice(0, 8);
+
+  // ✅ Quantity handlers
+  const handleDecrement = () => {
+    setQuantity((prev) => (prev > 1 ? prev - 1 : 1));
+  };
+
+  const handleIncrement = () => {
+    setQuantity((prev) => prev + 1);
+  };
+
+  const handleQuantityInput = (e) => {
+    const val = parseInt(e.target.value);
+    if (!isNaN(val) && val >= 1) {
+      setQuantity(val);
+    } else if (e.target.value === "") {
+      setQuantity("");
+    }
+  };
+
+  const handleQuantityBlur = () => {
+    if (quantity === "" || quantity < 1) setQuantity(1);
+  };
 
   const urlToFile = async (url) => {
     try {
@@ -68,9 +89,7 @@ const BaltraPersonalization = ({
   const handleSubmit = async (e) => {
     e.preventDefault();
     if (!validatedForm()) {
-      enqueueSnackbar("Please enter valid input", {
-        variant: "error",
-      });
+      enqueueSnackbar("Please enter valid input", { variant: "error" });
       return;
     }
 
@@ -81,6 +100,7 @@ const BaltraPersonalization = ({
     formData.append("color", selectedColor);
     formData.append("size", selectedSize);
     formData.append("product_id", productId);
+    formData.append("quantity", quantity); // ✅ NEW — bound to API
 
     const file = await urlToFile(mainImage);
     if (!file) {
@@ -103,9 +123,7 @@ const BaltraPersonalization = ({
 
   useEffect(() => {
     if (error) {
-      enqueueSnackbar(error, {
-        variant: "error",
-      });
+      enqueueSnackbar(error, { variant: "error" });
       dispatch(clearProductError());
     }
   }, [dispatch, error]);
@@ -141,8 +159,6 @@ const BaltraPersonalization = ({
                 alt="Bottle preview"
                 draggable={false}
               />
-
-              {/* Text overlay on bottle */}
               <div className="absolute inset-0 flex justify-center items-center pointer-events-none">
                 {displayText &&
                   (orientation === "horizontal" ? (
@@ -326,6 +342,41 @@ const BaltraPersonalization = ({
                   </option>
                 ))}
               </select>
+            </div>
+
+            {/* ✅ Quantity Selector */}
+            <div className="flex flex-col gap-2">
+              <label className="text-[#4F4F4F] font-gothamNarrow font-semibold">
+                Quantity
+              </label>
+              <div className="flex items-center gap-3">
+                <button
+                  type="button"
+                  onClick={handleDecrement}
+                  className="w-10 h-10 flex items-center justify-center rounded-md border border-[#C2C2C2] hover:border-orange-500 hover:bg-orange-50 text-gray-700 text-xl font-semibold transition-colors disabled:opacity-40"
+                  disabled={quantity <= 1}
+                  aria-label="Decrease quantity"
+                >
+                  −
+                </button>
+                <input
+                  type="number"
+                  min={1}
+                  value={quantity}
+                  onChange={handleQuantityInput}
+                  onBlur={handleQuantityBlur}
+                  className="w-16 h-10 text-center border border-[#C2C2C2] hover:border-orange-500 focus:border-orange-500 outline-none rounded-md text-base font-gothamNarrow font-semibold transition-colors [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
+                  aria-label="Quantity"
+                />
+                <button
+                  type="button"
+                  onClick={handleIncrement}
+                  className="w-10 h-10 flex items-center justify-center rounded-md border border-[#C2C2C2] hover:border-orange-500 hover:bg-orange-50 text-gray-700 text-xl font-semibold transition-colors"
+                  aria-label="Increase quantity"
+                >
+                  +
+                </button>
+              </div>
             </div>
 
             <button

@@ -40,6 +40,7 @@ import AllWarrantyPackageList from "./components/admin/adminComponents/warrantyS
 import AddWarrantyPackage from "./components/admin/adminComponents/warrantySection/addWarrantyPackage/AddWarrantyPackage";
 import EditWarrantyPackage from "./components/admin/adminComponents/warrantySection/editWarrantyPackage/EditWarrantyPackage";
 import Footer from "./components/footer/Footer";
+import AdminSkeletonLoader from "./components/layout/adminSkeletonLoader/AdminSkeletonLoader";
 import GlobalMetaTag from "./components/layout/globalMetaTag/GlobalMetaTag";
 import InitialLoader from "./components/layout/initialLoader/InitialLoader";
 import PrivateRoute from "./components/layout/privateRoute/PrivateRoute";
@@ -507,7 +508,9 @@ const App = () => {
                   userRole={userRole}
                   allowedRoles={ALL_STAFF}
                 >
-                  <MainLayout />
+                  <Suspense fallback={<AdminSkeletonLoader />}>
+                    <MainLayout />
+                  </Suspense>
                 </PrivateRoute>
               }
             >

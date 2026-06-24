@@ -186,7 +186,7 @@ export const updateProductComplaint = createAsyncThunk(
   ) => {
     try {
       const response = await API.put(
-        `/stocks/updatecomplaintbyid/${complaint_id}`,
+        `/stocks/updatecomplaint/${complaint_id}`,
         formData,
       );
       enqueueSnackbar(response.data.message || "product complaint updated!", {
@@ -206,7 +206,7 @@ export const deleteProductComplaint = createAsyncThunk(
   async ({ complaint_id, enqueueSnackbar }, { rejectWithValue }) => {
     try {
       const response = await API.delete(
-        `/stocks/deletecomplaintbyid/${complaint_id}`,
+        `/stocks/deletecomplaint/${complaint_id}`,
       );
       enqueueSnackbar(response.data.message || "product complaint deleted!", {
         variant: "success",

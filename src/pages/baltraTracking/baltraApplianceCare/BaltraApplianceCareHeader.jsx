@@ -2,8 +2,8 @@ import { jwtDecode } from "jwt-decode";
 import { enqueueSnackbar } from "notistack";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { AiOutlineProduct } from "react-icons/ai";
-import { FaBookOpen, FaHome } from "react-icons/fa";
-import { GoSignOut, GoStack } from "react-icons/go";
+import { FaBookOpen, FaHome, FaStar } from "react-icons/fa";
+import { GoSignOut } from "react-icons/go";
 import { HiOutlineUser, HiOutlineUserCircle, HiSearch } from "react-icons/hi";
 import { HiMiniBars3 } from "react-icons/hi2";
 import {
@@ -20,6 +20,7 @@ import SideBarLayout from "../../../components/layout/sideBarLayout/SideBarLayou
 import { setLogout } from "../../../redux/features/auth/authSlice";
 import { baltraSearchProducts } from "../../../redux/features/product/productSlice";
 
+/* ── Helpers ──────────────────────────────────────────────── */
 /* ── Helpers ──────────────────────────────────────────────── */
 const getInitials = (customer) =>
   [customer?.firstname, customer?.lastname]
@@ -49,6 +50,42 @@ const Avatar = ({ customer, size = "sm" }) => {
       <span className="font-semibold text-white font-gothamNarrow leading-none">
         {getInitials(customer)}
       </span>
+    </div>
+  );
+};
+
+/* ── Reward Points Badge (header trigger pill) ────────────── */
+const RewardPill = ({ points }) => {
+  if (points == null) return null;
+  return (
+    <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-amber-400/20 border border-amber-400/30 text-amber-300">
+      <FaStar size={9} />
+      <span className="text-[10px] font-semibold font-gothamNarrow leading-none">
+        {points.toLocaleString()}
+      </span>
+    </span>
+  );
+};
+
+/* ── Reward Points Card (inside dropdown) ─────────────────── */
+const RewardCard = ({ points }) => {
+  if (points == null) return null;
+  return (
+    <div className="mx-3 mb-1 mt-2 rounded-xl bg-gradient-to-r from-amber-50 to-yellow-50 border border-amber-100 px-3 py-2.5 flex items-center gap-2.5">
+      <span className="w-7 h-7 rounded-lg bg-amber-100 flex items-center justify-center flex-shrink-0">
+        <FaStar size={13} className="text-amber-500" />
+      </span>
+      <div className="flex-1 min-w-0">
+        <p className="text-[10px] font-semibold tracking-wide uppercase text-amber-600 font-gothamNarrow leading-none mb-0.5">
+          Reward Points
+        </p>
+        <p className="text-[15px] font-bold text-amber-700 font-gothamNarrow leading-none">
+          {points.toLocaleString()}
+          <span className="text-[10px] font-medium text-amber-500 ml-1">
+            pts
+          </span>
+        </p>
+      </div>
     </div>
   );
 };
@@ -147,6 +184,8 @@ const BaltraApplianceCareHeader = () => {
   const [showSidebar, setShowSidebar] = useState(false);
 
   const dropdownRef = useRef(null);
+
+  const rewardPoints = customer?.reward_points ?? null;
 
   /* Close dropdown on outside click */
   useEffect(() => {
@@ -265,9 +304,14 @@ const BaltraApplianceCareHeader = () => {
                     <span className="text-[12px] font-semibold text-white font-gothamNarrow leading-tight truncate w-full">
                       {customer?.firstname}
                     </span>
-                    <span className="text-[10px] text-white/55 font-gothamNarrow leading-tight">
-                      My Account
-                    </span>
+                    {/* Reward points pill under name */}
+                    {rewardPoints != null ? (
+                      <RewardPill points={rewardPoints} />
+                    ) : (
+                      <span className="text-[10px] text-white/55 font-gothamNarrow leading-tight">
+                        My Account
+                      </span>
+                    )}
                   </div>
                   {/* Chevron */}
                   <svg
@@ -312,6 +356,9 @@ const BaltraApplianceCareHeader = () => {
                       </div>
                     </div>
 
+                    {/* Reward points card */}
+                    <RewardCard points={rewardPoints} />
+
                     {/* Menu items */}
                     <ul role="none" className="p-1.5 flex flex-col gap-0.5">
                       <DropdownItem
@@ -330,12 +377,6 @@ const BaltraApplianceCareHeader = () => {
                         to="/baltra-trackingProducts"
                         icon={MdOutlineMedicalServices}
                         label="Service Ticket"
-                        onClick={() => setIsShownDropDown(false)}
-                      />
-                      <DropdownItem
-                        to="/baltra-bulk-quote"
-                        icon={GoStack}
-                        label="Bulk Order History"
                         onClick={() => setIsShownDropDown(false)}
                       />
 
@@ -434,7 +475,18 @@ const BaltraApplianceCareHeader = () => {
                 }`
               }
             >
-              <Avatar customer={customer} size="sm" />
+              {/* Avatar with reward points badge */}
+              <div className="relative">
+                <Avatar customer={customer} size="sm" />
+                {rewardPoints != null && (
+                  <span className="absolute -top-1.5 -right-2 inline-flex items-center gap-0.5 bg-amber-400 text-white text-[8px] font-bold px-1.5 py-0.5 rounded-full leading-none shadow-sm font-gothamNarrow whitespace-nowrap">
+                    <FaStar size={6} />
+                    {rewardPoints > 999
+                      ? `${Math.floor(rewardPoints / 1000)}k`
+                      : rewardPoints}
+                  </span>
+                )}
+              </div>
               <span className="text-[10px] font-semibold font-gothamNarrow tracking-wide mt-0.5">
                 Profile
               </span>

@@ -45,7 +45,7 @@ const ProductDetailsVideo = ({ singleProduct }) => {
   if (!singleProduct?.product_video) return null;
 
   return (
-    <div className="w-full h-64 md:h-80 rounded-lg overflow-hidden border border-gray-200 shadow-sm">
+    <div className="w-full h-96 md:h-[30rem] rounded-lg overflow-hidden border border-gray-200 shadow-sm py-2">
       <video
         ref={videoRef}
         src={singleProduct?.product_video}

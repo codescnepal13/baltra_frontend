@@ -2,8 +2,8 @@ import { jwtDecode } from "jwt-decode";
 import { enqueueSnackbar } from "notistack";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { AiOutlineProduct } from "react-icons/ai";
-import { FaBookOpen, FaHome } from "react-icons/fa";
-import { GoSignOut, GoStack } from "react-icons/go";
+import { FaBookOpen, FaHome, FaStar } from "react-icons/fa";
+import { GoSignOut } from "react-icons/go";
 import { HiOutlineUser, HiOutlineUserCircle, HiSearch } from "react-icons/hi";
 import { HiMiniBars3 } from "react-icons/hi2";
 import {
@@ -40,11 +40,11 @@ const Avatar = ({ customer, size = "sm" }) => {
     <img
       src={customer.image_url}
       alt="avatar"
-      className={`${dim} rounded-full object-cover ring-2 ring-gray-200`}
+      className={`${dim} rounded-full object-cover ring-2 ring-black/10`}
     />
   ) : (
     <div
-      className={`${dim} rounded-full bg-gradient-to-br from-red-500 to-red-700 flex items-center justify-center ring-2 ring-gray-100 flex-shrink-0`}
+      className={`${dim} rounded-full bg-gradient-to-br from-red-500 to-red-700 flex items-center justify-center ring-2 ring-black/10 flex-shrink-0`}
     >
       <span className="font-semibold text-white font-gothamNarrow leading-none">
         {getInitials(customer)}
@@ -53,7 +53,43 @@ const Avatar = ({ customer, size = "sm" }) => {
   );
 };
 
-/* ── NavLink helper — dark theme ──────────────────────────── */
+/* ── Reward Points Badge (header trigger pill) ────────────── */
+const RewardPill = ({ points }) => {
+  if (points == null) return null;
+  return (
+    <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-amber-50 border border-amber-200 text-amber-600">
+      <FaStar size={9} />
+      <span className="text-[10px] font-semibold font-gothamNarrow leading-none">
+        {points.toLocaleString()}
+      </span>
+    </span>
+  );
+};
+
+/* ── Reward Points Card (inside dropdown) ─────────────────── */
+const RewardCard = ({ points }) => {
+  if (points == null) return null;
+  return (
+    <div className="mx-3 mb-1 mt-2 rounded-xl bg-gradient-to-r from-amber-50 to-yellow-50 border border-amber-100 px-3 py-2.5 flex items-center gap-2.5">
+      <span className="w-7 h-7 rounded-lg bg-amber-100 flex items-center justify-center flex-shrink-0">
+        <FaStar size={13} className="text-amber-500" />
+      </span>
+      <div className="flex-1 min-w-0">
+        <p className="text-[10px] font-semibold tracking-wide uppercase text-amber-600 font-gothamNarrow leading-none mb-0.5">
+          Reward Points
+        </p>
+        <p className="text-[15px] font-bold text-amber-700 font-gothamNarrow leading-none">
+          {points.toLocaleString()}
+          <span className="text-[10px] font-medium text-amber-500 ml-1">
+            pts
+          </span>
+        </p>
+      </div>
+    </div>
+  );
+};
+
+/* ── NavLink helper ───────────────────────────────────────── */
 const HeaderLink = ({ to, children }) => (
   <NavLink
     to={to}
@@ -61,8 +97,8 @@ const HeaderLink = ({ to, children }) => (
     className={({ isActive }) =>
       `text-sm font-gothamNarrow transition-colors duration-150 ${
         isActive
-          ? "text-red-600 underline font-semibold"
-          : "text-gray-700 hover:text-red-600 hover:underline"
+          ? "text-red-500 underline font-medium"
+          : "text-gray-900/90 hover:text-red-500 hover:underline"
       }`
     }
   >
@@ -71,15 +107,25 @@ const HeaderLink = ({ to, children }) => (
 );
 
 /* ── Dropdown menu item ───────────────────────────────────── */
-const DropdownItem = ({ to, icon: Icon, label, badge, onClick }) => {
+const DropdownItem = ({ to, icon: Icon, label, badge, onClick, danger }) => {
+  const base =
+    "flex items-center gap-2.5 px-3 py-2.5 rounded-xl transition-colors duration-100 group w-full text-left";
+  const colors = danger
+    ? "text-gray-600 hover:bg-red-50 hover:text-red-700"
+    : "text-gray-600 hover:bg-slate-50 hover:text-gray-900";
+  const iconBg = danger
+    ? "bg-slate-100 group-hover:bg-red-100"
+    : "bg-slate-100 group-hover:bg-red-50";
+  const iconColor = danger
+    ? "text-slate-500 group-hover:text-red-500"
+    : "text-slate-500 group-hover:text-red-500";
+
   const inner = (
     <>
-      <span className="w-7 h-7 rounded-lg bg-slate-100 group-hover:bg-red-50 flex items-center justify-center flex-shrink-0 transition-colors">
-        <Icon
-          size={15}
-          className="text-slate-500 group-hover:text-red-500"
-          aria-hidden="true"
-        />
+      <span
+        className={`w-7 h-7 rounded-lg ${iconBg} flex items-center justify-center flex-shrink-0 transition-colors`}
+      >
+        <Icon size={15} className={iconColor} aria-hidden="true" />
       </span>
       <span className="text-[13px] font-medium font-gothamNarrow flex-1 leading-none">
         {label}
@@ -95,18 +141,11 @@ const DropdownItem = ({ to, icon: Icon, label, badge, onClick }) => {
   return (
     <li role="menuitem">
       {to ? (
-        <NavLink
-          to={to}
-          onClick={onClick}
-          className="flex items-center gap-2.5 px-3 py-2.5 rounded-xl text-gray-600 hover:bg-slate-50 hover:text-gray-900 transition-colors duration-100 group w-full text-left"
-        >
+        <NavLink to={to} onClick={onClick} className={`${base} ${colors}`}>
           {inner}
         </NavLink>
       ) : (
-        <button
-          onClick={onClick}
-          className="flex items-center gap-2.5 px-3 py-2.5 rounded-xl text-gray-600 hover:bg-slate-50 hover:text-gray-900 transition-colors duration-100 group w-full text-left"
-        >
+        <button onClick={onClick} className={`${base} ${colors}`}>
           {inner}
         </button>
       )}
@@ -115,7 +154,7 @@ const DropdownItem = ({ to, icon: Icon, label, badge, onClick }) => {
 };
 
 /* ── Bottom nav item ──────────────────────────────────────── */
-const BottomNavItem = ({ to, icon: Icon, label }) => (
+const BottomNavItem = ({ to, icon: Icon, label, customIcon }) => (
   <NavLink
     to={to}
     className={({ isActive }) =>
@@ -124,7 +163,7 @@ const BottomNavItem = ({ to, icon: Icon, label }) => (
       }`
     }
   >
-    <Icon size={22} />
+    {customIcon ?? <Icon size={22} />}
     <span className="text-[10px] font-semibold font-gothamNarrow tracking-wide">
       {label}
     </span>
@@ -144,6 +183,8 @@ const ProductHeader = () => {
   const [showSidebar, setShowSidebar] = useState(false);
 
   const dropdownRef = useRef(null);
+
+  const rewardPoints = customer?.reward_points ?? null;
 
   /* Close dropdown on outside click */
   useEffect(() => {
@@ -201,7 +242,7 @@ const ProductHeader = () => {
   return (
     <>
       {/* ── Desktop / tablet header ── */}
-      <header className="font-gothamNarrow relative w-full h-16 flex items-center justify-between px-4 sm:px-8 md:px-12 lg:px-16 xl:px-24 border-gray-100 shadow-sm">
+      <header className="font-gothamNarrow relative w-full h-16 flex items-center justify-between px-4 sm:px-8 md:px-12 lg:px-16 xl:px-24">
         {/* Logo */}
         <NavLink to="/baltra-aboutUs-Page" className="flex-shrink-0">
           <img
@@ -213,11 +254,11 @@ const ProductHeader = () => {
 
         {/* Mobile hamburger */}
         <button
-          className="md:hidden p-1.5 rounded-lg hover:bg-gray-100 transition-colors"
+          className="md:hidden p-1.5 rounded-lg hover:bg-black/5 transition-colors"
           onClick={handleShowMenu}
           aria-label="Open menu"
         >
-          <HiMiniBars3 className="text-gray-700 w-6 h-6" />
+          <HiMiniBars3 className="text-gray-900 w-6 h-6" />
         </button>
 
         {/* Desktop nav links */}
@@ -233,16 +274,16 @@ const ProductHeader = () => {
 
         {/* Search + auth */}
         <div className="hidden md:flex items-center gap-3 lg:gap-4">
-          {/* Search pill — dark on white */}
-          <div className="flex items-center gap-2 w-36 lg:w-52 h-9 px-3 bg-gray-50 hover:bg-gray-100 border border-gray-200 hover:border-gray-300 rounded-full transition-colors">
-            <HiSearch className="text-gray-400 w-4 h-4 flex-shrink-0" />
+          {/* Search pill */}
+          <div className="flex items-center gap-2 w-36 lg:w-52 h-9 px-3 bg-black/5 hover:bg-black/10 border border-black/10 rounded-full transition-colors">
+            <HiSearch className="text-gray-500 w-4 h-4 flex-shrink-0" />
             <input
               type="text"
               placeholder="Search…"
               value={product_name}
               onChange={(e) => setProductName(e.target.value)}
               onKeyDown={handleKeyDown}
-              className="bg-transparent border-none text-gray-800 text-sm font-gothamNarrow placeholder-gray-400 focus:outline-none w-full"
+              className="bg-transparent border-none text-gray-900 text-sm font-gothamNarrow placeholder-gray-400 focus:outline-none w-full"
             />
           </div>
 
@@ -250,34 +291,30 @@ const ProductHeader = () => {
           <div className="relative" ref={dropdownRef}>
             {isAuthenticated ? (
               <>
-                {/* Avatar trigger — dark variant */}
+                {/* Avatar trigger */}
                 <button
                   onClick={() => setIsShownDropDown((v) => !v)}
-                  className="
-    flex items-center gap-2.5 px-2.5 py-1.5
-    rounded-full bg-gray-50 hover:bg-gray-100
-    border border-gray-200 hover:border-gray-300
-    transition-all duration-200
-
-    appearance-none outline-none
-    focus:outline-none focus-visible:outline-none
-    focus:ring-0 focus:shadow-none
-  "
+                  className="flex items-center gap-2.5 px-2.5 py-1.5 rounded-full bg-black/5 hover:bg-black/10 border border-black/10 hover:border-black/20 transition-all duration-200 focus:outline-none"
                   aria-haspopup="true"
                   aria-expanded={isShownDropDown}
                 >
                   <Avatar customer={customer} size="sm" />
                   <div className="flex flex-col items-start min-w-0 max-w-[90px]">
-                    <span className="text-[12px] font-semibold text-gray-800 font-gothamNarrow leading-tight truncate w-full">
+                    <span className="text-[12px] font-semibold text-gray-900 font-gothamNarrow leading-tight truncate w-full">
                       {customer?.firstname}
                     </span>
-                    <span className="text-[10px] text-gray-400 font-gothamNarrow leading-tight">
-                      My Account
-                    </span>
+                    {/* Reward points pill under name */}
+                    {rewardPoints != null ? (
+                      <RewardPill points={rewardPoints} />
+                    ) : (
+                      <span className="text-[10px] text-gray-500 font-gothamNarrow leading-tight">
+                        My Account
+                      </span>
+                    )}
                   </div>
                   {/* Chevron */}
                   <svg
-                    className={`w-3 h-3 text-gray-400 flex-shrink-0 transition-transform duration-200 ${
+                    className={`w-3 h-3 text-gray-500 flex-shrink-0 transition-transform duration-200 ${
                       isShownDropDown ? "rotate-180" : ""
                     }`}
                     fill="none"
@@ -293,7 +330,7 @@ const ProductHeader = () => {
                   </svg>
                 </button>
 
-                {/* Dropdown panel — identical structure, same polish */}
+                {/* Dropdown panel */}
                 {isShownDropDown && (
                   <div
                     role="menu"
@@ -318,6 +355,9 @@ const ProductHeader = () => {
                       </div>
                     </div>
 
+                    {/* Reward points card */}
+                    <RewardCard points={rewardPoints} />
+
                     {/* Menu items */}
                     <ul role="none" className="p-1.5 flex flex-col gap-0.5">
                       <DropdownItem
@@ -336,12 +376,6 @@ const ProductHeader = () => {
                         to="/baltra-trackingProducts"
                         icon={MdOutlineMedicalServices}
                         label="Service Ticket"
-                        onClick={() => setIsShownDropDown(false)}
-                      />
-                      <DropdownItem
-                        to="/baltra-bulk-quote"
-                        icon={GoStack}
-                        label="Bulk Order History"
                         onClick={() => setIsShownDropDown(false)}
                       />
 
@@ -366,7 +400,7 @@ const ProductHeader = () => {
                         className="h-px bg-slate-100 mx-2 my-0.5"
                       />
 
-                      {/* Logout */}
+                      {/* Logout — extra sub-label */}
                       <li role="menuitem">
                         <button
                           onClick={openLogoutModal}
@@ -393,9 +427,8 @@ const ProductHeader = () => {
                 )}
               </>
             ) : (
-              /* Login button — dark on white */
               <NavLink to="/baltra-account-signin">
-                <div className="flex items-center gap-2 bg-red-600 hover:bg-red-700 rounded-full px-4 py-1.5 text-white cursor-pointer transition-colors shadow-sm">
+                <div className="flex items-center gap-2 bg-gray-900 hover:bg-gray-800 rounded-full px-4 py-1.5 text-white cursor-pointer transition-colors shadow-sm">
                   <HiOutlineUser className="w-4 h-4" />
                   <span className="text-sm font-gothamNarrow font-medium">
                     Login
@@ -407,7 +440,7 @@ const ProductHeader = () => {
         </div>
       </header>
 
-      {/* ── Bottom nav (mobile / tablet) — same clean white ── */}
+      {/* ── Bottom nav (mobile / tablet) ── */}
       <nav className="fixed bottom-0 left-0 right-0 bg-white/95 backdrop-blur-md border-t border-gray-200/80 z-50 lg:hidden">
         <div className="flex items-center justify-around px-2 py-2 max-w-lg mx-auto">
           <BottomNavItem to="/baltra-aboutUs-Page" icon={FaHome} label="Home" />
@@ -441,7 +474,18 @@ const ProductHeader = () => {
                 }`
               }
             >
-              <Avatar customer={customer} size="sm" />
+              {/* Avatar with reward points badge */}
+              <div className="relative">
+                <Avatar customer={customer} size="sm" />
+                {rewardPoints != null && (
+                  <span className="absolute -top-1.5 -right-2 inline-flex items-center gap-0.5 bg-amber-400 text-white text-[8px] font-bold px-1.5 py-0.5 rounded-full leading-none shadow-sm font-gothamNarrow whitespace-nowrap">
+                    <FaStar size={6} />
+                    {rewardPoints > 999
+                      ? `${Math.floor(rewardPoints / 1000)}k`
+                      : rewardPoints}
+                  </span>
+                )}
+              </div>
               <span className="text-[10px] font-semibold font-gothamNarrow tracking-wide mt-0.5">
                 Profile
               </span>

@@ -1,6 +1,6 @@
 import moment from "moment";
 import { enqueueSnackbar } from "notistack";
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { FaSyncAlt, FaTrash } from "react-icons/fa";
 import { FaEye } from "react-icons/fa6";
 import { HiOutlineInformationCircle } from "react-icons/hi2";
@@ -13,6 +13,7 @@ import {
   deleteCustomizedProduct,
 } from "../../../../redux/features/admin/adminSlice";
 import MetaData from "../../../layout/metaData/MetaData";
+import CustomPagination from "../adminPagination/customPagination/CustomPagination";
 import DeletePersonalizationModal from "./DeletePersonalizationModal";
 import UpdateCustomizedModal from "./UpdateCustomizedModal";
 
@@ -82,17 +83,42 @@ const PlacementBadge = ({ value }) => {
   );
 };
 
+// ─── Checkbox ─────────────────────────────────────────────────────────────────
+const Checkbox = ({ checked, indeterminate = false, onChange }) => (
+  <input
+    type="checkbox"
+    checked={checked}
+    ref={(el) => {
+      if (el) el.indeterminate = indeterminate;
+    }}
+    onChange={onChange}
+    onClick={(e) => e.stopPropagation()}
+    className="w-3.5 h-3.5 rounded border-gray-300 text-red-500 focus:ring-red-400 cursor-pointer"
+  />
+);
+
 // ─── Main component ───────────────────────────────────────────────────────────
 const AllPersonalizationProductsList = () => {
   const { loading, error, isError, allCustomizedProducts } = useSelector(
     (state) => state.admin,
   );
+
+  const {
+    page = 1,
+    total_pages = 1,
+    results_per_page,
+  } = useSelector((s) => s.admin.pagination) || {};
+
   const dispatch = useDispatch();
 
   const [selectedCustomizeId, setSelectedCustomizedId] = useState(null);
   const [selectedItem, setSelectedItem] = useState(null);
   const [openCustomizeModal, setOpenCustomizeModal] = useState(false);
   const [selectPlacement, setSelectPlacement] = useState("All");
+
+  // Bulk select state
+  const [selectedIds, setSelectedIds] = useState([]);
+  const [bulkDeleteOpen, setBulkDeleteOpen] = useState(false);
 
   const handleOpenModal = (id) => setSelectedCustomizedId(id);
   const handleCloseModal = () => setSelectedCustomizedId(null);
@@ -104,6 +130,45 @@ const AllPersonalizationProductsList = () => {
   const handleCloseCustomizeModal = () => {
     setOpenCustomizeModal(false);
     setSelectedItem(null);
+  };
+
+  // Single fetch helper so every trigger (filter, page, reset) stays consistent
+  const fetchList = useCallback(
+    (overrides = {}) => {
+      dispatch(
+        allCustomizedPersonalization({
+          placement: selectPlacement === "All" ? "" : selectPlacement,
+          page,
+          results_per_page,
+          ...overrides,
+        }),
+      );
+    },
+    [dispatch, selectPlacement, page, results_per_page],
+  );
+
+  const handlePageChange = useCallback(
+    (newPage) =>
+      dispatch(
+        allCustomizedPersonalization({
+          placement: selectPlacement === "All" ? "" : selectPlacement,
+          page: newPage,
+          results_per_page,
+        }),
+      ),
+    [dispatch, selectPlacement, results_per_page],
+  );
+
+  const handlePlacementChange = (p) => {
+    setSelectPlacement(p);
+    setSelectedIds([]);
+    dispatch(
+      allCustomizedPersonalization({
+        placement: p === "All" ? "" : p,
+        page: 1,
+        results_per_page,
+      }),
+    );
   };
 
   const handleDeleteConfirm = () => {
@@ -118,11 +183,63 @@ const AllPersonalizationProductsList = () => {
     }
   };
 
+  // ── Bulk delete ──────────────────────────────────────────────────────────
+  const handleBulkDeleteConfirm = async () => {
+    await Promise.all(
+      selectedIds.map((id) =>
+        dispatch(
+          deleteCustomizedProduct({
+            personalization_id: id,
+            enqueueSnackbar,
+          }),
+        ),
+      ),
+    );
+    setSelectedIds([]);
+    setBulkDeleteOpen(false);
+  };
+
+  // ── Checkbox helpers ─────────────────────────────────────────────────────
+  const allOnPageSelected =
+    allCustomizedProducts?.length > 0 &&
+    allCustomizedProducts.every((item) => selectedIds.includes(item.id));
+  const someOnPageSelected =
+    allCustomizedProducts?.some((item) => selectedIds.includes(item.id)) &&
+    !allOnPageSelected;
+
+  const toggleSelectAll = () => {
+    if (!allCustomizedProducts?.length) return;
+    if (allOnPageSelected) {
+      // unselect just this page's ids
+      const pageIds = new Set(allCustomizedProducts.map((i) => i.id));
+      setSelectedIds((prev) => prev.filter((id) => !pageIds.has(id)));
+    } else {
+      const pageIds = allCustomizedProducts.map((i) => i.id);
+      setSelectedIds((prev) => Array.from(new Set([...prev, ...pageIds])));
+    }
+  };
+
+  const toggleSelectRow = (id) => {
+    setSelectedIds((prev) =>
+      prev.includes(id) ? prev.filter((x) => x !== id) : [...prev, id],
+    );
+  };
+
+  // ── Full reset: filters, pagination, selections, modals ─────────────────
   const handleReset = () => {
     setSelectPlacement("All");
     setSelectedCustomizedId(null);
     setSelectedItem(null);
-    dispatch(allCustomizedPersonalization({ placement: "" }));
+    setOpenCustomizeModal(false);
+    setSelectedIds([]);
+    setBulkDeleteOpen(false);
+    dispatch(
+      allCustomizedPersonalization({
+        placement: "",
+        page: 1,
+        results_per_page,
+      }),
+    );
   };
 
   useEffect(() => {
@@ -136,13 +253,11 @@ const AllPersonalizationProductsList = () => {
     }
   }, [dispatch, isError]);
 
+  // Initial load only — filter changes are dispatched directly by their handlers
   useEffect(() => {
-    dispatch(
-      allCustomizedPersonalization({
-        placement: selectPlacement === "All" ? "" : selectPlacement,
-      }),
-    );
-  }, [dispatch, selectPlacement]);
+    fetchList({ page: 1 });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   const COLUMNS = [
     "S.N.",
@@ -152,6 +267,7 @@ const AllPersonalizationProductsList = () => {
     "Text",
     "Placement",
     "Font",
+    "Qty",
     "Color",
     "Size",
     "Status",
@@ -198,7 +314,7 @@ const AllPersonalizationProductsList = () => {
               {["All", "horizontal", "vertical"].map((p) => (
                 <button
                   key={p}
-                  onClick={() => setSelectPlacement(p)}
+                  onClick={() => handlePlacementChange(p)}
                   className={`px-2.5 py-1 text-[11px] font-medium tracking-[0.03em] rounded-lg transition-colors capitalize
                     ${
                       selectPlacement === p
@@ -220,6 +336,17 @@ const AllPersonalizationProductsList = () => {
               Reset
             </button>
 
+            {/* Bulk delete — shows only when rows are selected */}
+            {selectedIds.length > 0 && (
+              <button
+                onClick={() => setBulkDeleteOpen(true)}
+                className="inline-flex items-center gap-1.5 px-3 py-1.5 text-[12px] font-medium tracking-[0.02em] text-red-500 border border-red-200 bg-red-50 rounded-lg hover:bg-red-100 transition-colors"
+              >
+                <FaTrash size={10} />
+                Delete {selectedIds.length} selected
+              </button>
+            )}
+
             {/* Result count */}
             <span className="ml-auto text-[11px] text-gray-300 tracking-[0.03em]">
               {allCustomizedProducts?.length ?? 0} request
@@ -232,6 +359,13 @@ const AllPersonalizationProductsList = () => {
             <table className="min-w-full text-[12.5px]">
               <thead>
                 <tr className="bg-gray-50 border-b border-gray-200">
+                  <th className="px-4 py-3 w-8">
+                    <Checkbox
+                      checked={allOnPageSelected}
+                      indeterminate={someOnPageSelected}
+                      onChange={toggleSelectAll}
+                    />
+                  </th>
                   {COLUMNS.map((col) => (
                     <th
                       key={col}
@@ -246,7 +380,7 @@ const AllPersonalizationProductsList = () => {
               <tbody className="divide-y divide-gray-100">
                 {loading ? (
                   <tr>
-                    <td colSpan={12} className="text-center py-10">
+                    <td colSpan={14} className="text-center py-10">
                       <div className="inline-block animate-spin rounded-full h-5 w-5 border-t-2 border-red-500" />
                     </td>
                   </tr>
@@ -255,11 +389,24 @@ const AllPersonalizationProductsList = () => {
                   allCustomizedProducts.map((item, index) => (
                     <tr
                       key={item.id}
-                      className="hover:bg-[#FFF0E5]/60 transition-colors cursor-pointer"
+                      className={`hover:bg-[#FFF0E5]/60 transition-colors cursor-pointer ${
+                        selectedIds.includes(item.id) ? "bg-[#FFF6EF]" : ""
+                      }`}
                     >
+                      {/* Checkbox */}
+                      <td className="px-4 py-2.5">
+                        <Checkbox
+                          checked={selectedIds.includes(item.id)}
+                          onChange={() => toggleSelectRow(item.id)}
+                        />
+                      </td>
+
                       {/* S.N. */}
                       <td className="px-4 py-2.5 text-gray-400 tabular-nums w-10">
-                        {index + 1}
+                        {(page - 1) *
+                          (results_per_page || allCustomizedProducts.length) +
+                          index +
+                          1}
                       </td>
 
                       {/* Customer */}
@@ -305,9 +452,16 @@ const AllPersonalizationProductsList = () => {
                       {/* Font style */}
                       <td
                         className="px-4 py-2.5 text-gray-500 whitespace-nowrap tracking-[0.01em]"
-                        style={{ fontFamily: item.font_style ?? "inherit" }}
+                        style={{ fontFamily: item.font_style || "inherit" }}
                       >
                         {item.font_style || (
+                          <span className="text-gray-300">—</span>
+                        )}
+                      </td>
+
+                      {/* Quantity */}
+                      <td className="px-4 py-2.5 text-gray-500 whitespace-nowrap tracking-[0.01em]">
+                        {item.quantity || (
                           <span className="text-gray-300">—</span>
                         )}
                       </td>
@@ -377,7 +531,7 @@ const AllPersonalizationProductsList = () => {
                   ))
                 ) : (
                   <tr>
-                    <td colSpan={12} className="text-center py-14">
+                    <td colSpan={14} className="text-center py-14">
                       <div className="flex flex-col items-center gap-2">
                         <div className="w-8 h-8 rounded-full bg-gray-100 flex items-center justify-center">
                           <MdOutlineSearch
@@ -402,6 +556,20 @@ const AllPersonalizationProductsList = () => {
             </table>
           </div>
 
+          {/* Pagination */}
+          {total_pages > 1 && (
+            <div className="flex items-center justify-between px-5 py-4 border-t border-slate-100 bg-slate-50/50">
+              <p className="text-xs text-slate-400 font-medium">
+                Page {page} of {total_pages}
+              </p>
+              <CustomPagination
+                currentPage={page}
+                totalPages={total_pages}
+                onPageChange={handlePageChange}
+              />
+            </div>
+          )}
+
           {/* Footer */}
           <div className="px-4 py-3 border-t border-gray-100">
             <span className="text-[11px] text-gray-300 tracking-[0.03em]">
@@ -417,6 +585,14 @@ const AllPersonalizationProductsList = () => {
         <UpdateCustomizedModal
           item={selectedItem}
           onClose={handleCloseCustomizeModal}
+        />
+      )}
+
+      {/* Bulk delete confirmation — reuse the same modal component */}
+      {bulkDeleteOpen && (
+        <DeletePersonalizationModal
+          onClose={() => setBulkDeleteOpen(false)}
+          onConfirm={handleBulkDeleteConfirm}
         />
       )}
     </>

@@ -921,12 +921,20 @@ export const deleteProductCatalog = createAsyncThunk(
 );
 
 //get all Customized Products
+// get all Customized Products
 export const allCustomizedPersonalization = createAsyncThunk(
   "/admin/allCustomizedPersonalization",
-  async ({ placement } = {}, { rejectWithValue }) => {
+  async (
+    { placement, status, page = 1, results_per_page } = {},
+    { rejectWithValue },
+  ) => {
     try {
-      let queryParams = new URLSearchParams();
+      const queryParams = new URLSearchParams();
       if (placement) queryParams.append("placement", placement);
+      if (status) queryParams.append("status", status);
+      if (page) queryParams.append("page", page);
+      if (results_per_page)
+        queryParams.append("results_per_page", results_per_page);
 
       const response = await API.get(
         `/customer/getpersonalizedata${
@@ -1305,6 +1313,11 @@ const initialState = {
     results_per_page: null,
   },
   productPagination: {
+    page: null,
+    total_pages: null,
+    results_per_page: null,
+  },
+  pagination: {
     page: null,
     total_pages: null,
     results_per_page: null,
@@ -2123,6 +2136,7 @@ const adminSlice = createSlice({
       .addCase(allCustomizedPersonalization.fulfilled, (state, action) => {
         state.loading = false;
         state.allCustomizedProducts = action.payload.data;
+        state.pagination = action.payload.pagination;
       })
       .addCase(allCustomizedPersonalization.rejected, (state, action) => {
         state.loading = false;
