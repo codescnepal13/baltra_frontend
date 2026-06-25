@@ -248,12 +248,12 @@ const BaltraModal = () => {
                 </p>
                 <div className="rounded-xl overflow-hidden border border-white/15 shadow-lg shadow-black/20 ring-1 ring-white/10">
                   <iframe
-                    title="Balajee Group location"
-                    src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d3532.3469078794533!2d85.2820953!3d27.7065734!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x39eb1920f0ff3323%3A0xde5c22ad581e394!2sBalajee%20Group!5e0!3m2!1sen!2snp!4v1782295309179!5m2!1sen!2snp"
+                    title="Baltra Retail Outlet (BRO) - Teku"
+                    src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d3532.695443150361!2d85.30116307537084!3d27.695806426000708!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x39eb193834c1bd31%3A0x33cd27bbc2d47173!2sBaltra%20retail%20outlet%20(BRO)%20-%20Teku!5e0!3m2!1sen!2snp!4v1782383944652!5m2!1sen!2snp"
                     width="100%"
                     height="200"
                     style={{ border: 0, display: "block" }}
-                    allowFullScreen=""
+                    allowFullScreen
                     loading="lazy"
                     referrerPolicy="strict-origin-when-cross-origin"
                   />

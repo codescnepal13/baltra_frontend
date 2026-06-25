@@ -98,14 +98,10 @@ const CatalogCard = memo(
       transition={{ duration: 0.4, ease: "easeOut" }}
       className="flex flex-col h-full items-center gap-4"
       style={{
-        background: "rgba(15, 10, 10, 0.72)",
-        border: "1px solid rgba(192, 22, 31, 0.22)",
-        borderRadius: "4px",
         padding: "14px",
-        backdropFilter: "blur(6px)",
       }}
     >
-      {/* Catalog Image */}
+      {/* Catalog Image — no border, no frame */}
       <div
         className="relative group cursor-pointer w-full flex-1 min-h-0"
         onClick={() => onPreview(catalog)}
@@ -114,11 +110,7 @@ const CatalogCard = memo(
           src={catalog.catalogue_image}
           alt={catalog.catalogue_type}
           className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-[1.02]"
-          style={{
-            boxShadow: "0 8px 32px rgba(0,0,0,0.55), 0 2px 8px rgba(0,0,0,0.3)",
-            padding: "4px",
-            background: "#fff",
-          }}
+          style={{ border: "none", outline: "none", boxShadow: "none" }}
           loading="lazy"
         />
         {/* Red hover overlay */}
@@ -138,7 +130,7 @@ const CatalogCard = memo(
       {/* Title */}
       <h3
         className="text-center text-sm sm:text-base font-medium tracking-wide font-gothamNarrow w-full"
-        style={{ color: "#F2EAEA", minHeight: "2.5rem" }}
+        style={{ color: "#000000", minHeight: "2.5rem" }}
       >
         {catalog.catalogue_type}
       </h3>
@@ -241,8 +233,9 @@ const BaltraCatalog = () => {
     <>
       <MetaData title="Baltra Products Catalog" />
 
+      {/* Page wrapper with bg image */}
       <div className="relative min-h-screen">
-        {/* Background image */}
+        {/* Background image — full-bleed, no dim, matches About page pattern */}
         <img
           src={ArtCoverImg}
           alt=""
@@ -251,9 +244,6 @@ const BaltraCatalog = () => {
           style={{ maxWidth: "none" }}
           loading="lazy"
         />
-
-        {/* Dark red–black gradient scrim over background */}
-        <div className="absolute inset-0 z-0" />
 
         {/* Header */}
         <div className="absolute top-0 left-0 w-full z-50">
@@ -264,48 +254,13 @@ const BaltraCatalog = () => {
         </div>
 
         {/* Page Content */}
-        <main className="relative z-10 px-4 sm:px-8 md:px-16 lg:px-24 pt-20 md:pt-28 pb-16 min-h-screen">
-          {/* ── Section heading ── */}
-          <div className="mb-10 md:mb-14 text-center">
-            <h1 className="text-3xl sm:text-4xl md:text-5xl font-bold tracking-tight font-gothamNarrow">
-              <span className="text-black">Baltra</span>{" "}
-              <span
-                className="text-red-700"
-                style={{
-                  textShadow: "0 2px 24px rgba(192,22,31,0.35)",
-                }}
-              >
-                Catalogs
-              </span>
-            </h1>
-
-            {/* Red underline accent */}
-            <div className="flex justify-center mt-3">
-              <div
-                style={{
-                  width: 64,
-                  height: 3,
-                  background:
-                    "linear-gradient(90deg, #8B0000, #C0161F, #FF4D55)",
-                  borderRadius: 3,
-                }}
-              />
-            </div>
-
-            <p
-              className="mt-4 text-sm tracking-wide max-w-xl mx-auto"
-              style={{ color: "#C47A7A" }}
-            >
-              Browse and download the full range of Baltra household &amp;
-              kitchen solutions
-            </p>
-          </div>
-
-          {/* ── Grid ── */}
+        <main className="relative z-10 px-4 sm:px-8 md:px-16 lg:px-24 pt-20 md:pt-24 pb-16 min-h-screen">
+          {/* Soft scrim — keeps catalog cards readable over the bright image */}
+          <div className="absolute inset-0 bg-white/20 -z-10" />
           {loading ? (
             <CatalogSkeleton />
           ) : allProductsCatalogList?.length > 0 ? (
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 lg:gap-8">
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-8 lg:gap-10">
               {allProductsCatalogList.map((catalog, index) => (
                 <motion.div
                   key={catalog.id}
@@ -316,7 +271,7 @@ const BaltraCatalog = () => {
                     delay: index * 0.07,
                     ease: "easeOut",
                   }}
-                  className="h-full"
+                  className="h-full" // ← add this
                 >
                   <CatalogCard
                     catalog={catalog}
@@ -333,7 +288,7 @@ const BaltraCatalog = () => {
               <span className="text-4xl opacity-20">📂</span>
               <p
                 className="text-sm tracking-widest uppercase"
-                style={{ color: "#C47A7A" }}
+                style={{ color: "#6A90A0" }}
               >
                 No catalogs available
               </p>
@@ -341,8 +296,9 @@ const BaltraCatalog = () => {
           )}
         </main>
       </div>
+      {/* end page wrapper */}
 
-      {/* PDF Modal */}
+      {/* PDF Modal — outside wrapper so it overlays the full viewport */}
       <PdfModal
         isOpen={modalOpen}
         onClose={handleCloseModal}
