@@ -65,24 +65,32 @@ const BaltraSubCategorySlider = ({ subCategoryProducts = [] }) => {
             <AiOutlineLeftCircle size={24} md={28} />
           </button>
 
+          {/*
+            Fixed-height row so every slide lines up regardless of
+            how long the sub-category name is. Each item is a flex
+            column with a fixed-size image slot on top and a
+            fixed-height text slot below, both centered.
+          */}
           <div
-            className="flex overflow-x-scroll scrollbar-hide px-4 sm:px-6"
+            className="flex overflow-x-scroll scrollbar-hide px-4 sm:px-6 items-stretch"
             ref={sliderRef}
           >
             {subCategoryProducts && subCategoryProducts.length > 0 ? (
               subCategoryProducts.map((item, index) => (
                 <div
                   key={item.id}
-                  className={`flex-none w-1/3 sm:w-1/4 md:w-[14.28%] px-2 md:px-4 cursor-pointer ${
+                  className={`flex-none w-1/3 sm:w-1/4 md:w-[14.28%] px-2 md:px-4 cursor-pointer flex flex-col items-center justify-start h-[120px] sm:h-[135px] md:h-[150px] ${
                     index === subCategoryProducts.length - 1 ? "mr-4" : ""
                   }`}
                   onClick={() => handleCardClick(item)}
                 >
-                  <BaltraSubCategorySliderCard
-                    item={item}
-                    index={index}
-                    isSelected={selectedSubCategoryId === item.id}
-                  />
+                  <div className="w-full h-full flex flex-col items-center justify-between">
+                    <BaltraSubCategorySliderCard
+                      item={item}
+                      index={index}
+                      isSelected={selectedSubCategoryId === item.id}
+                    />
+                  </div>
                 </div>
               ))
             ) : (
