@@ -487,6 +487,31 @@ export const allBaltraProducts = createAsyncThunk(
   },
 );
 
+//bulkUploadBaltraProducts
+export const bulkUploadBaltraProducts = createAsyncThunk(
+  "/admin-bulkUploadProducts",
+  async ({ file, enqueueSnackbar }, { rejectWithValue }) => {
+    try {
+      const formData = new FormData();
+      formData.append("file", file);
+
+      const response = await API.post(`/products/bulkproductupload`, formData, {
+        headers: {
+          "Content-Type": "multipart/form-data",
+        },
+      });
+
+      enqueueSnackbar(response?.data?.message || "Bulk added successfully!", {
+        variant: "success",
+      });
+
+      return response.data;
+    } catch (error) {
+      return rejectWithValue({ message: getErrorMessage(error) });
+    }
+  },
+);
+
 //singleProductView
 export const singleProductView = createAsyncThunk(
   "/admin-singleProductView",
@@ -2286,6 +2311,17 @@ const adminSlice = createSlice({
       })
       .addCase(deletewarrantyComplaintsMultiple.rejected, (state, action) => {
         state.isProcessing = false;
+        state.error = action.payload.message;
+      })
+      .addCase(bulkUploadBaltraProducts.pending, (state) => {
+        state.isLoading = true;
+      })
+      .addCase(bulkUploadBaltraProducts.fulfilled, (state, action) => {
+        state.isLoading = false;
+        state.addProduct = action.payload;
+      })
+      .addCase(bulkUploadBaltraProducts.rejected, (state, action) => {
+        state.isLoading = false;
         state.error = action.payload.message;
       });
   },

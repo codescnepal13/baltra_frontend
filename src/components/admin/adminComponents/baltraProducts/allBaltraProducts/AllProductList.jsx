@@ -10,22 +10,24 @@ import {
   FaTrash,
   FaTrashAlt,
 } from "react-icons/fa";
+import { RiFileExcel2Fill } from "react-icons/ri";
 import { useDispatch, useSelector } from "react-redux";
 import { Link } from "react-router-dom";
 import {
   allBaltraProducts,
+  bulkUploadBaltraProducts,
   clearAdminError,
   deleteBaltraProduct,
   deleteMultipleProduct,
 } from "../../../../../redux/features/admin/adminSlice";
+import ExcelUploadLayout from "../../../../layout/excelLayoutUpload/ExcelUploadLayout";
 import MetaData from "../../../../layout/metaData/MetaData";
 import ProductPagination from "../../adminPagination/productPagination/ProductPagination";
 import ProductDeleteModal from "../productDeleteModal/ProductDeleteModal";
 
 const AllProductList = () => {
-  const { loading, error, allProducts, dropdownCategories } = useSelector(
-    (state) => state.admin,
-  );
+  const { loading, error, allProducts, dropdownCategories, isLoading } =
+    useSelector((state) => state.admin);
   const productPagination =
     useSelector((state) => state.admin.productPagination) || {};
   const { page, total_pages, results_per_page } = productPagination;
@@ -34,6 +36,7 @@ const AllProductList = () => {
   const [searchProductName, setSearchProductName] = useState("");
   const [selectedProductsId, setSelectedProductsId] = useState([]);
   const [selectedProductId, setSelectedProductId] = useState(null);
+  const [showUploadModal, setShowUploadModal] = useState(false);
 
   const handleSelectAll = (event) => {
     if (event.target.checked) {
@@ -65,6 +68,23 @@ const AllProductList = () => {
       setSelectedProductsId([]);
     }
   };
+
+  // ─── Bulk upload ────────────────────────────────────────────────────────────
+  // ✅ pass `file` directly (not formData), and replace fetchData with dispatch
+  const handleBulkUpload = useCallback(
+    async (file) => {
+      try {
+        await dispatch(
+          bulkUploadBaltraProducts({ file, enqueueSnackbar }),
+        ).unwrap();
+        setShowUploadModal(false);
+        dispatch(allBaltraProducts({ page: 1 }));
+      } catch {
+        /* error already handled by action via rejectWithValue */
+      }
+    },
+    [dispatch],
+  );
 
   const handleReset = () => {
     setSearchProductName("");
@@ -137,12 +157,23 @@ const AllProductList = () => {
               Manage and monitor your product catalogue
             </p>
           </div>
-          <Link to="/baltra-admin-dashboard/add-product">
-            <button className="inline-flex items-center gap-2 bg-red-600 hover:bg-red-700 active:scale-95 text-white text-sm font-semibold px-4 py-2.5 rounded-xl shadow-md shadow-red-200 transition-all duration-150">
-              <FaPlusCircle className="text-base" />
-              Add Product
+
+          <div className="flex items-center gap-3">
+            <button
+              onClick={() => setShowUploadModal(true)}
+              className="inline-flex items-center gap-2 bg-emerald-600 hover:bg-emerald-700 active:scale-95 text-white text-sm font-semibold px-4 py-2.5 rounded-xl shadow-md shadow-emerald-200 transition-all duration-150"
+            >
+              <RiFileExcel2Fill className="text-base" />
+              Bulk Upload
             </button>
-          </Link>
+
+            <Link to="/baltra-admin-dashboard/add-product">
+              <button className="inline-flex items-center gap-2 bg-red-600 hover:bg-red-700 active:scale-95 text-white text-sm font-semibold px-4 py-2.5 rounded-xl shadow-md shadow-red-200 transition-all duration-150">
+                <FaPlusCircle className="text-base" />
+                Add Product
+              </button>
+            </Link>
+          </div>
         </div>
 
         {/* ── Card ── */}
@@ -409,6 +440,14 @@ const AllProductList = () => {
           )}
         </div>
       </div>
+
+      {showUploadModal && (
+        <ExcelUploadLayout
+          onClose={() => setShowUploadModal(false)}
+          onBulkUpload={handleBulkUpload}
+          isLoading={isLoading}
+        />
+      )}
     </>
   );
 };
