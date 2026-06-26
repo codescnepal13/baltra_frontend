@@ -7,7 +7,7 @@ import { IoCloudUploadOutline } from "react-icons/io5";
 import ReactQuill from "react-quill";
 import "react-quill/dist/quill.snow.css";
 import { useDispatch, useSelector } from "react-redux";
-import { Link, useParams } from "react-router-dom";
+import { Link, useNavigate, useParams } from "react-router-dom";
 import {
   clearAdminError,
   editProduct,
@@ -226,6 +226,7 @@ const EditProduct = () => {
   );
   const dispatch = useDispatch();
   const { id } = useParams();
+  const navigate = useNavigate();
 
   const [addEditValue, setEditProductValue] = useState({
     name: "",
@@ -442,7 +443,9 @@ const EditProduct = () => {
     specification_images.forEach((p) =>
       formData.append("specification_images", p),
     );
-    dispatch(editProduct({ product_id: id, formData, enqueueSnackbar }));
+    dispatch(
+      editProduct({ product_id: id, formData, enqueueSnackbar, navigate }),
+    );
   };
 
   useEffect(() => {

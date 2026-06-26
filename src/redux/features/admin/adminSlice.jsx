@@ -560,7 +560,10 @@ export const singleProductById = createAsyncThunk(
 //edit Product
 export const editProduct = createAsyncThunk(
   "/admin/edit-Product",
-  async ({ product_id, formData, enqueueSnackbar }, { rejectWithValue }) => {
+  async (
+    { product_id, formData, enqueueSnackbar, navigate },
+    { rejectWithValue },
+  ) => {
     try {
       const response = await API.put(
         `/products/updateproduct/${product_id}`,
@@ -569,6 +572,7 @@ export const editProduct = createAsyncThunk(
       enqueueSnackbar(response.data.message || "product edited successFully", {
         variant: "success",
       });
+      navigate(`/baltra-admin-dashboard/all-products-list`);
 
       return response.data;
     } catch (error) {

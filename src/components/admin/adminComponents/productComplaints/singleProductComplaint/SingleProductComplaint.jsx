@@ -107,6 +107,9 @@ const SingleProductComplaint = () => {
     };
     dispatch(addCrmContent({ CRMConfig, enqueueSnackbar }))
       .unwrap()
+      .then(() => {
+        dispatch(getSingleProductComplaint({ complaint_id: id }));
+      })
       .catch((err) => console.error("Submission failed:", err));
   };
 
