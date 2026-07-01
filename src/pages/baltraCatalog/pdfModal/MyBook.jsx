@@ -1,13 +1,14 @@
 import * as pdfjsLib from "pdfjs-dist";
+import pdfjsWorker from "pdfjs-dist/build/pdf.worker.min.mjs?url";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { GrCaretNext, GrCaretPrevious } from "react-icons/gr";
 import HTMLFlipBook from "react-pageflip";
 import flipSound from "../../../assets/videos/flipSound.mp3";
 
-pdfjsLib.GlobalWorkerOptions.workerSrc = new URL(
-  "pdfjs-dist/build/pdf.worker.min.mjs",
-  import.meta.url,
-).toString();
+// Vite's `?url` import resolves to the final built asset URL at build time,
+// with correct Content-Type served automatically — avoids both the CDN
+// version-availability issue and the dynamic-import MIME issue on Android.
+pdfjsLib.GlobalWorkerOptions.workerSrc = pdfjsWorker;
 
 // ─── Render one PDF page → PNG data-URL, scaled for maximum sharpness ────────
 async function renderPageToDataUrl(pdfDoc, pageNum) {
