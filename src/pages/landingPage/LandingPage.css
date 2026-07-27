@@ -22,7 +22,7 @@
   );
 }
 
-/* ── EXIT ANIMATION (slow, smooth upward) ── */
+/* ── EXIT ANIMATION ── */
 @keyframes baltraExitUp {
   0% {
     transform: translateY(0);
@@ -104,7 +104,6 @@
   width: 100%;
 }
 
-/* ── EYEBROW ── */
 .baltra-eyebrow {
   font-family: "Barlow Condensed", sans-serif;
   font-size: 11px;
@@ -115,7 +114,6 @@
   opacity: 0;
 }
 
-/* ── "WELCOME TO" — big, bold, original feel ── */
 .baltra-welcome {
   font-family: "Barlow Condensed", sans-serif;
   font-weight: 800;
@@ -130,7 +128,6 @@
   opacity: 0;
 }
 
-/* ── BALTRA 3D NAME ── */
 .baltra-name {
   font-family: "Barlow Condensed", sans-serif;
   font-weight: 900;
@@ -139,7 +136,6 @@
   letter-spacing: -0.02em;
   text-transform: uppercase;
   color: #fff;
-  /* Multi-layer 3D depth shadow */
   text-shadow:
     1px 1px 0 rgba(155, 18, 18, 0.9),
     2px 2px 0 rgba(135, 13, 13, 0.85),
@@ -151,10 +147,8 @@
     0 18px 44px rgba(0, 0, 0, 0.48);
   position: relative;
   opacity: 0;
-  /* Shimmer via pseudo – handled in animation classes */
 }
 
-/* Shimmer sweep across BALTRA */
 .baltra-name::after {
   content: "BALTRA";
   position: absolute;
@@ -173,7 +167,6 @@
   animation: baltraShimmer 3.8s linear 1.5s infinite;
 }
 
-/* ── DIVIDER ── */
 .baltra-divider {
   width: 0;
   height: 1.5px;
@@ -185,7 +178,6 @@
   width: min(400px, 62%);
 }
 
-/* ── SUBTITLE (3D bold) ── */
 .baltra-subtitle {
   font-family: "Barlow Condensed", sans-serif;
   font-weight: 700;
@@ -201,7 +193,6 @@
   opacity: 0;
 }
 
-/* ── BODY TEXT ── */
 .baltra-body {
   font-family: "Barlow", sans-serif;
   font-size: clamp(12px, 1.4vw, 14px);
@@ -212,7 +203,6 @@
   opacity: 0;
 }
 
-/* ── STAT PILLS ── */
 .baltra-pills {
   display: flex;
   flex-wrap: wrap;
@@ -241,7 +231,7 @@
   font-weight: 700;
 }
 
-/* ── PRODUCT IMAGES ── */
+/* ── PRODUCT IMAGES SECTION ── */
 .baltra-imgs {
   position: relative;
   z-index: 2;
@@ -256,15 +246,49 @@
   justify-content: center;
   align-items: flex-end;
   gap: clamp(12px, 3vw, 32px);
+  perspective: 1600px;
+  position: relative;
 }
+
+.baltra-img-wrap {
+  position: relative;
+  display: inline-flex;
+}
+
+/* ── Tilt wrapper (mouse-tracked 3D) ── */
+.baltra-img-tilt {
+  position: relative;
+  cursor: pointer;
+  transform-style: preserve-3d;
+  will-change: transform;
+  outline: none;
+}
+.baltra-img-tilt:focus-visible {
+  outline: 2px solid rgba(255, 255, 255, 0.7);
+  outline-offset: 6px;
+  border-radius: 8px;
+}
+.baltra-img-glare {
+  position: absolute;
+  inset: 0;
+  z-index: 2;
+  pointer-events: none;
+  border-radius: 12px;
+  mix-blend-mode: overlay;
+}
+
 .baltra-img {
+  position: relative;
+  z-index: 1;
+  display: block;
   height: auto;
   filter: drop-shadow(0 22px 42px rgba(0, 0, 0, 0.5));
   transition: filter 0.4s ease;
 }
-.baltra-img:hover {
+.baltra-img-tilt:hover .baltra-img {
   filter: drop-shadow(0 28px 56px rgba(0, 0, 0, 0.6)) brightness(1.06);
 }
+
 .baltra-img--left {
   width: clamp(72px, 10vw, 108px);
   transform: rotate(-8deg);
@@ -279,14 +303,14 @@
   transform-origin: bottom center;
 }
 
-/* Float animations */
-.baltra-float-a {
+/* Idle float animations */
+.baltra-img-tilt--left {
   animation: baltraFloatA 4.2s ease-in-out infinite;
 }
-.baltra-float-b {
+.baltra-img-tilt--center {
   animation: baltraFloatB 4.2s ease-in-out 0.85s infinite;
 }
-.baltra-float-c {
+.baltra-img-tilt--right {
   animation: baltraFloatC 4.2s ease-in-out 1.7s infinite;
 }
 
@@ -398,6 +422,109 @@
 }
 
 /* ═══════════════════════════════════════════════
+   FULLSCREEN SHOWCASE (click-open overlay)
+   ═══════════════════════════════════════════════ */
+
+.baltra-showcase {
+  position: fixed;
+  inset: 0;
+  z-index: 100;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(10, 2, 2, 0.72);
+  backdrop-filter: blur(14px) saturate(120%);
+}
+
+.baltra-showcase__spotlight {
+  position: absolute;
+  inset: 0;
+  background: radial-gradient(
+    circle at 50% 45%,
+    rgba(255, 150, 100, 0.22) 0%,
+    transparent 60%
+  );
+  pointer-events: none;
+}
+
+.baltra-showcase__stage {
+  position: relative;
+  display: flex;
+  align-items: center;
+  gap: clamp(24px, 6vw, 72px);
+  padding: 24px;
+  max-width: 1000px;
+  width: 100%;
+  flex-wrap: wrap;
+  justify-content: center;
+}
+
+.baltra-showcase__img {
+  width: clamp(220px, 32vw, 380px);
+  filter: drop-shadow(0 40px 80px rgba(0, 0, 0, 0.6));
+}
+
+.baltra-showcase__card {
+  max-width: 340px;
+  text-align: left;
+  background: rgba(255, 255, 255, 0.07);
+  border: 1px solid rgba(255, 255, 255, 0.16);
+  border-radius: 20px;
+  padding: 28px 30px;
+  backdrop-filter: blur(10px);
+}
+
+.baltra-showcase__eyebrow {
+  display: block;
+  font-family: "Barlow Condensed", sans-serif;
+  font-size: 11px;
+  letter-spacing: 0.22em;
+  text-transform: uppercase;
+  color: rgba(255, 255, 255, 0.5);
+  margin-bottom: 8px;
+}
+
+.baltra-showcase__title {
+  font-family: "Barlow Condensed", sans-serif;
+  font-weight: 800;
+  font-size: clamp(24px, 3.4vw, 34px);
+  color: #fff;
+  text-transform: uppercase;
+  margin: 0 0 12px;
+}
+
+.baltra-showcase__desc {
+  font-family: "Barlow", sans-serif;
+  font-size: 14px;
+  line-height: 1.7;
+  color: rgba(255, 255, 255, 0.68);
+  margin: 0;
+}
+
+.baltra-showcase__close {
+  position: absolute;
+  top: 28px;
+  right: 28px;
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  background: rgba(255, 255, 255, 0.08);
+  color: #fff;
+  font-size: 22px;
+  line-height: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  z-index: 3;
+  transition: background 0.2s ease;
+}
+.baltra-showcase__close:hover {
+  background: rgba(255, 255, 255, 0.18);
+}
+
+/* ═══════════════════════════════════════════════
    KEYFRAMES
    ═══════════════════════════════════════════════ */
 
@@ -480,24 +607,8 @@
   }
 }
 
-/* Exit — long, slow, cinematic upward slide */
-@keyframes baltraExitUp {
-  0% {
-    transform: translateY(0);
-    opacity: 1;
-  }
-  20% {
-    transform: translateY(-14px);
-    opacity: 1;
-  }
-  100% {
-    transform: translateY(-100vh);
-    opacity: 0;
-  }
-}
-
 /* ═══════════════════════════════════════════════
-   ANIMATION UTILITY CLASSES
+   ANIMATION UTILITY CLASSES (scroll-in reveals)
    ═══════════════════════════════════════════════ */
 
 .anim-fadein {
@@ -540,5 +651,31 @@
   }
   .baltra-btn {
     padding: 13px 30px;
+  }
+  .baltra-showcase__stage {
+    flex-direction: column;
+    text-align: center;
+  }
+  .baltra-showcase__card {
+    text-align: center;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .baltra-img-tilt {
+    transform: none !important;
+    animation: none !important;
+  }
+  .anim-fadein,
+  .anim-riseup,
+  .anim-riseup-delay,
+  .anim-fadeup-d2,
+  .anim-fadeup-d3,
+  .anim-fadeup-d4,
+  .anim-fadeup-d5,
+  .anim-fadein-d1 {
+    animation-duration: 0.01ms !important;
+    animation-delay: 0s !important;
+    opacity: 1;
   }
 }
