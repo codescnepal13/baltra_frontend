@@ -187,7 +187,7 @@ const Footer = () => {
               info@balajeenp.com
             </a>
             <a
-              href="tel:+97715970088"
+              href="tel:01-5970088"
               className="
                 relative flex items-center gap-2 text-gray-400 text-sm mb-2 w-fit
                 font-gothamNarrow transition-colors duration-200 hover:text-white
@@ -198,7 +198,22 @@ const Footer = () => {
               "
             >
               <AiOutlinePhone className="flex-shrink-0" />
-              +977-15970088
+              01-5970088
+            </a>
+
+            <a
+              href="tel:01-5971595"
+              className="
+                relative flex items-center gap-2 text-gray-400 text-sm mb-2 w-fit
+                font-gothamNarrow transition-colors duration-200 hover:text-white
+                after:absolute after:left-0 after:bottom-0
+                after:h-[1px] after:w-0 after:bg-white
+                after:transition-all after:duration-300
+                hover:after:w-full
+              "
+            >
+              <AiOutlinePhone className="flex-shrink-0" />
+              01-5971595
             </a>
           </div>
         </div>

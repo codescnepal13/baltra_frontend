@@ -4,6 +4,11 @@ import { enqueueSnackbar } from "notistack";
 import { useCallback, useEffect, useState } from "react";
 import { FaArrowRight } from "react-icons/fa";
 import { GoTrash } from "react-icons/go";
+import {
+  HiOutlineCalendar,
+  HiOutlineHashtag,
+  HiOutlineTag,
+} from "react-icons/hi";
 import { useDispatch, useSelector } from "react-redux";
 import { Link, useNavigate } from "react-router-dom";
 import {
@@ -15,7 +20,13 @@ import AddRegisteredComplaintModal from "../userRegisteredComplaint/AddRegistere
 import CustomerAddSkeleton from "./customerAddSkeleton/CustomerAddSkeleton";
 import DeletePopUpModal from "./deleteModal/DeletePopUpModal";
 
-const RippleButton = ({ label, rippleColor, onClick, children }) => {
+const RippleButton = ({
+  label,
+  rippleColor,
+  onClick,
+  children,
+  variant = "secondary",
+}) => {
   const [ripplePosition, setRipplePosition] = useState({ x: 0, y: 0 });
   const [isHovered, setIsHovered] = useState(false);
 
@@ -31,17 +42,23 @@ const RippleButton = ({ label, rippleColor, onClick, children }) => {
     setIsHovered(false);
   };
 
+  const isPrimary = variant === "primary";
+
   return (
     <motion.button
       whileTap={{ scale: 0.97 }}
-      className="w-full py-3 border border-[#d2d0d0] flex justify-center items-center relative overflow-hidden rounded-lg"
+      className={`w-full py-2.5 flex justify-center items-center relative overflow-hidden rounded-xl transition-colors ${
+        isPrimary
+          ? "bg-red-600 hover:bg-red-700"
+          : "border border-gray-200 bg-white hover:border-gray-300"
+      }`}
       onMouseEnter={handleMouseEnter}
       onMouseLeave={handleMouseLeave}
       onClick={onClick}
     >
       {/* Ripple Effect */}
       <AnimatePresence>
-        {isHovered && (
+        {isHovered && !isPrimary && (
           <motion.div
             className="absolute rounded-full"
             style={{
@@ -52,42 +69,50 @@ const RippleButton = ({ label, rippleColor, onClick, children }) => {
               transform: "translate(-50%, -50%)",
               backgroundColor: rippleColor,
             }}
-            animate={{
-              width: 1500,
-              height: 700,
-              opacity: 1,
-            }}
-            exit={{
-              opacity: 0,
-              transition: { duration: 0.5 },
-            }}
-            transition={{
-              duration: 0.5,
-              ease: "easeInOut",
-            }}
+            animate={{ width: 1500, height: 700, opacity: 1 }}
+            exit={{ opacity: 0, transition: { duration: 0.5 } }}
+            transition={{ duration: 0.5, ease: "easeInOut" }}
           />
         )}
       </AnimatePresence>
 
-      {/* Button Text and Children */}
       <span
-        className={`relative z-10 text-center text-sm sm:text-base font-normal font-gothamNarrow flex items-center transition-colors ${
-          isHovered ? "text-white" : "text-black"
+        className={`relative z-10 text-center text-sm sm:text-[13.5px] font-medium font-gothamNarrow flex items-center gap-1.5 transition-colors ${
+          isPrimary ? "text-white" : isHovered ? "text-white" : "text-gray-700"
         }`}
       >
         {label}
-        {children && <span className="ml-2">{children}</span>}
+        {children}
       </span>
     </motion.button>
   );
 };
 
 const STATUS_STYLES = {
-  Pending: "bg-gray-600",
-  Approved: "bg-green-600",
-  Discount: "bg-amber-600",
-  Rejected: "bg-red-600",
+  Pending: "bg-gray-100 text-gray-700 ring-1 ring-gray-200",
+  Approved: "bg-emerald-50 text-emerald-700 ring-1 ring-emerald-200",
+  Discount: "bg-amber-50 text-amber-700 ring-1 ring-amber-200",
+  Rejected: "bg-red-50 text-red-700 ring-1 ring-red-200",
 };
+
+const STATUS_DOT = {
+  Pending: "bg-gray-400",
+  Approved: "bg-emerald-500",
+  Discount: "bg-amber-500",
+  Rejected: "bg-red-500",
+};
+
+const DetailRow = ({ icon, label, value }) => (
+  <div className="flex items-center justify-between gap-3 py-2 border-b border-gray-50 last:border-0">
+    <span className="flex items-center gap-1.5 text-[13px] text-gray-400 font-gothamNarrow shrink-0">
+      {icon}
+      {label}
+    </span>
+    <span className="text-[13px] font-semibold text-gray-800 text-right truncate font-gothamNarrow">
+      {value || "—"}
+    </span>
+  </div>
+);
 
 const UserAllProducts = () => {
   const { isLoading, error, customerAddedList } = useSelector(
@@ -172,24 +197,21 @@ const UserAllProducts = () => {
             </p>
 
             {customerAddedList && customerAddedList.length > 0 ? (
-              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5 sm:gap-6 lg:gap-8 items-stretch">
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 sm:gap-7 lg:gap-8 items-stretch">
                 {customerAddedList.map((customer) => (
                   <motion.div
                     key={customer.id}
-                    whileHover={{
-                      boxShadow:
-                        "0px 0px 10px rgba(245, 222, 12, 0.5), 0px 4px 10px rgba(223, 98, 98, 0.5)",
-                      y: -2,
-                    }}
+                    whileHover={{ y: -4 }}
                     transition={{ duration: 0.2, ease: "easeInOut" }}
-                    className="relative w-full h-full border border-gray-200 bg-white rounded-2xl p-4 sm:p-5 flex flex-col"
+                    className="group relative w-full h-full bg-white rounded-2xl border border-gray-100 shadow-sm hover:shadow-xl hover:shadow-red-100/60 transition-shadow duration-300 flex flex-col overflow-hidden"
                   >
+                    {/* Delete button */}
                     <button
-                      className="absolute top-3 right-3 w-8 h-8 bg-gray-100 cursor-pointer hover:bg-red-50 hover:text-red-600 rounded-full flex justify-center items-center transition-colors z-10"
+                      className="absolute top-3 right-3 w-8 h-8 bg-white/90 backdrop-blur-sm border border-gray-100 cursor-pointer hover:bg-red-50 hover:border-red-200 hover:text-red-600 text-gray-400 rounded-full flex justify-center items-center transition-colors z-10 shadow-sm"
                       onClick={() => handleOpenDeleteModal(customer.id)}
                       title="Delete product"
                     >
-                      <GoTrash />
+                      <GoTrash size={14} />
                     </button>
                     {openDeleteModal === customer.id && (
                       <DeletePopUpModal
@@ -199,77 +221,101 @@ const UserAllProducts = () => {
                       />
                     )}
 
-                    {/* Image */}
+                    {/* Image banner */}
                     <Link
                       to={`/baltra-user-registered-ProductPage/${customer.id}`}
-                      className="w-full flex justify-center items-center"
+                      className="block w-full bg-gradient-to-br from-gray-50 to-gray-100/60 relative"
                     >
-                      <div className="w-full aspect-square max-w-[180px] flex items-center justify-center">
+                      {/* Status badge, overlapping the image */}
+                      <span
+                        className={`absolute top-3 left-3 z-10 inline-flex items-center gap-1.5 text-[11px] font-semibold px-2.5 py-1 rounded-full font-gothamNarrow ${
+                          STATUS_STYLES[customer?.status] ||
+                          "bg-gray-100 text-gray-700 ring-1 ring-gray-200"
+                        }`}
+                      >
+                        <span
+                          className={`w-1.5 h-1.5 rounded-full ${
+                            STATUS_DOT[customer?.status] || "bg-gray-400"
+                          }`}
+                        />
+                        {customer?.status}
+                      </span>
+
+                      <div className="w-full aspect-[4/3] flex items-center justify-center p-8">
                         <img
-                          className="w-full h-full object-contain"
+                          className="w-full h-full object-contain transition-transform duration-500 group-hover:scale-[1.04]"
                           src={customer.product_image}
                           alt={customer.model_name || "Product"}
                         />
                       </div>
                     </Link>
 
-                    {/* Details */}
-                    <div className="mt-4 space-y-2 flex-1 font-gothamNarrow">
-                      <div className="flex justify-between gap-2 text-[#4A4A4A] font-normal text-sm">
-                        <span>Model Name :</span>
-                        <span className="font-semibold text-sm text-right truncate">
-                          {customer.model_name}
-                        </span>
+                    {/* Body */}
+                    <div className="px-4 sm:px-5 pb-4 sm:pb-5 flex-1 flex flex-col">
+                      <h3 className="text-[15px] font-bold text-gray-900 font-gothamNarrow truncate mb-0.5">
+                        {customer.model_name || "Unnamed product"}
+                      </h3>
+                      <p className="text-xs text-gray-400 font-gothamNarrow mb-3">
+                        {customer.model_num}
+                      </p>
+
+                      {/* Details */}
+                      <div className="flex-1">
+                        <DetailRow
+                          icon={
+                            <HiOutlineTag size={14} className="text-gray-300" />
+                          }
+                          label="Model No."
+                          value={customer.model_num}
+                        />
+                        <DetailRow
+                          icon={
+                            <HiOutlineCalendar
+                              size={14}
+                              className="text-gray-300"
+                            />
+                          }
+                          label="Purchased"
+                          value={
+                            customer.purchase_date
+                              ? moment(customer.purchase_date).format(
+                                  "Do MMM, YYYY",
+                                )
+                              : null
+                          }
+                        />
+                        <DetailRow
+                          icon={
+                            <HiOutlineHashtag
+                              size={14}
+                              className="text-gray-300"
+                            />
+                          }
+                          label="Serial No."
+                          value={customer.serial_number}
+                        />
                       </div>
-                      <div className="flex justify-between gap-2 text-[#4A4A4A] font-normal text-sm">
-                        <span>Model Number :</span>
-                        <span className="font-semibold text-sm text-right truncate">
-                          {customer.model_num}
-                        </span>
-                      </div>
-                      <div className="flex justify-between gap-2 text-[#4A4A4A] font-normal text-sm">
-                        <span>Purchase Date :</span>
-                        <span className="font-semibold text-sm text-right">
-                          {moment(customer.purchase_date).format(
-                            "Do MMM, YYYY",
-                          )}
-                        </span>
-                      </div>
-                      <div className="flex justify-between gap-2 text-[#4A4A4A] font-normal text-sm">
-                        <span>Serial Number :</span>
-                        <span className="font-semibold text-sm text-right truncate">
-                          {customer.serial_number}
-                        </span>
-                      </div>
-                      <div className="flex justify-between items-center gap-2 text-[#4A4A4A] font-normal text-sm pt-1">
-                        <span>Status :</span>
-                        <span
-                          className={`text-white text-xs font-semibold px-3 py-1 rounded-full font-gothamNarrow ${
-                            STATUS_STYLES[customer?.status] || "bg-gray-600"
-                          }`}
+
+                      {/* Actions */}
+                      <div className="mt-4 flex flex-col gap-2">
+                        <RippleButton
+                          label="Register a Complaint"
+                          rippleColor="#202D31"
+                          variant="secondary"
+                          onClick={() => handleRegisteredComplaint(customer)}
                         >
-                          {customer?.status}
-                        </span>
+                          <FaArrowRight size={11} />
+                        </RippleButton>
+
+                        <RippleButton
+                          label="Extend Warranty"
+                          rippleColor="#8B0000"
+                          variant="primary"
+                          onClick={() => handleExtendWarranty(customer)}
+                        >
+                          <FaArrowRight size={11} />
+                        </RippleButton>
                       </div>
-                    </div>
-
-                    {/* Actions */}
-                    <div className="mt-4 flex flex-col gap-2 sm:gap-3">
-                      <RippleButton
-                        label="Register a Complaint"
-                        rippleColor="#202D31"
-                        onClick={() => handleRegisteredComplaint(customer)}
-                      >
-                        <FaArrowRight className="ml-2" />
-                      </RippleButton>
-
-                      <RippleButton
-                        label="Extend warranty"
-                        rippleColor="#202D31"
-                        onClick={() => handleExtendWarranty(customer)}
-                      >
-                        <FaArrowRight className="ml-2" />
-                      </RippleButton>
                     </div>
                   </motion.div>
                 ))}

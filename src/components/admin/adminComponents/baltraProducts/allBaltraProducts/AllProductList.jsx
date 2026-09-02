@@ -1,3 +1,4 @@
+import { debounce } from "lodash";
 import moment from "moment";
 import { enqueueSnackbar } from "notistack";
 import { useCallback, useEffect, useState } from "react";
@@ -26,32 +27,43 @@ import ProductPagination from "../../adminPagination/productPagination/ProductPa
 import ProductDeleteModal from "../productDeleteModal/ProductDeleteModal";
 
 const AllProductList = () => {
-  const { loading, error, allProducts, dropdownCategories, isLoading } =
-    useSelector((state) => state.admin);
+  const { loading, error, allProducts, isLoading } = useSelector(
+    (state) => state.admin,
+  );
   const productPagination =
     useSelector((state) => state.admin.productPagination) || {};
   const { page, total_pages, results_per_page } = productPagination;
   const dispatch = useDispatch();
-  const [selectedCategoryName, setSelectedCategoryName] = useState("All");
-  const [searchProductName, setSearchProductName] = useState("");
+
+  const [searchQuery, setSearchQuery] = useState("");
   const [selectedProductsId, setSelectedProductsId] = useState([]);
   const [selectedProductId, setSelectedProductId] = useState(null);
   const [showUploadModal, setShowUploadModal] = useState(false);
 
-  const handleSelectAll = (event) => {
-    if (event.target.checked) {
-      const allProductIds = allProducts.map((product) => product.id);
-      setSelectedProductsId(allProductIds);
-    } else {
-      setSelectedProductsId([]);
-    }
+  // ── Select ────────────────────────────────────────────────────────────────
+  const allSelected =
+    allProducts?.length > 0 && selectedProductsId.length === allProducts.length;
+
+  const handleSelectAll = (e) => {
+    setSelectedProductsId(e.target.checked ? allProducts.map((p) => p.id) : []);
   };
 
-  const handleSelectProduct = (event, id) => {
-    if (event.target.checked) {
-      setSelectedProductsId((prev) => [...prev, id]);
-    } else {
-      setSelectedProductsId((prev) => prev.filter((pid) => pid !== id));
+  const handleSelectProduct = (e, id) => {
+    setSelectedProductsId((prev) =>
+      e.target.checked ? [...prev, id] : prev.filter((pid) => pid !== id),
+    );
+  };
+
+  // ── Delete ────────────────────────────────────────────────────────────────
+  const handleOpenModal = (id) => setSelectedProductId(id);
+  const handleCloseModal = () => setSelectedProductId(null);
+
+  const handleDeleteConfirm = () => {
+    if (selectedProductId !== null) {
+      dispatch(
+        deleteBaltraProduct({ product_id: selectedProductId, enqueueSnackbar }),
+      );
+      setSelectedProductId(null);
     }
   };
 
@@ -63,14 +75,33 @@ const AllProductList = () => {
           enqueueSnackbar,
         }),
       ).then(() => {
-        dispatch(allBaltraProducts(page));
+        dispatch(allBaltraProducts({ page: 1, search: searchQuery }));
       });
       setSelectedProductsId([]);
     }
   };
 
-  // ─── Bulk upload ────────────────────────────────────────────────────────────
-  // ✅ pass `file` directly (not formData), and replace fetchData with dispatch
+  // ── Search (debounced — matches model name / model number / category) ─────
+  const debouncedSearch = useCallback(
+    debounce((query) => {
+      dispatch(allBaltraProducts({ page: 1, search: query }));
+    }, 300),
+    [dispatch],
+  );
+
+  const handleSearchChange = (e) => {
+    const value = e.target.value;
+    setSearchQuery(value);
+    debouncedSearch(value);
+  };
+
+  const handleReset = () => {
+    setSearchQuery("");
+    setSelectedProductsId([]);
+    dispatch(allBaltraProducts({ page: 1, search: "" }));
+  };
+
+  // ── Bulk upload ──────────────────────────────────────────────────────────
   const handleBulkUpload = useCallback(
     async (file) => {
       try {
@@ -86,43 +117,15 @@ const AllProductList = () => {
     [dispatch],
   );
 
-  const handleReset = () => {
-    setSearchProductName("");
-    setSelectedCategoryName("All");
-    dispatch(allBaltraProducts({ page: 1 }));
-    setSelectedProductsId([]);
-  };
-
-  const handleSearch = () => {
-    dispatch(
-      allBaltraProducts({
-        name: searchProductName,
-        category_name:
-          selectedCategoryName === "All" ? "" : selectedCategoryName,
-        page: 1,
-      }),
-    );
-  };
-
-  const handleOpenModal = (id) => setSelectedProductId(id);
-  const handleCloseModal = () => setSelectedProductId(null);
-
-  const handleDeleteConfirm = () => {
-    if (selectedProductId !== null) {
-      dispatch(
-        deleteBaltraProduct({ product_id: selectedProductId, enqueueSnackbar }),
-      );
-      setSelectedProductId(null);
-    }
-  };
-
+  // ── Pagination ───────────────────────────────────────────────────────────
   const handlePageChange = useCallback(
     (newPage) => {
-      dispatch(allBaltraProducts({ page: newPage }));
+      dispatch(allBaltraProducts({ page: newPage, search: searchQuery }));
     },
-    [dispatch],
+    [dispatch, searchQuery],
   );
 
+  // ── Effects ──────────────────────────────────────────────────────────────
   useEffect(() => {
     if (error) {
       enqueueSnackbar(error, { variant: "error" });
@@ -131,23 +134,15 @@ const AllProductList = () => {
   }, [dispatch, error]);
 
   useEffect(() => {
-    dispatch(
-      allBaltraProducts({
-        category_name:
-          selectedCategoryName === "All" ? "" : selectedCategoryName,
-      }),
-    );
-  }, [dispatch, selectedCategoryName]);
-
-  const allSelected =
-    allProducts?.length > 0 && selectedProductsId.length === allProducts.length;
+    dispatch(allBaltraProducts({ page: 1 }));
+  }, [dispatch]);
 
   return (
     <>
       <MetaData title="baltra-admin-dashboard-all-products-list" />
 
       <div className="bg-[#f5f6fa] font-inter px-4 py-4 max-w-screen-2xl">
-        {/* ── Page Header ── */}
+        {/* Header */}
         <div className="flex items-center justify-between mb-6">
           <div>
             <h1 className="text-2xl font-bold text-gray-900 tracking-tight">
@@ -176,49 +171,20 @@ const AllProductList = () => {
           </div>
         </div>
 
-        {/* ── Card ── */}
         <div className="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden">
-          {/* ── Toolbar ── */}
+          {/* Toolbar */}
           <div className="flex flex-wrap items-center gap-3 px-5 py-4 border-b border-gray-100">
-            {/* Search */}
-            <div className="flex items-center gap-1.5 flex-1 min-w-[200px] max-w-xs">
-              <div className="relative flex-1">
-                <FaSearch className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 text-xs" />
-                <input
-                  type="text"
-                  value={searchProductName}
-                  placeholder="Search products…"
-                  onChange={(e) => setSearchProductName(e.target.value)}
-                  onKeyDown={(e) => e.key === "Enter" && handleSearch()}
-                  className="w-full pl-8 pr-3 py-2 text-sm bg-gray-50 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-red-500/30 focus:border-red-400 transition"
-                />
-              </div>
-              <button
-                onClick={handleSearch}
-                className="bg-red-600 hover:bg-red-700 text-white px-3.5 py-2 rounded-lg text-sm transition active:scale-95"
-              >
-                <FaSearch />
-              </button>
+            {/* Live search */}
+            <div className="relative flex-1 min-w-[240px] max-w-sm">
+              <FaSearch className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 text-xs" />
+              <input
+                type="text"
+                value={searchQuery}
+                placeholder="Search by model name, number, or category…"
+                onChange={handleSearchChange}
+                className="w-full pl-8 pr-3 py-2 text-sm bg-gray-50 border border-gray-200 rounded-lg focus:outline-none focus:border-red-400 transition"
+              />
             </div>
-
-            {/* Category */}
-            <select
-              value={selectedCategoryName}
-              onChange={(e) => setSelectedCategoryName(e.target.value)}
-              className="text-sm bg-gray-50 border border-gray-200 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-red-500/30 focus:border-red-400 transition min-w-[160px]"
-            >
-              <option value="">Select category</option>
-              <option value="All">All Categories</option>
-              {dropdownCategories?.length > 0 ? (
-                dropdownCategories.map((c) => (
-                  <option key={c.category_id} value={c.category_name}>
-                    {c.category_name}
-                  </option>
-                ))
-              ) : (
-                <option disabled>Loading…</option>
-              )}
-            </select>
 
             {/* Reset */}
             <button
@@ -229,7 +195,6 @@ const AllProductList = () => {
               Reset
             </button>
 
-            {/* Bulk delete (shown when items selected) */}
             {selectedProductsId.length > 0 && (
               <div className="ml-auto flex items-center gap-3">
                 <span className="text-sm font-medium text-red-600 bg-red-50 border border-red-100 px-3 py-1.5 rounded-full">
@@ -246,7 +211,7 @@ const AllProductList = () => {
             )}
           </div>
 
-          {/* ── Table ── */}
+          {/* Table */}
           <div className="overflow-x-auto">
             <table className="min-w-full text-sm">
               <thead>
@@ -264,6 +229,7 @@ const AllProductList = () => {
                     "Category",
                     "Sub Category",
                     "Product",
+                    "Model No.",
                     "Image",
                     "Created At",
                     "Actions",
@@ -300,7 +266,6 @@ const AllProductList = () => {
                           isChecked ? "bg-red-50/60" : "hover:bg-gray-50/80"
                         }`}
                       >
-                        {/* Checkbox */}
                         <td className="px-5 py-2">
                           <input
                             type="checkbox"
@@ -310,35 +275,37 @@ const AllProductList = () => {
                           />
                         </td>
 
-                        {/* S.N. */}
                         <td className="px-4 py-2 text-gray-400 text-xs font-mono">
                           {page != null && results_per_page != null
                             ? (page - 1) * results_per_page + index + 1
                             : ""}
                         </td>
 
-                        {/* Category */}
                         <td className="px-4 py-2">
                           <span className="inline-block bg-orange-50 text-orange-600 text-xs font-medium px-2.5 py-1 rounded-full border border-orange-100 whitespace-nowrap">
                             {product?.category?.category_name}
                           </span>
                         </td>
 
-                        {/* Sub Category */}
                         <td className="px-4 py-2">
                           <span className="inline-block bg-blue-50 text-blue-600 text-xs font-medium px-2.5 py-1 rounded-full border border-blue-100 whitespace-nowrap">
                             {product?.sub_category?.sub_category_name}
                           </span>
                         </td>
 
-                        {/* Product Name */}
                         <td className="px-4 py-2 max-w-[200px]">
                           <span className="text-gray-800 text-xs line-clamp-1 whitespace-nowrap overflow-hidden text-ellipsis block">
                             {product.name}
                           </span>
                         </td>
 
-                        {/* Image */}
+                        {/* Model No. */}
+                        <td className="px-4 py-2 whitespace-nowrap">
+                          <span className="text-gray-600 text-xs font-mono">
+                            {product?.model_num || "—"}
+                          </span>
+                        </td>
+
                         <td className="px-4 py-2">
                           <div className="w-12 h-12 rounded-xl border border-gray-100 overflow-hidden bg-gray-50 flex items-center justify-center shadow-sm">
                             <img
@@ -349,12 +316,10 @@ const AllProductList = () => {
                           </div>
                         </td>
 
-                        {/* Created At */}
                         <td className="px-4 py-2 whitespace-nowrap text-gray-500 text-xs">
                           {moment(product.date_joined).format("D MMM YYYY")}
                         </td>
 
-                        {/* Actions */}
                         <td className="px-4 py-2">
                           <div className="flex items-center gap-1.5 opacity-60 group-hover:opacity-100 transition-opacity">
                             <Link
@@ -386,7 +351,7 @@ const AllProductList = () => {
                             </button>
                           </div>
 
-                          {selectedProductId !== null && (
+                          {selectedProductId === product.id && (
                             <ProductDeleteModal
                               onClose={handleCloseModal}
                               onConfirm={handleDeleteConfirm}
@@ -408,7 +373,7 @@ const AllProductList = () => {
                             No products found
                           </p>
                           <p className="text-xs mt-0.5">
-                            Try adjusting your search or filters
+                            Try adjusting your search
                           </p>
                         </div>
                         <button
@@ -425,7 +390,6 @@ const AllProductList = () => {
             </table>
           </div>
 
-          {/* ── Pagination ── */}
           {total_pages > 1 && (
             <div className="flex items-center justify-between px-5 py-4 border-t border-slate-100 bg-slate-50/50">
               <p className="text-xs text-slate-400 font-medium">

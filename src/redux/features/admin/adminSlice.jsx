@@ -469,15 +469,14 @@ export const addBaltraProduct = createAsyncThunk(
 //getAllProductsByAmdmin
 export const allBaltraProducts = createAsyncThunk(
   "/admin-allBaltraProducts",
-  async ({ category_name, page = 1 } = {}, { rejectWithValue }) => {
+  async ({ search, page = 1 } = {}, { rejectWithValue }) => {
     try {
-      let queryParams = new URLSearchParams();
-      if (page) queryParams.append("page", page);
-      if (category_name) queryParams.append("category_name", category_name);
+      const queryParams = new URLSearchParams();
+      queryParams.append("page", page);
+      if (search) queryParams.append("search", search);
+
       const response = await API.get(
-        `/products/getdata${
-          queryParams.toString() ? `?${queryParams.toString()}` : ""
-        }`,
+        `/products/getdata?${queryParams.toString()}`,
       );
 
       return response.data;

@@ -53,9 +53,10 @@ const BaltraSubCategorySlider = ({ subCategoryProducts = [] }) => {
           </h2>
           <Link
             to="/baltra-allProducts"
-            className="absolute top-1 md:top-0 left-2 md:left-4"
+            className="absolute top-1 md:top-0 left-2 md:left-4 z-20 p-2 -m-2"
+            aria-label="Back to all products"
           >
-            <FaArrowLeft size={20} md={24} />
+            <FaArrowLeft className="w-5 h-5 md:w-6 md:h-6" />
           </Link>
 
           <button

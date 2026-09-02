@@ -215,7 +215,7 @@ const BaltraModal = () => {
                     href="tel:+9779801200501"
                     className="text-sm text-white font-gothamNarrow hover:text-white/80 transition-colors"
                   >
-                    +977 980-1200501
+                    01-5970088
                   </a>
                 </div>
               </div>
@@ -233,7 +233,7 @@ const BaltraModal = () => {
                     href="tel:+9779801200505"
                     className="text-sm text-white font-gothamNarrow hover:text-white/80 transition-colors"
                   >
-                    +977 980-1200505
+                    01-5971595
                   </a>
                 </div>
               </div>

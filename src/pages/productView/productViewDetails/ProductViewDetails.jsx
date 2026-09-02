@@ -120,6 +120,7 @@ const ProductViewDetails = ({ singleProduct, loading }) => {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [quoteModalOpen, setQuoteModalOpen] = useState(false);
   const [imageViews, setImageViews] = useState(0);
+  const [isLightboxOpen, setLightboxOpen] = useState(false);
 
   const [zoomPosition, setZoomPosition] = useState({
     backgroundPositionX: "0%",
@@ -207,6 +208,9 @@ const ProductViewDetails = ({ singleProduct, loading }) => {
     return <ProductViewSkeleton />;
   }
 
+  const hasPackaging = Boolean(singleProduct?.packaging);
+  const hasPower = Boolean(singleProduct?.power);
+
   return (
     <div className="min-h-screen bg-gradient-to-br from-gray-50 via-white to-gray-100">
       {/* Breadcrumb Navigation */}
@@ -241,36 +245,56 @@ const ProductViewDetails = ({ singleProduct, loading }) => {
             {/* Image Section */}
             <div className="relative">
               <div className="sticky top-8">
-                {/* Main Image Container */}
-                <div className="relative bg-gradient-to-br from-gray-50 to-white rounded-2xl p-8 mb-6 group overflow-hidden">
-                  <div className="absolute inset-0 bg-gradient-to-tr from-red-50/30 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500"></div>
+                {/* Main Image Container — NOT clipped, so the warranty badge can sit outside its edges */}
+                <div className="relative p-8 mb-6 group">
+                  {/* Clipped inner area: background, hover glow, image, zoom overlay */}
+                  <div className="relative rounded-2xl overflow-hidden bg-gradient-to-br from-gray-50 to-white">
+                    <div className="absolute inset-0 bg-gradient-to-tr from-red-50/30 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500 pointer-events-none"></div>
 
-                  <motion.img
-                    initial={{ scale: 0.8, opacity: 0 }}
-                    animate={{ scale: 1, opacity: 1 }}
-                    transition={{ duration: 0.5 }}
-                    className="w-full h-96 object-contain relative z-10"
-                    src={selectedImage}
-                    alt="Product"
-                    loading="lazy"
-                    onMouseMove={handleMouseMove}
-                    onMouseOut={handleMouseOut}
-                  />
+                    <div className="relative w-full h-96">
+                      <motion.img
+                        initial={{ scale: 0.8, opacity: 0 }}
+                        animate={{ scale: 1, opacity: 1 }}
+                        transition={{ duration: 0.5 }}
+                        className="w-full h-full object-contain relative z-10"
+                        src={selectedImage}
+                        alt="Product"
+                        loading="lazy"
+                        onMouseMove={handleMouseMove}
+                        onMouseOut={handleMouseOut}
+                      />
 
-                  {/* Zoom Effect */}
-                  {isZoomVisible && (
-                    <div
-                      className="absolute inset-0 bg-contain bg-no-repeat pointer-events-none z-20 rounded-2xl"
-                      style={{
-                        backgroundImage: `url(${selectedImage})`,
-                        backgroundPositionX: zoomPosition.backgroundPositionX,
-                        backgroundPositionY: zoomPosition.backgroundPositionY,
-                        backgroundSize: "200%",
+                      {/* Zoom Effect */}
+                      {isZoomVisible && (
+                        <div
+                          className="absolute inset-0 bg-contain bg-no-repeat pointer-events-none z-20"
+                          style={{
+                            backgroundImage: `url(${selectedImage})`,
+                            backgroundPositionX:
+                              zoomPosition.backgroundPositionX,
+                            backgroundPositionY:
+                              zoomPosition.backgroundPositionY,
+                            backgroundSize: "160%",
+                          }}
+                        />
+                      )}
+                    </div>
+
+                    {/* View Counter / Lightbox trigger */}
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setImageViews((prev) => prev + 1);
+                        setLightboxOpen(true);
                       }}
-                    />
-                  )}
+                      className="absolute bottom-4 right-4 bg-black/70 hover:bg-black/85 text-white px-3 py-1 rounded-full text-sm flex items-center gap-1 z-30 transition-colors"
+                    >
+                      <FaEye size={12} />
+                      <span>{imageViews}</span>
+                    </button>
+                  </div>
 
-                  {/* Warranty Badge */}
+                  {/* Warranty Badge — sibling of the clipped area, so it's never cropped */}
                   {singleProduct?.warranty_icon && (
                     <motion.img
                       initial={{ scale: 0, rotate: -180 }}
@@ -280,17 +304,11 @@ const ProductViewDetails = ({ singleProduct, loading }) => {
                         type: "spring",
                         stiffness: 200,
                       }}
-                      className="absolute -top-2 -right-2 w-16 h-16 md:w-20 md:h-20 z-30"
+                      className="absolute top-2 right-2 w-16 h-16 md:w-20 md:h-20 z-30"
                       src={singleProduct?.warranty_icon}
                       alt="Warranty"
                     />
                   )}
-
-                  {/* View Counter */}
-                  <div className="absolute bottom-4 right-4 bg-black/70 text-white px-3 py-1 rounded-full text-sm flex items-center gap-1">
-                    <FaEye size={12} />
-                    <span>{imageViews}</span>
-                  </div>
                 </div>
 
                 {/* Thumbnail Images */}
@@ -344,7 +362,7 @@ const ProductViewDetails = ({ singleProduct, loading }) => {
                   <p className="text-gray-600 text-lg font-medium mb-2">
                     {singleProduct?.model_name}
                   </p>
-                  <h1 className="text-4xl lg:text-5xl font-bold text-gray-900 leading-tight mb-3">
+                  <h1 className="text-2xl lg:text-3xl font-bold text-gray-900 leading-tight mb-3">
                     {singleProduct?.name}
                   </h1>
                   <p className="text-gray-700 text-lg mb-2 font-medium">
@@ -458,25 +476,35 @@ const ProductViewDetails = ({ singleProduct, loading }) => {
                 </div>
               )}
 
-              {/* Product Specifications */}
-              <div className="grid grid-cols-2 gap-6 p-6 bg-gray-50 rounded-2xl">
-                <div>
-                  <h4 className="text-sm font-semibold text-gray-600 mb-2">
-                    PACKAGING
-                  </h4>
-                  <p className="text-lg font-bold text-gray-900">
-                    {singleProduct?.packaging}
-                  </p>
+              {/* Product Specifications — only render fields that actually have a value */}
+              {(hasPackaging || hasPower) && (
+                <div
+                  className={`grid gap-6 p-6 bg-gray-50 rounded-2xl ${
+                    hasPackaging && hasPower ? "grid-cols-2" : "grid-cols-1"
+                  }`}
+                >
+                  {hasPackaging && (
+                    <div>
+                      <h4 className="text-sm font-semibold text-gray-600 mb-2">
+                        PACKAGING
+                      </h4>
+                      <p className="text-lg font-bold text-gray-900">
+                        {singleProduct.packaging}
+                      </p>
+                    </div>
+                  )}
+                  {hasPower && (
+                    <div>
+                      <h4 className="text-sm font-semibold text-gray-600 mb-2">
+                        POWER
+                      </h4>
+                      <p className="text-lg font-bold text-gray-900">
+                        {singleProduct.power}
+                      </p>
+                    </div>
+                  )}
                 </div>
-                <div>
-                  <h4 className="text-sm font-semibold text-gray-600 mb-2">
-                    POWER
-                  </h4>
-                  <p className="text-lg font-bold text-gray-900">
-                    {singleProduct?.power}
-                  </p>
-                </div>
-              </div>
+              )}
 
               {/* Action Buttons */}
               <div className="space-y-4">
@@ -572,6 +600,35 @@ const ProductViewDetails = ({ singleProduct, loading }) => {
                   </div>
                 </div>
               </motion.div>
+            </motion.div>
+          )}
+        </AnimatePresence>
+
+        {/* Fullscreen image lightbox — opened via the eye icon */}
+        <AnimatePresence>
+          {isLightboxOpen && (
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              className="fixed inset-0 z-50 flex items-center justify-center bg-black/85 backdrop-blur-sm px-4"
+              onClick={() => setLightboxOpen(false)}
+            >
+              <motion.img
+                initial={{ scale: 0.9, opacity: 0 }}
+                animate={{ scale: 1, opacity: 1 }}
+                exit={{ scale: 0.9, opacity: 0 }}
+                src={selectedImage}
+                alt="Product full view"
+                className="max-w-full max-h-[85vh] object-contain rounded-xl"
+                onClick={(e) => e.stopPropagation()}
+              />
+              <button
+                className="absolute top-6 right-6 p-2 rounded-full bg-white/10 hover:bg-white/20 text-white transition-colors"
+                onClick={() => setLightboxOpen(false)}
+              >
+                <FaTimes size={22} />
+              </button>
             </motion.div>
           )}
         </AnimatePresence>

@@ -80,9 +80,45 @@ const SingleProductComplaint = () => {
   const { loading, error, isError, isLoading, productComplaint } = useSelector(
     (state) => state.customer,
   );
+
+  console.log("productComplaint:", productComplaint); // Debugging line
   const { job_no } = productComplaint || {};
   const dispatch = useDispatch();
   const { id } = useParams();
+
+  //with invoice and serial number images
+  // const handleCrmSubmit = (e) => {
+  //   e.preventDefault();
+  //   if (job_no) {
+  //     toast.info("Already dispatched to CRM");
+  //     return;
+  //   }
+  //   const CRMConfig = {
+  //     complaint_id: id,
+  //     customerName: productComplaint.customerName,
+  //     customerContact: productComplaint.customerContact,
+  //     email: productComplaint.email,
+  //     zone: productComplaint.zone,
+  //     customerPincode: "",
+  //     area: productComplaint.area,
+  //     customerAddress: productComplaint.customerAddress,
+  //     modelCode: productComplaint.model_num,
+  //     serialNo: productComplaint.serial_number,
+  //     purchaseDate: productComplaint.purchase_date,
+  //     complaint_remark: productComplaint.problem_description,
+
+  //     purchaseInvoice: productComplaint.warranty_image_url || "",
+
+  //     serialNoImg: productComplaint.damaged_image_url || "",
+  //     accessKey: import.meta.env.VITE_CRM_ACCESS_KEY,
+  //   };
+  //   dispatch(addCrmContent({ CRMConfig, enqueueSnackbar }))
+  //     .unwrap()
+  //     .then(() => {
+  //       dispatch(getSingleProductComplaint({ complaint_id: id }));
+  //     })
+  //     .catch((err) => console.error("Submission failed:", err));
+  // };
 
   const handleCrmSubmit = (e) => {
     e.preventDefault();

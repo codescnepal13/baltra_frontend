@@ -31,7 +31,6 @@ async function renderPageToDataUrl(pdfDoc, pageNum) {
 
 // ─── Layout constants ─────────────────────────────────────────────────────────
 // Space reserved below the book for the HUD (counter + progress bar).
-// ─── Layout constants ─────────────────────────────────────────────────────────
 const RESERVE_H = 56; // was 48
 const ARROW_GUTTER = 44; // was 56 — less wasted side space
 const ARROW_GUTTER_MOBILE = 32; // was 40
@@ -192,19 +191,26 @@ const MyBook = ({ pdfUrl }) => {
     a.play().catch(() => {});
   }, []);
 
-  const handleFlip = useCallback((e) => setCurrentPage(e.data), []);
+  // Single source of truth for "a flip happened" — fires for button clicks,
+  // drag/swipe, and keyboard nav alike, since react-pageflip's onFlip covers
+  // every trigger method. Sound + page counter now always stay in sync.
+  const handleFlip = useCallback(
+    (e) => {
+      setCurrentPage(e.data);
+      playFlip();
+    },
+    [playFlip],
+  );
 
   const handleNext = useCallback(() => {
     if (!flipBookRef.current || isAtEnd) return;
     flipBookRef.current.pageFlip().flipNext();
-    if (currentPage < totalPages - 2) playFlip();
-  }, [isAtEnd, currentPage, totalPages, playFlip]);
+  }, [isAtEnd]);
 
   const handlePrev = useCallback(() => {
     if (!flipBookRef.current || isAtStart) return;
     flipBookRef.current.pageFlip().flipPrev();
-    playFlip();
-  }, [isAtStart, playFlip]);
+  }, [isAtStart]);
 
   const progressPercent =
     totalPages > 1 ? Math.round((currentPage / (totalPages - 1)) * 100) : 0;
@@ -348,7 +354,7 @@ const MyBook = ({ pdfUrl }) => {
             showCover
             maxShadowOpacity={0.5}
             flippingTime={700}
-            usePortrait
+            usePortrait={!isDesktop}
             startZIndex={0}
             autoSize={false}
             clickEventForward

@@ -385,9 +385,10 @@ const AllContactList = () => {
                         </td>
 
                         {/* Created At */}
+
                         <td className="px-4 py-2 text-gray-500 whitespace-nowrap tabular-nums tracking-[0.01em]">
                           {moment(adminContact.date_joined).format(
-                            "MMM Do YYYY, h:mm A",
+                            "MMM Do YYYY",
                           )}
                         </td>
 

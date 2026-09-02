@@ -1,6 +1,5 @@
-import React from "react";
-import BaltraSubCategoryBanner from "./baltraSubCategoryBanner/BaltraSubCategoryBanner";
 import MetaData from "../../components/layout/metaData/MetaData";
+import BaltraSubCategoryBanner from "./baltraSubCategoryBanner/BaltraSubCategoryBanner";
 
 const BaltraSubCategoryProducts = () => {
   return (
