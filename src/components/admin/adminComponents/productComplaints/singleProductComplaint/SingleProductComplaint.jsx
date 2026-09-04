@@ -81,45 +81,11 @@ const SingleProductComplaint = () => {
     (state) => state.customer,
   );
 
-  console.log("productComplaint:", productComplaint); // Debugging line
   const { job_no } = productComplaint || {};
   const dispatch = useDispatch();
   const { id } = useParams();
 
   //with invoice and serial number images
-  // const handleCrmSubmit = (e) => {
-  //   e.preventDefault();
-  //   if (job_no) {
-  //     toast.info("Already dispatched to CRM");
-  //     return;
-  //   }
-  //   const CRMConfig = {
-  //     complaint_id: id,
-  //     customerName: productComplaint.customerName,
-  //     customerContact: productComplaint.customerContact,
-  //     email: productComplaint.email,
-  //     zone: productComplaint.zone,
-  //     customerPincode: "",
-  //     area: productComplaint.area,
-  //     customerAddress: productComplaint.customerAddress,
-  //     modelCode: productComplaint.model_num,
-  //     serialNo: productComplaint.serial_number,
-  //     purchaseDate: productComplaint.purchase_date,
-  //     complaint_remark: productComplaint.problem_description,
-
-  //     purchaseInvoice: productComplaint.warranty_image_url || "",
-
-  //     serialNoImg: productComplaint.damaged_image_url || "",
-  //     accessKey: import.meta.env.VITE_CRM_ACCESS_KEY,
-  //   };
-  //   dispatch(addCrmContent({ CRMConfig, enqueueSnackbar }))
-  //     .unwrap()
-  //     .then(() => {
-  //       dispatch(getSingleProductComplaint({ complaint_id: id }));
-  //     })
-  //     .catch((err) => console.error("Submission failed:", err));
-  // };
-
   const handleCrmSubmit = (e) => {
     e.preventDefault();
     if (job_no) {
@@ -139,6 +105,10 @@ const SingleProductComplaint = () => {
       serialNo: productComplaint.serial_number,
       purchaseDate: productComplaint.purchase_date,
       complaint_remark: productComplaint.problem_description,
+
+      purchaseInvoice: productComplaint.warranty_image_url || "",
+
+      serialNoImg: productComplaint.serial_number_image || "",
       accessKey: import.meta.env.VITE_CRM_ACCESS_KEY,
     };
     dispatch(addCrmContent({ CRMConfig, enqueueSnackbar }))
@@ -148,6 +118,35 @@ const SingleProductComplaint = () => {
       })
       .catch((err) => console.error("Submission failed:", err));
   };
+
+  // const handleCrmSubmit = (e) => {
+  //   e.preventDefault();
+  //   if (job_no) {
+  //     toast.info("Already dispatched to CRM");
+  //     return;
+  //   }
+  //   const CRMConfig = {
+  //     complaint_id: id,
+  //     customerName: productComplaint.customerName,
+  //     customerContact: productComplaint.customerContact,
+  //     email: productComplaint.email,
+  //     zone: productComplaint.zone,
+  //     customerPincode: "",
+  //     area: productComplaint.area,
+  //     customerAddress: productComplaint.customerAddress,
+  //     modelCode: productComplaint.model_num,
+  //     serialNo: productComplaint.serial_number,
+  //     purchaseDate: productComplaint.purchase_date,
+  //     complaint_remark: productComplaint.problem_description,
+  //     accessKey: import.meta.env.VITE_CRM_ACCESS_KEY,
+  //   };
+  //   dispatch(addCrmContent({ CRMConfig, enqueueSnackbar }))
+  //     .unwrap()
+  //     .then(() => {
+  //       dispatch(getSingleProductComplaint({ complaint_id: id }));
+  //     })
+  //     .catch((err) => console.error("Submission failed:", err));
+  // };
 
   useEffect(() => {
     if (error) dispatch(clearCustomerError());
@@ -195,10 +194,16 @@ const SingleProductComplaint = () => {
     damaged_image_url,
     damaged_video_url,
     warranty_image_url,
+    /* new: serial number image */
+    serial_number_image,
     date_joined,
   } = productComplaint || {};
 
-  const hasMedia = damaged_image_url || warranty_image_url || damaged_video_url;
+  const hasMedia =
+    damaged_image_url ||
+    warranty_image_url ||
+    damaged_video_url ||
+    serial_number_image;
 
   return (
     <>
@@ -448,6 +453,31 @@ const SingleProductComplaint = () => {
                     <img
                       src={warranty_image_url}
                       alt="Warranty"
+                      className="w-full h-52 object-cover transition-transform duration-300 group-hover:scale-105"
+                    />
+                    <div className="absolute inset-0 bg-black/30 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center rounded-2xl">
+                      <HiOutlineArrowTopRightOnSquare
+                        size={22}
+                        className="text-white"
+                      />
+                    </div>
+                  </div>
+                </MediaCard>
+              )}
+              {/* new: serial number image */}
+              {serial_number_image && (
+                <MediaCard
+                  label="Serial Number Image"
+                  icon={HiOutlineFingerPrint}
+                  iconColor="bg-orange-500"
+                >
+                  <div
+                    className="relative group cursor-pointer"
+                    onClick={() => window.open(serial_number_image, "_blank")}
+                  >
+                    <img
+                      src={serial_number_image}
+                      alt="Serial Number"
                       className="w-full h-52 object-cover transition-transform duration-300 group-hover:scale-105"
                     />
                     <div className="absolute inset-0 bg-black/30 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center rounded-2xl">

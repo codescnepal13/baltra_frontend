@@ -28,6 +28,10 @@ const AddRegisteredComplaintModal = ({ handleClose, complaintDetails }) => {
 
   const { model_name, modelCode, serial_number, problem_type } = complaintValue;
 
+  /* new: serial number image */
+  const [serial_number_image, setSerialNumberImage] = useState(null);
+  const [serialNumberImagePreview, setSerialNumberImagePreview] = useState("");
+
   const [damaged_image, setDamagedImage] = useState(null);
   const [damagedImagePreview, setDamagedImagePreview] = useState("");
 
@@ -66,6 +70,8 @@ const AddRegisteredComplaintModal = ({ handleClose, complaintDetails }) => {
       }
     });
 
+    if (!serial_number_image)
+      newErrors.serial_number_image = "Serial number image is required";
     if (!damaged_image) newErrors.damaged_image = "Damaged image is required";
     if (!productDescription)
       newErrors.productDescription = "Complaint remark is required";
@@ -80,6 +86,18 @@ const AddRegisteredComplaintModal = ({ handleClose, complaintDetails }) => {
   const handleInputChange = (e) => {
     const { name, value } = e.target;
     setComplaintValue((prev) => ({ ...prev, [name]: value }));
+  };
+
+  const handleSerialNumberImage = (e) => {
+    const file = e.target.files[0];
+    if (file) {
+      const reader = new FileReader();
+      reader.readAsDataURL(file);
+      reader.onloadend = () => {
+        setSerialNumberImagePreview(reader.result);
+        setSerialNumberImage(file);
+      };
+    }
   };
 
   const handleWarrantyCardImage = (e) => {
@@ -137,6 +155,7 @@ const AddRegisteredComplaintModal = ({ handleClose, complaintDetails }) => {
       formData.append("serial_number", serial_number);
       formData.append("problem_type", problem_type);
       formData.append("problem_description", sanitizedDescription);
+      formData.append("serial_number_image", serial_number_image);
       formData.append("damaged_image", damaged_image);
       formData.append("damaged_Video", damaged_Video);
       formData.append("warranty_image", warranty_image);
@@ -209,6 +228,62 @@ const AddRegisteredComplaintModal = ({ handleClose, complaintDetails }) => {
         <div className="h-0.5 bg-gradient-to-r from-red-700 via-red-400 to-red-700" />
 
         <form onSubmit={handleSubmit} className="px-6 py-6 space-y-6">
+          {/* ── Serial number image (new, shown above the damaged/warranty row) ── */}
+          <div>
+            <p className={labelBase}>
+              Serial number image{" "}
+              <span className="text-red-600 normal-case">*</span>
+            </p>
+            <label
+              htmlFor="serial_number_image"
+              className={`flex flex-col items-center justify-center h-36 rounded cursor-pointer border-2 border-dashed transition-colors duration-150 overflow-hidden
+                ${
+                  serialNumberImagePreview
+                    ? "border-gray-300"
+                    : "border-gray-300 bg-gray-50 hover:bg-gray-100"
+                }`}
+            >
+              {serialNumberImagePreview ? (
+                <img
+                  src={serialNumberImagePreview}
+                  alt="Serial number"
+                  className="object-contain w-full h-full"
+                />
+              ) : (
+                <div className="flex flex-col items-center gap-1.5 text-gray-400">
+                  <svg
+                    xmlns="http://www.w3.org/2000/svg"
+                    className="w-8 h-8"
+                    fill="none"
+                    viewBox="0 0 24 24"
+                    stroke="currentColor"
+                    strokeWidth={1.5}
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      d="M4 9h16M4 15h16M9 4L7 20m10-16l-2 16"
+                    />
+                  </svg>
+                  <span className="text-xs font-medium">
+                    Upload serial number photo
+                  </span>
+                </div>
+              )}
+            </label>
+            <input
+              id="serial_number_image"
+              type="file"
+              name="serial_number_image"
+              accept="image/*"
+              className="hidden"
+              onChange={handleSerialNumberImage}
+            />
+            {complaintErr.serial_number_image && (
+              <p className={errorText}>{complaintErr.serial_number_image}</p>
+            )}
+          </div>
+
           {/* ── Upload row ── */}
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             {/* Damaged image */}

@@ -99,7 +99,7 @@ const ViewBaltraRepairDamage = () => {
     );
   }
 
-  // ── Media items — now includes warranty image ──
+  // ── Media items — now includes warranty image and serial number image ──
   const mediaItems = [
     {
       type: "image",
@@ -111,6 +111,13 @@ const ViewBaltraRepairDamage = () => {
       src:
         trackingProduct?.warranty_image_url || trackingProduct?.warranty_image,
       label: "Warranty Image",
+    },
+    {
+      type: "image",
+      src:
+        trackingProduct?.serial_number_image_url ||
+        trackingProduct?.serial_number_image,
+      label: "Serial Number Image",
     },
     {
       type: "video",
