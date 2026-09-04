@@ -40,7 +40,7 @@ export const mobileVerify = createAsyncThunk(
     } catch (error) {
       return rejectWithValue({ message: getErrorMessage(error) });
     }
-  }
+  },
 );
 
 //OTPVerify
@@ -57,7 +57,7 @@ export const verifyOTP = createAsyncThunk(
     } catch (error) {
       return rejectWithValue({ message: getErrorMessage(error) });
     }
-  }
+  },
 );
 
 //register
@@ -69,12 +69,12 @@ export const baltraRegister = createAsyncThunk(
       enqueueSnackbar(response.data.message || "Register successful!", {
         variant: "success",
       });
-      navigate("/baltra-aboutUs-Page");
+      navigate("/baltra-user-ProductPage");
       return response.data;
     } catch (error) {
       return rejectWithValue({ message: getErrorMessage(error) });
     }
-  }
+  },
 );
 
 //login
@@ -89,13 +89,13 @@ export const baltraLogin = createAsyncThunk(
       if (response.data.data && response.data.data.role === "admin") {
         navigate("/baltra-admin-dashboard");
       } else {
-        navigate("/baltra-aboutUs-Page");
+        navigate("/baltra-user-ProductPage");
       }
       return response.data;
     } catch (error) {
       return rejectWithValue({ message: getErrorMessage(error) });
     }
-  }
+  },
 );
 
 //forgotPassword
@@ -105,7 +105,7 @@ export const forgotPassword = createAsyncThunk(
     try {
       const response = await API.post(
         `/customer/requestpasswordreset`,
-        forgotData
+        forgotData,
       );
       enqueueSnackbar(response.data.message || "Please verify Your OTP!", {
         variant: "success",
@@ -115,7 +115,7 @@ export const forgotPassword = createAsyncThunk(
     } catch (error) {
       return rejectWithValue({ message: getErrorMessage(error) });
     }
-  }
+  },
 );
 
 //verifyResetOTP
@@ -132,7 +132,7 @@ export const verifyResetOTP = createAsyncThunk(
     } catch (error) {
       return rejectWithValue({ message: getErrorMessage(error) });
     }
-  }
+  },
 );
 
 //resetPassword
@@ -149,7 +149,7 @@ export const resetPassword = createAsyncThunk(
     } catch (error) {
       return rejectWithValue({ message: getErrorMessage(error) });
     }
-  }
+  },
 );
 
 //getProfile
@@ -162,7 +162,7 @@ export const getProfileMe = createAsyncThunk(
     } catch (error) {
       return rejectWithValue({ message: getErrorMessage(error) });
     }
-  }
+  },
 );
 
 // updateProfile
@@ -179,7 +179,7 @@ export const updateProfile = createAsyncThunk(
     } catch (error) {
       return rejectWithValue({ message: getErrorMessage(error) });
     }
-  }
+  },
 );
 
 //changePassword
@@ -187,18 +187,18 @@ export const changePassword = createAsyncThunk(
   "/auth/changePassword",
   async (
     { editPasswordData, enqueueSnackbar, navigate },
-    { rejectWithValue, dispatch }
+    { rejectWithValue, dispatch },
   ) => {
     try {
       const response = await API.put(
         `/customer/changepassword`,
-        editPasswordData
+        editPasswordData,
       );
       enqueueSnackbar(
         response.data.message || "password changed successFully!",
         {
           variant: "success",
-        }
+        },
       );
       dispatch(setLogout());
       navigate("/baltra-account-signin");
@@ -206,7 +206,7 @@ export const changePassword = createAsyncThunk(
     } catch (error) {
       return rejectWithValue({ message: getErrorMessage(error) });
     }
-  }
+  },
 );
 
 //updateMemberShipStatus
@@ -219,14 +219,14 @@ export const updateMemberShipStatus = createAsyncThunk(
         response.data.message || "membership updated successFully!",
         {
           variant: "success",
-        }
+        },
       );
       dispatch(getProfileMe());
       return response.data;
     } catch (error) {
       return rejectWithValue({ message: getErrorMessage(error) });
     }
-  }
+  },
 );
 
 const initialState = {

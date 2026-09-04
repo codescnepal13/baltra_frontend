@@ -340,7 +340,7 @@ const App = () => {
                   ) ? (
                     <Navigate to="/baltra-admin-dashboard" replace />
                   ) : (
-                    <Navigate to="/baltra-profileInformation" replace />
+                    <Navigate to="/baltra-user-ProductPage" replace />
                   )
                 ) : (
                   <>
