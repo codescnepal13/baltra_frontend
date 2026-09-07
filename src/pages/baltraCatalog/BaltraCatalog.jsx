@@ -238,7 +238,7 @@ const BaltraCatalog = () => {
         {/* Background image — full-bleed, no dim, matches About page pattern */}
         <img
           src={ArtCoverImg}
-          alt=""
+          alt="ArtImage"
           aria-hidden="true"
           className="absolute top-0 left-0 w-full h-full object-cover object-top z-0"
           style={{ maxWidth: "none" }}

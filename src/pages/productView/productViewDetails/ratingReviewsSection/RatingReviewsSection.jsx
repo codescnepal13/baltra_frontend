@@ -224,7 +224,7 @@ const RatingReviewsSection = () => {
                       ? "border-red-400 focus:border-red-500 bg-red-50"
                       : "border-gray-200 focus:border-red-400 bg-gray-50 focus:bg-white"
                   }`}
-                placeholder="What did you like or dislike? How was the quality?"
+                placeholder="Share your experience..."
                 value={review}
                 onChange={(e) => {
                   setReview(e.target.value);

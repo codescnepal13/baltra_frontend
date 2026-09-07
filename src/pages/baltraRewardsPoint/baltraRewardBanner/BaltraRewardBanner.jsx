@@ -38,6 +38,7 @@ const BaltraRewardBanner = ({
       dispatch(clearProductError());
     }
   }, [dispatch, error]);
+
   return (
     <>
       <div
@@ -47,11 +48,13 @@ const BaltraRewardBanner = ({
           backgroundBlendMode: "hard-light",
         }}
       >
-        <div>
+        {/* Header — now explicitly positioned + high z-index so it always sits above the content overlay */}
+        <div className="relative z-20">
           <TopHeader />
         </div>
 
-        <div className="absolute inset-0 flex flex-col lg:flex-row items-center lg:justify-between px-4 sm:px-8 lg:px-36 mt-5 lg:mt-10 space-y-8 lg:space-y-0 lg:space-x-8">
+        {/* Content overlay — explicit lower z-index than the header */}
+        <div className="absolute inset-0 z-10 flex flex-col lg:flex-row items-center lg:justify-between px-4 sm:px-8 lg:px-36 mt-5 lg:mt-10 space-y-8 lg:space-y-0 lg:space-x-8">
           <div className="flex flex-col mt-14 sm:mt-8">
             <span className="text-white text-lg sm:text-2xl font-semibold tracking-wide leading-tight font-gothamNarrow">
               Welcome to

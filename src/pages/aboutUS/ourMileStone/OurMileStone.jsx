@@ -25,7 +25,7 @@ const OurMileStone = () => {
     <section
       ref={sectionRef}
       aria-labelledby="milestone-heading"
-      className="relative w-full min-h-screen bg-[#F6F8FA] flex flex-col items-center justify-center overflow-hidden"
+      className="relative w-full py-10 sm:py-14 md:min-h-[100dvh] md:py-0 bg-[#F6F8FA] flex flex-col items-center justify-center overflow-hidden"
     >
       {/* Background Image with overlay for readability */}
       <div
@@ -47,7 +47,7 @@ const OurMileStone = () => {
         className={`
           relative z-20 text-center mx-auto
           px-4 sm:px-8
-          mt-16 mb-8 sm:mt-20 sm:mb-10 lg:mt-24 lg:mb-12
+          mb-4 sm:mb-8 md:mt-20 md:mb-10 lg:mt-24 lg:mb-12
           max-w-3xl
           transition-all duration-700 ease-out
           ${isVisible ? "opacity-100 translate-y-0" : "opacity-0 translate-y-8"}
@@ -57,8 +57,8 @@ const OurMileStone = () => {
           id="milestone-heading"
           className="
             text-[#202D31] font-bold font-gothamNarrow
-            text-3xl sm:text-4xl lg:text-5xl xl:text-6xl
-            mb-3 sm:mb-4
+            text-2xl sm:text-3xl lg:text-5xl xl:text-6xl
+            mb-2 sm:mb-4
             leading-tight tracking-tight
           "
         >
@@ -68,7 +68,7 @@ const OurMileStone = () => {
         <p
           className={`
             text-[#1a1a1a] font-normal font-gothamNarrow
-            text-base sm:text-lg lg:text-xl xl:text-2xl
+            text-sm sm:text-base lg:text-xl xl:text-2xl
             leading-relaxed tracking-wide
             transition-all duration-700 delay-150 ease-out
             ${isVisible ? "opacity-100 translate-y-0" : "opacity-0 translate-y-6"}
@@ -83,7 +83,7 @@ const OurMileStone = () => {
         className={`
           relative z-20 w-full
           px-2 sm:px-4 lg:px-8
-          pb-12 sm:pb-16 lg:pb-20
+          pb-20 sm:pb-10 md:pb-16 lg:pb-20
           lg:mt-16 xl:mt-20
           transition-all duration-700 delay-300 ease-out
           ${isVisible ? "opacity-100 translate-y-0" : "opacity-0 translate-y-10"}

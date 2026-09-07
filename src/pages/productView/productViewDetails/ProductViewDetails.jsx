@@ -32,38 +32,37 @@ const RippleButton = ({
 }) => {
   const [ripplePosition, setRipplePosition] = useState({ x: 0, y: 0 });
   const [isHovered, setIsHovered] = useState(false);
-
   const handleMouseEnter = (e) => {
-    const rect = e.target.getBoundingClientRect();
+    const rect = e.currentTarget.getBoundingClientRect();
     const x = e.clientX - rect.left;
     const y = e.clientY - rect.top;
     setRipplePosition({ x, y });
     setIsHovered(true);
   };
-
   const handleMouseLeave = () => {
     setIsHovered(false);
   };
-
-  const baseClasses =
-    "w-full py-4 px-6 font-semibold font-gothamNarrow relative overflow-hidden transition-all duration-300 transform hover:scale-[1.02] shadow-lg hover:shadow-xl";
+  const baseClasses = ` relative overflow-hidden w-full min-h-[52px] sm:min-h-[56px] px-4 sm:px-6 md:px-7 py-3 sm:py-4 rounded-xl font-semibold font-gothamNarrow text-sm sm:text-base md:text-lg leading-none whitespace-nowrap text-center flex items-center justify-center transition-all duration-300 transform hover:scale-[1.02] shadow-lg hover:shadow-xl select-none `;
   const variantClasses =
     variant === "primary"
-      ? "bg-gradient-to-r from-red-600 to-red-700 text-white border border-red-600"
-      : "bg-white text-gray-800 border-2 border-gray-300 hover:border-gray-400";
-
+      ? ` bg-gradient-to-r from-red-600 to-red-700 text-white border border-red-600 `
+      : ` bg-white text-gray-800 border-2 border-gray-300 hover:border-gray-400 `;
   return (
     <motion.button
+      type="button"
       whileTap={{ scale: 0.98 }}
-      className={`${baseClasses} ${variantClasses} rounded-xl`}
+      className={`${baseClasses} ${variantClasses}`}
       onMouseEnter={handleMouseEnter}
       onMouseLeave={handleMouseLeave}
       onClick={onClick}
     >
+      {" "}
+      {/* ===================================================== RIPPLE EFFECT ====================================================== */}{" "}
       <AnimatePresence>
+        {" "}
         {isHovered && (
           <motion.div
-            className="absolute rounded-full"
+            className=" absolute rounded-full pointer-events-none "
             style={{
               top: ripplePosition.y,
               left: ripplePosition.x,
@@ -72,31 +71,23 @@ const RippleButton = ({
               transform: "translate(-50%, -50%)",
               backgroundColor: rippleColor,
             }}
-            animate={{
-              width: 1500,
-              height: 700,
-              opacity: 0.3,
-            }}
-            exit={{
-              opacity: 0,
-              transition: { duration: 0.5 },
-            }}
-            transition={{
-              duration: 0.5,
-              ease: "easeInOut",
-            }}
+            animate={{ width: 1500, height: 700, opacity: 0.3 }}
+            exit={{ opacity: 0, transition: { duration: 0.5 } }}
+            transition={{ duration: 0.5, ease: "easeInOut" }}
           />
-        )}
-      </AnimatePresence>
-
+        )}{" "}
+      </AnimatePresence>{" "}
+      {/* ===================================================== BUTTON CONTENT ====================================================== */}{" "}
       <span
-        className={`relative z-10 flex items-center justify-center gap-2 text-lg ${
-          isHovered && variant === "secondary" ? "text-white" : ""
-        }`}
+        className={` relative z-10 flex items-center justify-center gap-2 w-full whitespace-nowrap text-center ${isHovered && variant === "secondary" ? "text-white" : ""} `}
       >
-        {label}
-        {children}
-      </span>
+        {" "}
+        <span className="whitespace-nowrap"> {label} </span>{" "}
+        <span className="flex-shrink-0 flex items-center justify-center">
+          {" "}
+          {children}{" "}
+        </span>{" "}
+      </span>{" "}
     </motion.button>
   );
 };

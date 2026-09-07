@@ -45,7 +45,7 @@ const ArtOfComfort = () => {
   return (
     <div
       ref={sectionRef}
-      className="relative w-full min-h-screen flex flex-col justify-center items-center overflow-hidden -mt-px"
+      className="relative w-full min-h-[100dvh] flex flex-col justify-center items-center overflow-hidden -mt-px"
     >
       {/* Background image */}
       <div className="absolute inset-0 w-full h-full">

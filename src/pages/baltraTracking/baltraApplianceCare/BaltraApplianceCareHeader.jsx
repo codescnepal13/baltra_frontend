@@ -1,6 +1,7 @@
 import { jwtDecode } from "jwt-decode";
 import { enqueueSnackbar } from "notistack";
 import { useCallback, useEffect, useRef, useState } from "react";
+import { createPortal } from "react-dom";
 import { AiOutlineProduct } from "react-icons/ai";
 import { FaBookOpen, FaHome, FaStar } from "react-icons/fa";
 import { GoSignOut } from "react-icons/go";
@@ -11,7 +12,7 @@ import {
   MdOutlineMedicalServices,
   MdPersonOutline,
 } from "react-icons/md";
-import { RiCustomerService2Line } from "react-icons/ri";
+import { RiTicket2Line } from "react-icons/ri";
 import { useDispatch, useSelector } from "react-redux";
 import { NavLink, useNavigate } from "react-router-dom";
 import ApplianceCareImg from "../../../assets/images/Appliance Care logo.png";
@@ -20,7 +21,6 @@ import SideBarLayout from "../../../components/layout/sideBarLayout/SideBarLayou
 import { setLogout } from "../../../redux/features/auth/authSlice";
 import { baltraSearchProducts } from "../../../redux/features/product/productSlice";
 
-/* ── Helpers ──────────────────────────────────────────────── */
 /* ── Helpers ──────────────────────────────────────────────── */
 const getInitials = (customer) =>
   [customer?.firstname, customer?.lastname]
@@ -41,11 +41,11 @@ const Avatar = ({ customer, size = "sm" }) => {
     <img
       src={customer.image_url}
       alt="avatar"
-      className={`${dim} rounded-full object-cover ring-2 ring-white/30`}
+      className={`${dim} rounded-full object-cover ring-2 ring-black/10`}
     />
   ) : (
     <div
-      className={`${dim} rounded-full bg-gradient-to-br from-red-500 to-red-700 flex items-center justify-center ring-2 ring-white/30 flex-shrink-0`}
+      className={`${dim} rounded-full bg-gradient-to-br from-red-500 to-red-700 flex items-center justify-center ring-2 ring-black/10 flex-shrink-0`}
     >
       <span className="font-semibold text-white font-gothamNarrow leading-none">
         {getInitials(customer)}
@@ -58,7 +58,7 @@ const Avatar = ({ customer, size = "sm" }) => {
 const RewardPill = ({ points }) => {
   if (points == null) return null;
   return (
-    <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-amber-400/20 border border-amber-400/30 text-amber-300">
+    <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-amber-50 border border-amber-200 text-amber-600">
       <FaStar size={9} />
       <span className="text-[10px] font-semibold font-gothamNarrow leading-none">
         {points.toLocaleString()}
@@ -90,7 +90,7 @@ const RewardCard = ({ points }) => {
   );
 };
 
-/* ── NavLink helper ───────────────────────────────────────── */
+/* ── NavLink helper (desktop nav — now white) ─────────────── */
 const HeaderLink = ({ to, children }) => (
   <NavLink
     to={to}
@@ -98,8 +98,8 @@ const HeaderLink = ({ to, children }) => (
     className={({ isActive }) =>
       `text-sm font-gothamNarrow transition-colors duration-150 ${
         isActive
-          ? "text-red-400 underline font-medium"
-          : "text-white/90 hover:text-white hover:underline"
+          ? "text-white underline font-semibold"
+          : "text-white/85 hover:text-white hover:underline"
       }`
     }
   >
@@ -107,7 +107,7 @@ const HeaderLink = ({ to, children }) => (
   </NavLink>
 );
 
-/* ── Dropdown menu item ───────────────────────────────────── */
+/* ── Dropdown menu item (stays dark — sits on white card) ──── */
 const DropdownItem = ({ to, icon: Icon, label, badge, onClick, danger }) => {
   const base =
     "flex items-center gap-2.5 px-3 py-2.5 rounded-xl transition-colors duration-100 group w-full text-left";
@@ -154,20 +154,39 @@ const DropdownItem = ({ to, icon: Icon, label, badge, onClick, danger }) => {
   );
 };
 
-/* ── Bottom nav item ──────────────────────────────────────── */
+/* ── Bottom nav item (stays dark — sits on white/95 bar) ──── */
 const BottomNavItem = ({ to, icon: Icon, label, customIcon }) => (
   <NavLink
     to={to}
     className={({ isActive }) =>
-      `flex flex-col items-center gap-0.5 px-3 py-1 rounded-xl transition-colors ${
-        isActive ? "text-red-600" : "text-gray-500 hover:text-gray-800"
+      `relative flex flex-col items-center justify-center gap-1 px-3 py-1.5 rounded-2xl transition-all duration-200 ${
+        isActive ? "text-red-600" : "text-gray-400 hover:text-gray-700"
       }`
     }
   >
-    {customIcon ?? <Icon size={22} />}
-    <span className="text-[10px] font-semibold font-gothamNarrow tracking-wide">
-      {label}
-    </span>
+    {({ isActive }) => (
+      <>
+        <span
+          className={`absolute -top-[3px] h-[3px] w-7 rounded-full bg-red-600 transition-all duration-300 ${
+            isActive ? "opacity-100 scale-100" : "opacity-0 scale-50"
+          }`}
+        />
+        <span
+          className={`relative flex items-center justify-center w-9 h-9 rounded-xl transition-all duration-200 ${
+            isActive ? "bg-red-50 scale-105" : "scale-100"
+          }`}
+        >
+          {customIcon ?? <Icon size={20} />}
+        </span>
+        <span
+          className={`text-[10px] font-gothamNarrow tracking-wide transition-all duration-200 ${
+            isActive ? "font-bold" : "font-medium"
+          }`}
+        >
+          {label}
+        </span>
+      </>
+    )}
   </NavLink>
 );
 
@@ -240,6 +259,86 @@ const BaltraApplianceCareHeader = () => {
     }
   }
 
+  /* ── Bottom nav (mobile / tablet) ── */
+  const bottomNav = (
+    <nav className="fixed bottom-0 left-0 right-0 z-[999] lg:hidden bg-white/95 backdrop-blur-xl rounded-t-[28px] shadow-[0_-8px_30px_rgba(0,0,0,0.12)] ring-1 ring-black/5 overflow-hidden pb-[env(safe-area-inset-bottom)]">
+      <div className="absolute top-0 left-6 right-6 h-[3px] rounded-full bg-gradient-to-r from-transparent via-red-500 to-transparent" />
+
+      <div className="relative flex items-center justify-around px-2 pt-3 pb-2 max-w-lg mx-auto">
+        <BottomNavItem to="/baltra-aboutUs-Page" icon={FaHome} label="Home" />
+
+        {isAuthenticated && customer ? (
+          <BottomNavItem
+            to="/baltra-trackingProducts"
+            icon={RiTicket2Line}
+            label="Tickets"
+          />
+        ) : (
+          <BottomNavItem
+            to="/baltra-catalog"
+            icon={FaBookOpen}
+            label="Catalog"
+          />
+        )}
+
+        <BottomNavItem
+          to="/baltra-allProducts"
+          icon={AiOutlineProduct}
+          label="Products"
+        />
+
+        {isAuthenticated && customer ? (
+          <NavLink
+            to="/baltra-profileInformation"
+            className={({ isActive }) =>
+              `relative flex flex-col items-center justify-center gap-1 px-3 py-1.5 rounded-2xl transition-all duration-200 ${
+                isActive ? "text-red-600" : "text-gray-400"
+              }`
+            }
+          >
+            {({ isActive }) => (
+              <>
+                <span
+                  className={`absolute -top-[3px] h-[3px] w-7 rounded-full bg-red-600 transition-all duration-300 ${
+                    isActive ? "opacity-100 scale-100" : "opacity-0 scale-50"
+                  }`}
+                />
+                <div
+                  className={`relative transition-transform duration-200 ${
+                    isActive ? "scale-110" : "scale-100"
+                  }`}
+                >
+                  <Avatar customer={customer} size="sm" />
+                  {rewardPoints != null && (
+                    <span className="absolute -top-1.5 -right-2 inline-flex items-center gap-0.5 bg-amber-400 text-white text-[8px] font-bold px-1.5 py-0.5 rounded-full leading-none shadow-sm font-gothamNarrow whitespace-nowrap ring-2 ring-white">
+                      <FaStar size={6} />
+                      {rewardPoints > 999
+                        ? `${Math.floor(rewardPoints / 1000)}k`
+                        : rewardPoints}
+                    </span>
+                  )}
+                </div>
+                <span
+                  className={`text-[10px] font-gothamNarrow tracking-wide ${
+                    isActive ? "font-bold" : "font-medium"
+                  }`}
+                >
+                  Profile
+                </span>
+              </>
+            )}
+          </NavLink>
+        ) : (
+          <BottomNavItem
+            to="/baltra-account-signin"
+            icon={MdPersonOutline}
+            label="Sign In"
+          />
+        )}
+      </div>
+    </nav>
+  );
+
   return (
     <>
       {/* ── Desktop / tablet header ── */}
@@ -253,7 +352,7 @@ const BaltraApplianceCareHeader = () => {
           />
         </NavLink>
 
-        {/* Mobile hamburger */}
+        {/* Mobile hamburger — white */}
         <button
           className="md:hidden p-1.5 rounded-lg hover:bg-white/10 transition-colors"
           onClick={handleShowMenu}
@@ -262,7 +361,7 @@ const BaltraApplianceCareHeader = () => {
           <HiMiniBars3 className="text-white w-6 h-6" />
         </button>
 
-        {/* Desktop nav links */}
+        {/* Desktop nav links — white */}
         <nav className="hidden md:flex items-center space-x-5 lg:space-x-7 ml-6 lg:ml-10">
           <HeaderLink to="/baltra-aboutUs-Page">About Us</HeaderLink>
           <HeaderLink to="/baltra-allProducts">Our Products</HeaderLink>
@@ -275,16 +374,16 @@ const BaltraApplianceCareHeader = () => {
 
         {/* Search + auth */}
         <div className="hidden md:flex items-center gap-3 lg:gap-4">
-          {/* Search pill */}
-          <div className="flex items-center gap-2 w-36 lg:w-52 h-9 px-3 bg-white/10 hover:bg-white/15 border border-white/25 rounded-full transition-colors">
-            <HiSearch className="text-white/70 w-4 h-4 flex-shrink-0" />
+          {/* Search pill — white on dark */}
+          <div className="flex items-center gap-2 w-36 lg:w-52 h-9 px-3 bg-white/10 hover:bg-white/15 border border-white/20 rounded-full transition-colors">
+            <HiSearch className="text-white/80 w-4 h-4 flex-shrink-0" />
             <input
               type="text"
               placeholder="Search…"
               value={product_name}
               onChange={(e) => setProductName(e.target.value)}
               onKeyDown={handleKeyDown}
-              className="bg-transparent border-none text-white text-sm font-gothamNarrow placeholder-white/40 focus:outline-none w-full"
+              className="bg-transparent border-none text-white text-sm font-gothamNarrow placeholder-white/60 focus:outline-none w-full"
             />
           </div>
 
@@ -292,10 +391,10 @@ const BaltraApplianceCareHeader = () => {
           <div className="relative" ref={dropdownRef}>
             {isAuthenticated ? (
               <>
-                {/* Avatar trigger */}
+                {/* Avatar trigger — white text */}
                 <button
                   onClick={() => setIsShownDropDown((v) => !v)}
-                  className="flex items-center gap-2.5 px-2.5 py-1.5 rounded-full bg-white/10 hover:bg-white/20 border border-white/20 hover:border-white/35 transition-all duration-200 focus:outline-none"
+                  className="flex items-center gap-2.5 px-2.5 py-1.5 rounded-full bg-white/10 hover:bg-white/15 border border-white/20 hover:border-white/30 transition-all duration-200 focus:outline-none"
                   aria-haspopup="true"
                   aria-expanded={isShownDropDown}
                 >
@@ -304,18 +403,16 @@ const BaltraApplianceCareHeader = () => {
                     <span className="text-[12px] font-semibold text-white font-gothamNarrow leading-tight truncate w-full">
                       {customer?.firstname}
                     </span>
-                    {/* Reward points pill under name */}
                     {rewardPoints != null ? (
                       <RewardPill points={rewardPoints} />
                     ) : (
-                      <span className="text-[10px] text-white/55 font-gothamNarrow leading-tight">
+                      <span className="text-[10px] text-white/70 font-gothamNarrow leading-tight">
                         My Account
                       </span>
                     )}
                   </div>
-                  {/* Chevron */}
                   <svg
-                    className={`w-3 h-3 text-white/60 flex-shrink-0 transition-transform duration-200 ${
+                    className={`w-3 h-3 text-white/80 flex-shrink-0 transition-transform duration-200 ${
                       isShownDropDown ? "rotate-180" : ""
                     }`}
                     fill="none"
@@ -331,14 +428,13 @@ const BaltraApplianceCareHeader = () => {
                   </svg>
                 </button>
 
-                {/* Dropdown panel */}
+                {/* Dropdown panel — stays dark text on white card */}
                 {isShownDropDown && (
                   <div
                     role="menu"
                     aria-orientation="vertical"
                     className="absolute right-0 top-full mt-3 w-[240px] bg-white border border-slate-200/70 rounded-2xl shadow-xl shadow-black/10 overflow-hidden z-50"
                   >
-                    {/* Identity header */}
                     <div className="flex items-center gap-3 px-4 py-4 bg-gradient-to-br from-red-50 to-orange-50 border-b border-slate-100">
                       <Avatar customer={customer} size="lg" />
                       <div className="min-w-0 flex-1">
@@ -356,10 +452,8 @@ const BaltraApplianceCareHeader = () => {
                       </div>
                     </div>
 
-                    {/* Reward points card */}
                     <RewardCard points={rewardPoints} />
 
-                    {/* Menu items */}
                     <ul role="none" className="p-1.5 flex flex-col gap-0.5">
                       <DropdownItem
                         to="/baltra-profileInformation"
@@ -401,7 +495,6 @@ const BaltraApplianceCareHeader = () => {
                         className="h-px bg-slate-100 mx-2 my-0.5"
                       />
 
-                      {/* Logout — extra sub-label */}
                       <li role="menuitem">
                         <button
                           onClick={openLogoutModal}
@@ -429,7 +522,7 @@ const BaltraApplianceCareHeader = () => {
               </>
             ) : (
               <NavLink to="/baltra-account-signin">
-                <div className="flex items-center gap-2 bg-white hover:bg-gray-50 rounded-full px-4 py-1.5 text-black cursor-pointer transition-colors shadow-sm">
+                <div className="flex items-center gap-2 bg-white hover:bg-gray-100 rounded-full px-4 py-1.5 text-gray-900 cursor-pointer transition-colors shadow-sm">
                   <HiOutlineUser className="w-4 h-4" />
                   <span className="text-sm font-gothamNarrow font-medium">
                     Login
@@ -441,72 +534,15 @@ const BaltraApplianceCareHeader = () => {
         </div>
       </header>
 
-      {/* ── Bottom nav (mobile / tablet) ── */}
-      <nav className="fixed bottom-0 left-0 right-0 bg-white/95 backdrop-blur-md border-t border-gray-200/80 z-50 lg:hidden">
-        <div className="flex items-center justify-around px-2 py-2 max-w-lg mx-auto">
-          <BottomNavItem to="/baltra-aboutUs-Page" icon={FaHome} label="Home" />
+      {createPortal(bottomNav, document.body)}
 
-          {isAuthenticated && customer ? (
-            <BottomNavItem
-              to="/baltra-trackingProducts"
-              icon={RiCustomerService2Line}
-              label="Track"
-            />
-          ) : (
-            <BottomNavItem
-              to="/baltra-catalog"
-              icon={FaBookOpen}
-              label="Catalog"
-            />
-          )}
-
-          <BottomNavItem
-            to="/baltra-allProducts"
-            icon={AiOutlineProduct}
-            label="Products"
-          />
-
-          {isAuthenticated && customer ? (
-            <NavLink
-              to="/baltra-profileInformation"
-              className={({ isActive }) =>
-                `flex flex-col items-center gap-0.5 px-3 py-1 rounded-xl transition-colors ${
-                  isActive ? "text-red-600" : "text-gray-500"
-                }`
-              }
-            >
-              {/* Avatar with reward points badge */}
-              <div className="relative">
-                <Avatar customer={customer} size="sm" />
-                {rewardPoints != null && (
-                  <span className="absolute -top-1.5 -right-2 inline-flex items-center gap-0.5 bg-amber-400 text-white text-[8px] font-bold px-1.5 py-0.5 rounded-full leading-none shadow-sm font-gothamNarrow whitespace-nowrap">
-                    <FaStar size={6} />
-                    {rewardPoints > 999
-                      ? `${Math.floor(rewardPoints / 1000)}k`
-                      : rewardPoints}
-                  </span>
-                )}
-              </div>
-              <span className="text-[10px] font-semibold font-gothamNarrow tracking-wide mt-0.5">
-                Profile
-              </span>
-            </NavLink>
-          ) : (
-            <BottomNavItem
-              to="/baltra-account-signin"
-              icon={MdPersonOutline}
-              label="Sign In"
-            />
-          )}
-        </div>
-      </nav>
-
-      {showSidebar && (
-        <SideBarLayout
-          showSidebar={showSidebar}
-          setShowSidebar={setShowSidebar}
-        />
-      )}
+      {/* Sidebar always mounted so close animation plays */}
+      <SideBarLayout
+        showSidebar={showSidebar}
+        setShowSidebar={setShowSidebar}
+        isAuthenticated={isAuthenticated}
+        onLogoutClick={openLogoutModal}
+      />
 
       {showLogoutModal && (
         <LogoutPopUp

@@ -1,5 +1,4 @@
-import React from "react";
-import NepalMapImg from "../../../assets/images/NepalMap.png";
+import NepalMapImg from "../../../assets/images/NepalLogo.png";
 
 const BaltraDistributor = () => {
   return (

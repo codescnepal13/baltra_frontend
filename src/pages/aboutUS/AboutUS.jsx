@@ -19,18 +19,25 @@ const AboutUS = () => {
         ogImage="https://www.baltra.com/images/baltraAllProductsBanner.png"
         ogUrl="https://www.baltra.com/baltra-aboutUs-Page"
       />
-      <div className="relative w-full h-auto min-h-[50vh] md:h-screen overflow-hidden">
+      <div className="relative w-full h-auto min-h-[50vh] md:h-screen">
+        {/* Image clipped ONLY within this wrapper. TopHeader is rendered
+            as a sibling OUTSIDE this overflow-hidden box, so its `fixed`
+            bottom nav is never bound/clipped to this section's box on
+            scroll — while still visually floating over the banner. */}
+        <div className="absolute inset-0 overflow-hidden">
+          <img
+            src={BaltraImg}
+            alt="Baltra Banner"
+            className="absolute top-0 left-0 w-full h-full object-cover"
+            style={{ maxWidth: "none" }}
+            loading="lazy"
+          />
+        </div>
+
         <div className="absolute top-0 left-0 w-full z-10">
           <TopHeader />
         </div>
 
-        <img
-          src={BaltraImg}
-          alt="Baltra Banner"
-          className="absolute top-0 left-0 w-full h-full object-cover"
-          style={{ maxWidth: "none" }}
-          loading="lazy"
-        />
         <div className="absolute inset-0 flex items-center justify-center md:translate-y-40">
           <div className="inline-flex items-center justify-center mt-40 lg:mt-14 px-8 py-2 bg-[#FCFCFC] hover:bg-gray-50 rounded-md">
             <Link
