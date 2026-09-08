@@ -1,5 +1,5 @@
 import PropTypes from "prop-types";
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { createPortal } from "react-dom";
 import { AiOutlineProduct, AiOutlineRight } from "react-icons/ai";
 import { GoSignOut } from "react-icons/go";
@@ -30,32 +30,59 @@ const SideBarLayout = ({
   isAuthenticated,
   onLogoutClick,
 }) => {
-  // shouldRender keeps the DOM (and portal) mounted long enough for the
-  // close transition to finish playing before we unmount.
-  const [shouldRender, setShouldRender] = useState(showSidebar);
-  // animateIn controls the actual translate/opacity classes.
-  const [animateIn, setAnimateIn] = useState(false);
+  // mounted: whether the panel exists in the DOM at all
+  const [mounted, setMounted] = useState(showSidebar);
+  // visible: whether the "open" transform/opacity classes are applied
+  const [visible, setVisible] = useState(false);
+
+  // Track every pending rAF / timeout so we can fully cancel them,
+  // including nested rAFs, on every toggle and on unmount.
+  const rafIdsRef = useRef([]);
+  const timeoutIdRef = useRef(null);
+  const generationRef = useRef(0);
+
+  const clearPendingWork = () => {
+    rafIdsRef.current.forEach((id) => cancelAnimationFrame(id));
+    rafIdsRef.current = [];
+    if (timeoutIdRef.current !== null) {
+      clearTimeout(timeoutIdRef.current);
+      timeoutIdRef.current = null;
+    }
+  };
 
   useEffect(() => {
-    let openFrame;
-    let closeTimer;
+    // Bump the generation so any callback scheduled by a previous
+    // run of this effect knows it's stale and refuses to apply.
+    const myGeneration = ++generationRef.current;
+
+    // Cancel anything left over from the previous toggle before
+    // starting a new one — this is what the old code was missing
+    // for the *nested* rAF.
+    clearPendingWork();
 
     if (showSidebar) {
-      setShouldRender(true);
-      // mount first with the "closed" classes, then flip to "open"
-      // on the next frame so the browser actually animates the transition
-      openFrame = requestAnimationFrame(() => {
-        requestAnimationFrame(() => setAnimateIn(true));
+      setMounted(true);
+      // Double rAF: mount with "closed" classes first, then flip to
+      // "open" on the next frame so the browser actually animates.
+      const raf1 = requestAnimationFrame(() => {
+        const raf2 = requestAnimationFrame(() => {
+          if (generationRef.current === myGeneration) {
+            setVisible(true);
+          }
+        });
+        rafIdsRef.current.push(raf2);
       });
+      rafIdsRef.current.push(raf1);
     } else {
-      setAnimateIn(false);
-      closeTimer = setTimeout(() => setShouldRender(false), TRANSITION_MS);
+      setVisible(false);
+      timeoutIdRef.current = setTimeout(() => {
+        if (generationRef.current === myGeneration) {
+          setMounted(false);
+        }
+      }, TRANSITION_MS);
     }
 
-    return () => {
-      cancelAnimationFrame(openFrame);
-      clearTimeout(closeTimer);
-    };
+    return clearPendingWork;
   }, [showSidebar]);
 
   useEffect(() => {
@@ -67,7 +94,7 @@ const SideBarLayout = ({
 
   const handleCloseSidebar = () => setShowSidebar(false);
 
-  if (!shouldRender) return null;
+  if (!mounted) return null;
 
   const sidebarContent = (
     <>
@@ -76,26 +103,24 @@ const SideBarLayout = ({
         onClick={handleCloseSidebar}
         aria-hidden="true"
         className={`fixed inset-0 bg-black/40 backdrop-blur-[2px] z-[9998] transition-opacity duration-300 ease-out ${
-          animateIn ? "opacity-100 visible" : "opacity-0 invisible"
+          visible ? "opacity-100 visible" : "opacity-0 invisible"
         }`}
       />
 
       {/* Panel */}
       <div
         className={`font-gothamNarrow fixed top-0 left-0 w-full md:w-2/6 h-full bg-white z-[9999] shadow-2xl transform transition-transform duration-[350ms] ${
-          animateIn ? "translate-x-0" : "-translate-x-full"
+          visible ? "translate-x-0" : "-translate-x-full"
         }`}
         style={{ transitionTimingFunction: "cubic-bezier(0.32, 0.72, 0, 1)" }}
       >
         <div className="flex justify-between items-center p-4 my-5">
-          {/* Logo at the far left */}
           <img
             src={RedBaltraLogoImg}
             alt="Red Baltra Logo"
             className="h-8 md:h-10 w-auto object-contain"
           />
 
-          {/* MENU label + close icon stay at their original right-end position */}
           <button
             onClick={handleCloseSidebar}
             className="text-gray-600 hover:text-gray-800 transition duration-300 flex items-center"

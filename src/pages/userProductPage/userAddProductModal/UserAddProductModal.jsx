@@ -294,8 +294,15 @@ const UserAddProductModal = ({ handleClose }) => {
   const today = new Date().toISOString().split("T")[0];
 
   return (
+    // FIX: z-[1200] — was z-50. TopHeader's bottom nav is rendered via a
+    // React portal straight onto document.body at z-[999], so it escapes
+    // this component's own stacking context entirely. Any z-index below
+    // 999 here means the bottom nav will always paint ON TOP of this
+    // modal, which is exactly what was chopping the bottom of the form
+    // (Purchase date field / Save button) in the screenshot. Matches the
+    // same z-[1200] convention already used in AddRegisteredComplaintModal.
     <div
-      className="fixed inset-0 z-50 flex items-end sm:items-center justify-center bg-black/50 backdrop-blur-[2px] overflow-y-auto"
+      className="fixed inset-0 z-[1200] flex items-end sm:items-center justify-center bg-black/50 backdrop-blur-[2px] overflow-y-auto"
       onClick={handleClose}
     >
       {/* ── Sheet / Modal ── */}
@@ -346,7 +353,7 @@ const UserAddProductModal = ({ handleClose }) => {
         <div className="overflow-y-auto flex-1 overscroll-contain">
           <form
             onSubmit={handleSubmit}
-            className="px-4 sm:px-6 py-4 sm:py-5 space-y-5 sm:space-y-6"
+            className="px-4 sm:px-6 py-4 sm:py-5 space-y-5 sm:space-y-6 pb-[calc(1rem+env(safe-area-inset-bottom))] sm:pb-5"
             noValidate
           >
             {/* Upload images */}

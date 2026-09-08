@@ -313,7 +313,9 @@ const App = () => {
                   >
                     <EditPassword />
                   </PrivateRoute>
-                  <Footer />
+                  <div className="hidden lg:block">
+                    <Footer />
+                  </div>
                 </>
               }
             />
@@ -324,7 +326,9 @@ const App = () => {
                 customer && customer?.is_verified ? (
                   <>
                     <Register />
-                    <Footer />
+                    <div className="hidden lg:block">
+                      <Footer />
+                    </div>
                   </>
                 ) : (
                   <Navigate to="/baltra-account-signin" />
@@ -345,7 +349,9 @@ const App = () => {
                 ) : (
                   <>
                     <BaltraLogin />
-                    <Footer />
+                    <div className="hidden lg:block">
+                      <Footer />
+                    </div>
                   </>
                 )
               }
@@ -355,7 +361,9 @@ const App = () => {
               element={
                 <>
                   <BaltraMobile />
-                  <Footer />
+                  <div className="hidden lg:block">
+                    <Footer />
+                  </div>
                 </>
               }
             />
@@ -364,7 +372,9 @@ const App = () => {
               element={
                 <>
                   <VerifyOTP />
-                  <Footer />
+                  <div className="hidden lg:block">
+                    <Footer />
+                  </div>
                 </>
               }
             />
@@ -373,7 +383,9 @@ const App = () => {
               element={
                 <>
                   <ForgotPassword />
-                  <Footer />
+                  <div className="hidden lg:block">
+                    <Footer />
+                  </div>
                 </>
               }
             />
@@ -382,7 +394,9 @@ const App = () => {
               element={
                 <>
                   <ResetOTPVerify />
-                  <Footer />
+                  <div className="hidden lg:block">
+                    <Footer />
+                  </div>
                 </>
               }
             />
@@ -391,7 +405,9 @@ const App = () => {
               element={
                 <>
                   <ResetPassword />
-                  <Footer />
+                  <div className="hidden lg:block">
+                    <Footer />
+                  </div>
                 </>
               }
             />
@@ -408,7 +424,9 @@ const App = () => {
               element={
                 <>
                   <BaltraSuccessModal />
-                  <Footer />
+                  <div className="hidden lg:block">
+                    <Footer />
+                  </div>
                 </>
               }
             />
@@ -468,7 +486,6 @@ const App = () => {
                   >
                     <BaltraExtendWarranty />
                   </PrivateRoute>
-
                   <Footer />
                 </>
               }

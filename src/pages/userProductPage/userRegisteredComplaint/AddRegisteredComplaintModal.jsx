@@ -189,6 +189,17 @@ const AddRegisteredComplaintModal = ({ handleClose, complaintDetails }) => {
     }
   }, [dispatch, error]);
 
+  /* ── Lock background scroll while modal is open, so the bottom
+     nav (portal-rendered, fixed) never fights this modal's own
+     scroll and the form is always fully reachable ── */
+  useEffect(() => {
+    const originalOverflow = document.body.style.overflow;
+    document.body.style.overflow = "hidden";
+    return () => {
+      document.body.style.overflow = originalOverflow;
+    };
+  }, []);
+
   /* ── Quill toolbar config ── */
   const quillModules = {
     toolbar: [
@@ -207,10 +218,16 @@ const AddRegisteredComplaintModal = ({ handleClose, complaintDetails }) => {
   const errorText = "mt-1 text-xs text-red-600";
 
   return (
-    <div className="fixed inset-0 z-50 flex items-start justify-center bg-black/55 overflow-y-auto py-8 px-4">
-      <div className="relative w-full max-w-2xl bg-white rounded shadow-xl overflow-hidden">
-        {/* ── Header ── */}
-        <div className="flex items-center gap-3 bg-red-600 px-6 py-4">
+    // z-[1200]: sits above TopHeader's bottom nav (z-[999]) so the nav
+    // never overlaps/chops the modal once it renders.
+    <div className="fixed inset-0 z-[1200] flex items-start sm:items-center justify-center bg-black/55 p-0 sm:p-4">
+      <div
+        className="relative w-full sm:max-w-2xl bg-white sm:rounded shadow-xl
+          h-[100dvh] sm:h-auto sm:max-h-[90vh]
+          flex flex-col overflow-hidden"
+      >
+        {/* ── Header (fixed — never scrolls away) ── */}
+        <div className="flex-shrink-0 flex items-center gap-3 bg-red-600 px-6 py-4">
           <MdOutlineAddHomeWork size={22} className="text-white shrink-0" />
           <h2 className="text-white text-base font-medium tracking-wide flex-1">
             Add Registered Complaint
@@ -225,142 +242,42 @@ const AddRegisteredComplaintModal = ({ handleClose, complaintDetails }) => {
         </div>
 
         {/* ── Red accent line ── */}
-        <div className="h-0.5 bg-gradient-to-r from-red-700 via-red-400 to-red-700" />
+        <div className="flex-shrink-0 h-0.5 bg-gradient-to-r from-red-700 via-red-400 to-red-700" />
 
-        <form onSubmit={handleSubmit} className="px-6 py-6 space-y-6">
-          {/* ── Serial number image (new, shown above the damaged/warranty row) ── */}
-          <div>
-            <p className={labelBase}>
-              Serial number image{" "}
-              <span className="text-red-600 normal-case">*</span>
-            </p>
-            <label
-              htmlFor="serial_number_image"
-              className={`flex flex-col items-center justify-center h-36 rounded cursor-pointer border-2 border-dashed transition-colors duration-150 overflow-hidden
-                ${
-                  serialNumberImagePreview
-                    ? "border-gray-300"
-                    : "border-gray-300 bg-gray-50 hover:bg-gray-100"
-                }`}
-            >
-              {serialNumberImagePreview ? (
-                <img
-                  src={serialNumberImagePreview}
-                  alt="Serial number"
-                  className="object-contain w-full h-full"
-                />
-              ) : (
-                <div className="flex flex-col items-center gap-1.5 text-gray-400">
-                  <svg
-                    xmlns="http://www.w3.org/2000/svg"
-                    className="w-8 h-8"
-                    fill="none"
-                    viewBox="0 0 24 24"
-                    stroke="currentColor"
-                    strokeWidth={1.5}
-                  >
-                    <path
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                      d="M4 9h16M4 15h16M9 4L7 20m10-16l-2 16"
-                    />
-                  </svg>
-                  <span className="text-xs font-medium">
-                    Upload serial number photo
-                  </span>
-                </div>
-              )}
-            </label>
-            <input
-              id="serial_number_image"
-              type="file"
-              name="serial_number_image"
-              accept="image/*"
-              className="hidden"
-              onChange={handleSerialNumberImage}
-            />
-            {complaintErr.serial_number_image && (
-              <p className={errorText}>{complaintErr.serial_number_image}</p>
-            )}
-          </div>
-
-          {/* ── Upload row ── */}
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-            {/* Damaged image */}
+        {/* ── Scrollable body — this is what was missing before.
+             flex-1 + overflow-y-auto lets the form scroll fully
+             within the card, independent of the fixed header and
+             independent of whatever sits underneath the modal
+             (including the bottom nav). Extra bottom padding
+             clears the mobile safe-area + bottom nav height so the
+             submit button is never hidden. ── */}
+        <div
+          className="flex-1 overflow-y-auto overscroll-contain"
+          style={{ WebkitOverflowScrolling: "touch" }}
+        >
+          <form
+            onSubmit={handleSubmit}
+            className="px-6 py-6 space-y-6 pb-[calc(1.5rem+env(safe-area-inset-bottom)+72px)] sm:pb-6"
+          >
+            {/* ── Serial number image (new, shown above the damaged/warranty row) ── */}
             <div>
               <p className={labelBase}>
-                Damaged image{" "}
+                Serial number image{" "}
                 <span className="text-red-600 normal-case">*</span>
               </p>
               <label
-                htmlFor="damaged_image"
+                htmlFor="serial_number_image"
                 className={`flex flex-col items-center justify-center h-36 rounded cursor-pointer border-2 border-dashed transition-colors duration-150 overflow-hidden
                   ${
-                    damagedImagePreview
-                      ? "border-red-300"
-                      : "border-red-400 bg-red-50 hover:bg-red-100"
-                  }`}
-              >
-                {damagedImagePreview ? (
-                  <img
-                    src={damagedImagePreview}
-                    alt="Damaged product"
-                    className="object-contain w-full h-full"
-                  />
-                ) : (
-                  <div className="flex flex-col items-center gap-1.5 text-red-500">
-                    <svg
-                      xmlns="http://www.w3.org/2000/svg"
-                      className="w-8 h-8"
-                      fill="none"
-                      viewBox="0 0 24 24"
-                      stroke="currentColor"
-                      strokeWidth={1.5}
-                    >
-                      <path
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                        d="M3 16.5v2.25A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75V16.5m-13.5-9L12 3m0 0l4.5 4.5M12 3v13.5"
-                      />
-                    </svg>
-                    <span className="text-xs font-medium">
-                      Upload product photo
-                    </span>
-                  </div>
-                )}
-              </label>
-              <input
-                id="damaged_image"
-                type="file"
-                name="damaged_image"
-                accept="image/*"
-                className="hidden"
-                onChange={handleProductFileInputChange}
-              />
-              {complaintErr.damaged_image && (
-                <p className={errorText}>{complaintErr.damaged_image}</p>
-              )}
-            </div>
-
-            {/* Warranty image */}
-            <div>
-              <p className={labelBase}>
-                Warranty card image{" "}
-                <span className="text-red-600 normal-case">*</span>
-              </p>
-              <label
-                htmlFor="warranty_image"
-                className={`flex flex-col items-center justify-center h-36 rounded cursor-pointer border-2 border-dashed transition-colors duration-150 overflow-hidden
-                  ${
-                    warrantyImagePreview
+                    serialNumberImagePreview
                       ? "border-gray-300"
                       : "border-gray-300 bg-gray-50 hover:bg-gray-100"
                   }`}
               >
-                {warrantyImagePreview ? (
+                {serialNumberImagePreview ? (
                   <img
-                    src={warrantyImagePreview}
-                    alt="Warranty card"
+                    src={serialNumberImagePreview}
+                    alt="Serial number"
                     className="object-contain w-full h-full"
                   />
                 ) : (
@@ -376,239 +293,355 @@ const AddRegisteredComplaintModal = ({ handleClose, complaintDetails }) => {
                       <path
                         strokeLinecap="round"
                         strokeLinejoin="round"
-                        d="M9 12.75L11.25 15 15 9.75m-3-7.036A11.959 11.959 0 013.598 6 11.99 11.99 0 003 9.749c0 5.592 3.824 10.29 9 11.623 5.176-1.332 9-6.03 9-11.622 0-1.31-.21-2.571-.598-3.751h-.152c-3.196 0-6.1-1.248-8.25-3.285z"
+                        d="M4 9h16M4 15h16M9 4L7 20m10-16l-2 16"
                       />
                     </svg>
                     <span className="text-xs font-medium">
-                      Upload warranty card
+                      Upload serial number photo
                     </span>
                   </div>
                 )}
               </label>
               <input
-                id="warranty_image"
+                id="serial_number_image"
                 type="file"
-                name="warranty_image"
+                name="serial_number_image"
                 accept="image/*"
                 className="hidden"
-                onChange={handleWarrantyCardImage}
+                onChange={handleSerialNumberImage}
               />
-              {complaintErr.warranty_image && (
-                <p className={errorText}>{complaintErr.warranty_image}</p>
+              {complaintErr.serial_number_image && (
+                <p className={errorText}>{complaintErr.serial_number_image}</p>
               )}
             </div>
-          </div>
 
-          {/* ── Zone / Area ── */}
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-            <div>
-              <label className={labelBase}>Zone</label>
-              <select
-                value={
-                  DistrictsData.find((z) => z.zoneName === selectedZone)?.id ||
-                  ""
-                }
-                onChange={handleZoneChange}
-                name="zone"
-                className={inputBase}
-              >
-                <option value="">Select a zone</option>
-                {DistrictsData.map((zone) => (
-                  <option key={zone.id} value={zone.id}>
-                    {zone.zoneName}
-                  </option>
-                ))}
-              </select>
-            </div>
-            <div>
-              <label className={labelBase}>Area</label>
-              <select
-                value={selectedArea}
-                onChange={handleAreaChange}
-                name="area"
-                className={inputBase}
-              >
-                <option value="">Select an area</option>
-                {zoneAreas.map((area) => (
-                  <option key={area.id} value={area.areaName}>
-                    {area.areaName}
-                  </option>
-                ))}
-              </select>
-            </div>
-          </div>
+            {/* ── Upload row ── */}
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              {/* Damaged image */}
+              <div>
+                <p className={labelBase}>
+                  Damaged image{" "}
+                  <span className="text-red-600 normal-case">*</span>
+                </p>
+                <label
+                  htmlFor="damaged_image"
+                  className={`flex flex-col items-center justify-center h-36 rounded cursor-pointer border-2 border-dashed transition-colors duration-150 overflow-hidden
+                    ${
+                      damagedImagePreview
+                        ? "border-red-300"
+                        : "border-red-400 bg-red-50 hover:bg-red-100"
+                    }`}
+                >
+                  {damagedImagePreview ? (
+                    <img
+                      src={damagedImagePreview}
+                      alt="Damaged product"
+                      className="object-contain w-full h-full"
+                    />
+                  ) : (
+                    <div className="flex flex-col items-center gap-1.5 text-red-500">
+                      <svg
+                        xmlns="http://www.w3.org/2000/svg"
+                        className="w-8 h-8"
+                        fill="none"
+                        viewBox="0 0 24 24"
+                        stroke="currentColor"
+                        strokeWidth={1.5}
+                      >
+                        <path
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                          d="M3 16.5v2.25A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75V16.5m-13.5-9L12 3m0 0l4.5 4.5M12 3v13.5"
+                        />
+                      </svg>
+                      <span className="text-xs font-medium">
+                        Upload product photo
+                      </span>
+                    </div>
+                  )}
+                </label>
+                <input
+                  id="damaged_image"
+                  type="file"
+                  name="damaged_image"
+                  accept="image/*"
+                  className="hidden"
+                  onChange={handleProductFileInputChange}
+                />
+                {complaintErr.damaged_image && (
+                  <p className={errorText}>{complaintErr.damaged_image}</p>
+                )}
+              </div>
 
-          {/* ── Model name / Model code ── */}
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-            <div>
-              <label className={labelBase}>Model name</label>
-              <input
-                type="text"
-                name="model_name"
-                value={complaintValue.model_name}
-                onChange={handleInputChange}
-                readOnly
-                className={readonlyInput}
-                placeholder="Rice Cooker"
-              />
+              {/* Warranty image */}
+              <div>
+                <p className={labelBase}>
+                  Warranty card image{" "}
+                  <span className="text-red-600 normal-case">*</span>
+                </p>
+                <label
+                  htmlFor="warranty_image"
+                  className={`flex flex-col items-center justify-center h-36 rounded cursor-pointer border-2 border-dashed transition-colors duration-150 overflow-hidden
+                    ${
+                      warrantyImagePreview
+                        ? "border-gray-300"
+                        : "border-gray-300 bg-gray-50 hover:bg-gray-100"
+                    }`}
+                >
+                  {warrantyImagePreview ? (
+                    <img
+                      src={warrantyImagePreview}
+                      alt="Warranty card"
+                      className="object-contain w-full h-full"
+                    />
+                  ) : (
+                    <div className="flex flex-col items-center gap-1.5 text-gray-400">
+                      <svg
+                        xmlns="http://www.w3.org/2000/svg"
+                        className="w-8 h-8"
+                        fill="none"
+                        viewBox="0 0 24 24"
+                        stroke="currentColor"
+                        strokeWidth={1.5}
+                      >
+                        <path
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                          d="M9 12.75L11.25 15 15 9.75m-3-7.036A11.959 11.959 0 013.598 6 11.99 11.99 0 003 9.749c0 5.592 3.824 10.29 9 11.623 5.176-1.332 9-6.03 9-11.622 0-1.31-.21-2.571-.598-3.751h-.152c-3.196 0-6.1-1.248-8.25-3.285z"
+                        />
+                      </svg>
+                      <span className="text-xs font-medium">
+                        Upload warranty card
+                      </span>
+                    </div>
+                  )}
+                </label>
+                <input
+                  id="warranty_image"
+                  type="file"
+                  name="warranty_image"
+                  accept="image/*"
+                  className="hidden"
+                  onChange={handleWarrantyCardImage}
+                />
+                {complaintErr.warranty_image && (
+                  <p className={errorText}>{complaintErr.warranty_image}</p>
+                )}
+              </div>
             </div>
+
+            {/* ── Zone / Area ── */}
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              <div>
+                <label className={labelBase}>Zone</label>
+                <select
+                  value={
+                    DistrictsData.find((z) => z.zoneName === selectedZone)
+                      ?.id || ""
+                  }
+                  onChange={handleZoneChange}
+                  name="zone"
+                  className={inputBase}
+                >
+                  <option value="">Select a zone</option>
+                  {DistrictsData.map((zone) => (
+                    <option key={zone.id} value={zone.id}>
+                      {zone.zoneName}
+                    </option>
+                  ))}
+                </select>
+              </div>
+              <div>
+                <label className={labelBase}>Area</label>
+                <select
+                  value={selectedArea}
+                  onChange={handleAreaChange}
+                  name="area"
+                  className={inputBase}
+                >
+                  <option value="">Select an area</option>
+                  {zoneAreas.map((area) => (
+                    <option key={area.id} value={area.areaName}>
+                      {area.areaName}
+                    </option>
+                  ))}
+                </select>
+              </div>
+            </div>
+
+            {/* ── Model name / Model code ── */}
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              <div>
+                <label className={labelBase}>Model name</label>
+                <input
+                  type="text"
+                  name="model_name"
+                  value={complaintValue.model_name}
+                  onChange={handleInputChange}
+                  readOnly
+                  className={readonlyInput}
+                  placeholder="Rice Cooker"
+                />
+              </div>
+              <div>
+                <label className={labelBase}>
+                  Model code <span className="text-red-600 normal-case">*</span>
+                </label>
+                <input
+                  type="text"
+                  name="modelCode"
+                  value={complaintValue.modelCode}
+                  onChange={handleInputChange}
+                  placeholder="e.g. RC-1500"
+                  className={`${inputBase} ${complaintErr.modelCode ? "border-red-500" : ""}`}
+                />
+                {complaintErr.modelCode && (
+                  <p className={errorText}>{complaintErr.modelCode}</p>
+                )}
+              </div>
+            </div>
+
+            {/* ── Serial number / Problem type ── */}
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              <div>
+                <label className={labelBase}>
+                  Serial number{" "}
+                  <span className="text-red-600 normal-case">*</span>
+                </label>
+                <input
+                  type="text"
+                  name="serial_number"
+                  value={complaintValue.serial_number}
+                  onChange={handleInputChange}
+                  readOnly
+                  className={readonlyInput}
+                  placeholder="Serial number"
+                />
+                {complaintErr.serial_number && (
+                  <p className={errorText}>{complaintErr.serial_number}</p>
+                )}
+              </div>
+              <div>
+                <label className={labelBase}>Problem type</label>
+                <input
+                  type="text"
+                  name="problem_type"
+                  value={problem_type}
+                  onChange={handleInputChange}
+                  placeholder="e.g. Not heating"
+                  className={inputBase}
+                />
+              </div>
+            </div>
+
+            {/* ── Complaint remark ── */}
             <div>
               <label className={labelBase}>
-                Model code <span className="text-red-600 normal-case">*</span>
-              </label>
-              <input
-                type="text"
-                name="modelCode"
-                value={complaintValue.modelCode}
-                onChange={handleInputChange}
-                placeholder="e.g. RC-1500"
-                className={`${inputBase} ${complaintErr.modelCode ? "border-red-500" : ""}`}
-              />
-              {complaintErr.modelCode && (
-                <p className={errorText}>{complaintErr.modelCode}</p>
-              )}
-            </div>
-          </div>
-
-          {/* ── Serial number / Problem type ── */}
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-            <div>
-              <label className={labelBase}>
-                Serial number{" "}
+                Complaint remark{" "}
                 <span className="text-red-600 normal-case">*</span>
               </label>
-              <input
-                type="text"
-                name="serial_number"
-                value={complaintValue.serial_number}
-                onChange={handleInputChange}
-                readOnly
-                className={readonlyInput}
-                placeholder="Serial number"
-              />
-              {complaintErr.serial_number && (
-                <p className={errorText}>{complaintErr.serial_number}</p>
+              <div className="border border-gray-300 rounded overflow-hidden focus-within:border-red-600 transition-colors duration-150">
+                <ReactQuill
+                  theme="snow"
+                  value={productDescription}
+                  onChange={handleDescriptionChange}
+                  modules={quillModules}
+                  className="baltra-quill"
+                />
+              </div>
+              {complaintErr.productDescription && (
+                <p className={errorText}>{complaintErr.productDescription}</p>
               )}
             </div>
+
+            {/* ── Damaged video ── */}
             <div>
-              <label className={labelBase}>Problem type</label>
+              <p className={labelBase}>
+                Damaged video{" "}
+                <span className="text-red-600 normal-case">*</span>
+              </p>
+              <label
+                htmlFor="damaged_Video"
+                className={`flex flex-col items-center justify-center h-24 rounded cursor-pointer border-2 border-dashed transition-colors duration-150 overflow-hidden
+                  ${
+                    damagedVideoPreview
+                      ? "border-gray-300"
+                      : "border-gray-300 bg-gray-50 hover:bg-gray-100"
+                  }`}
+              >
+                {damagedVideoPreview ? (
+                  <video
+                    src={damagedVideoPreview}
+                    controls
+                    className="object-cover w-full h-full"
+                  />
+                ) : (
+                  <div className="flex flex-col items-center gap-1.5 text-gray-400">
+                    <svg
+                      xmlns="http://www.w3.org/2000/svg"
+                      className="w-7 h-7"
+                      fill="none"
+                      viewBox="0 0 24 24"
+                      stroke="currentColor"
+                      strokeWidth={1.5}
+                    >
+                      <path
+                        strokeLinecap="round"
+                        d="M15.75 10.5l4.72-4.72a.75.75 0 011.28.53v11.38a.75.75 0 01-1.28.53l-4.72-4.72M4.5 18.75h9a2.25 2.25 0 002.25-2.25v-9a2.25 2.25 0 00-2.25-2.25h-9A2.25 2.25 0 002.25 7.5v9a2.25 2.25 0 002.25 2.25z"
+                      />
+                    </svg>
+                    <span className="text-xs font-medium">
+                      Upload video of damaged product
+                    </span>
+                  </div>
+                )}
+              </label>
               <input
-                type="text"
-                name="problem_type"
-                value={problem_type}
-                onChange={handleInputChange}
-                placeholder="e.g. Not heating"
-                className={inputBase}
+                id="damaged_Video"
+                type="file"
+                name="damaged_Video"
+                accept="video/*"
+                className="hidden"
+                onChange={handleVideoUpload}
               />
+              {complaintErr.damaged_Video && (
+                <p className={errorText}>{complaintErr.damaged_Video}</p>
+              )}
             </div>
-          </div>
 
-          {/* ── Complaint remark ── */}
-          <div>
-            <label className={labelBase}>
-              Complaint remark{" "}
-              <span className="text-red-600 normal-case">*</span>
-            </label>
-            <div className="border border-gray-300 rounded overflow-hidden focus-within:border-red-600 transition-colors duration-150">
-              <ReactQuill
-                theme="snow"
-                value={productDescription}
-                onChange={handleDescriptionChange}
-                modules={quillModules}
-                className="baltra-quill"
-              />
-            </div>
-            {complaintErr.productDescription && (
-              <p className={errorText}>{complaintErr.productDescription}</p>
-            )}
-          </div>
-
-          {/* ── Damaged video ── */}
-          <div>
-            <p className={labelBase}>
-              Damaged video <span className="text-red-600 normal-case">*</span>
-            </p>
-            <label
-              htmlFor="damaged_Video"
-              className={`flex flex-col items-center justify-center h-24 rounded cursor-pointer border-2 border-dashed transition-colors duration-150 overflow-hidden
-                ${
-                  damagedVideoPreview
-                    ? "border-gray-300"
-                    : "border-gray-300 bg-gray-50 hover:bg-gray-100"
-                }`}
+            {/* ── Submit ── */}
+            <button
+              type="submit"
+              disabled={isProcessing}
+              className="w-full bg-red-600 hover:bg-red-700 active:bg-red-800 text-white text-sm font-medium py-3 rounded transition-colors duration-150 flex items-center justify-center gap-2 disabled:opacity-70 disabled:cursor-not-allowed"
             >
-              {damagedVideoPreview ? (
-                <video
-                  src={damagedVideoPreview}
-                  controls
-                  className="object-cover w-full h-full"
-                />
+              {isProcessing ? (
+                <>
+                  <span className="inline-block w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+                  Submitting…
+                </>
               ) : (
-                <div className="flex flex-col items-center gap-1.5 text-gray-400">
+                <>
                   <svg
                     xmlns="http://www.w3.org/2000/svg"
-                    className="w-7 h-7"
+                    className="w-4 h-4"
                     fill="none"
                     viewBox="0 0 24 24"
                     stroke="currentColor"
-                    strokeWidth={1.5}
+                    strokeWidth={2}
                   >
                     <path
                       strokeLinecap="round"
-                      d="M15.75 10.5l4.72-4.72a.75.75 0 011.28.53v11.38a.75.75 0 01-1.28.53l-4.72-4.72M4.5 18.75h9a2.25 2.25 0 002.25-2.25v-9a2.25 2.25 0 00-2.25-2.25h-9A2.25 2.25 0 002.25 7.5v9a2.25 2.25 0 002.25 2.25z"
+                      strokeLinejoin="round"
+                      d="M6 12L3.269 3.126A59.768 59.768 0 0121.485 12 59.77 59.77 0 013.27 20.876L5.999 12zm0 0h7.5"
                     />
                   </svg>
-                  <span className="text-xs font-medium">
-                    Upload video of damaged product
-                  </span>
-                </div>
+                  Submit complaint
+                </>
               )}
-            </label>
-            <input
-              id="damaged_Video"
-              type="file"
-              name="damaged_Video"
-              accept="video/*"
-              className="hidden"
-              onChange={handleVideoUpload}
-            />
-            {complaintErr.damaged_Video && (
-              <p className={errorText}>{complaintErr.damaged_Video}</p>
-            )}
-          </div>
-
-          {/* ── Submit ── */}
-          <button
-            type="submit"
-            disabled={isProcessing}
-            className="w-full bg-red-600 hover:bg-red-700 active:bg-red-800 text-white text-sm font-medium py-3 rounded transition-colors duration-150 flex items-center justify-center gap-2 disabled:opacity-70 disabled:cursor-not-allowed"
-          >
-            {isProcessing ? (
-              <>
-                <span className="inline-block w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
-                Submitting…
-              </>
-            ) : (
-              <>
-                <svg
-                  xmlns="http://www.w3.org/2000/svg"
-                  className="w-4 h-4"
-                  fill="none"
-                  viewBox="0 0 24 24"
-                  stroke="currentColor"
-                  strokeWidth={2}
-                >
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    d="M6 12L3.269 3.126A59.768 59.768 0 0121.485 12 59.77 59.77 0 013.27 20.876L5.999 12zm0 0h7.5"
-                  />
-                </svg>
-                Submit complaint
-              </>
-            )}
-          </button>
-        </form>
+            </button>
+          </form>
+        </div>
       </div>
 
       {/* ── Quill overrides to match Baltra theme ── */}

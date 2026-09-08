@@ -114,52 +114,61 @@ const AllProductsBanner = ({ onSearchChange, onClearSearch, searchState }) => {
 
   return (
     <>
-      {/* Hero banner — unchanged */}
+      {/* Hero banner */}
       <div className="relative w-full bg-gradient-to-r from-[#E91C1C] to-[#831010]">
         <div className="absolute top-0 left-0 w-full z-10">
           <TopHeader />
         </div>
-        <div className="flex flex-col md:flex-row justify-between items-center pt-14 h-auto md:h-[258px] px-4 sm:px-8 lg:px-16 2xl:px-24">
+        <div className="flex flex-col md:flex-row justify-between items-center pt-14 h-auto md:h-[258px] px-4 sm:px-8 lg:px-16 2xl:px-24 pb-6 md:pb-0">
           <img
             src={RiceCookerImg}
             alt="Rice Cooker"
-            className="w-[80px] h-[80px] sm:w-[120px] sm:h-[120px] lg:w-[230px] lg:h-[170px] object-contain"
+            className="w-[60px] h-[60px] xs:w-[80px] xs:h-[80px] sm:w-[120px] sm:h-[120px] lg:w-[230px] lg:h-[170px] object-contain flex-shrink-0"
           />
-          <div className="text-white text-center my-4 md:my-0">
-            <div className="text-lg sm:text-xl lg:text-3xl 2xl:text-4xl font-medium font-gothamNarrow tracking-wide">
+          <div className="text-white text-center my-3 md:my-0 px-2">
+            <div className="text-base xs:text-lg sm:text-xl lg:text-3xl 2xl:text-4xl font-medium font-gothamNarrow tracking-wide leading-snug">
               What are You Looking for?
             </div>
-            <div className="text-sm lg:text-base 2xl:text-lg font-gothamNarrow tracking-wide mt-2">
+            <div className="text-xs xs:text-sm lg:text-base 2xl:text-lg font-gothamNarrow tracking-wide mt-2">
               Empower Your Home, Elevate Your Lifestyle!
             </div>
           </div>
           <img
             src={FanImg}
             alt="Fan"
-            className="w-[80px] h-[80px] sm:w-[120px] sm:h-[120px] lg:w-[140px] lg:h-[190px] object-contain"
+            className="w-[60px] h-[60px] xs:w-[80px] xs:h-[80px] sm:w-[120px] sm:h-[120px] lg:w-[140px] lg:h-[190px] object-contain flex-shrink-0"
           />
         </div>
       </div>
 
       {/* Search + filter */}
-      <div className="flex justify-center relative -top-6 md:-top-10 z-30 px-4">
+      <div className="flex justify-center relative -top-6 md:-top-10 z-30 px-3 sm:px-4">
         <div ref={dropdownRef} className="w-full max-w-[632px]">
           <div
-            className={`w-full h-12 px-4 bg-white shadow-lg flex items-center gap-3 transition-all duration-200 ${
+            className={`w-full h-12 px-3 sm:px-4 bg-white shadow-lg flex items-center gap-2 sm:gap-3 transition-all duration-200 ${
               dropdownOpen ? "rounded-t-xl rounded-b-none" : "rounded-xl"
             }`}
           >
             <FiSearch className="w-4 h-4 text-neutral-400 flex-shrink-0" />
 
-            <input
-              type="text"
-              placeholder="Search product using name, category or model"
-              value={product_name}
-              onChange={handleInputChange}
-              onKeyDown={handleKeyDown}
-              onFocus={() => setDropdownOpen(true)}
-              className="flex-1 min-w-0 bg-transparent border-none outline-none text-sm text-black font-gothamNarrow leading-loose placeholder:text-neutral-400"
-            />
+            <div className="relative flex-1 min-w-0">
+              <input
+                type="text"
+                value={product_name}
+                onChange={handleInputChange}
+                onKeyDown={handleKeyDown}
+                onFocus={() => setDropdownOpen(true)}
+                className="w-full bg-transparent border-none outline-none text-sm text-black font-gothamNarrow leading-loose"
+              />
+              {product_name === "" && (
+                <span className="absolute inset-y-0 left-0 flex items-center text-neutral-400 text-sm pointer-events-none truncate pr-2">
+                  <span className="sm:hidden">Search products...</span>
+                  <span className="hidden sm:inline">
+                    Search product using name, category or model
+                  </span>
+                </span>
+              )}
+            </div>
 
             {/* Clear all — shown only when search is active */}
             {searchState?.isActive && (
@@ -173,13 +182,13 @@ const AllProductsBanner = ({ onSearchChange, onClearSearch, searchState }) => {
             )}
 
             {activeFilter && (
-              <div className="flex items-center gap-1 bg-red-50 border border-red-200 rounded-full px-2.5 py-0.5 flex-shrink-0">
-                <span className="text-red-600 text-[11px] font-semibold font-gothamNarrow whitespace-nowrap max-w-[110px] truncate">
+              <div className="flex items-center gap-1 bg-red-50 border border-red-200 rounded-full px-2 sm:px-2.5 py-0.5 flex-shrink-0">
+                <span className="text-red-600 text-[10px] sm:text-[11px] font-semibold font-gothamNarrow whitespace-nowrap max-w-[60px] sm:max-w-[110px] truncate">
                   {activeFilter}
                 </span>
                 <button
                   onClick={clearFilter}
-                  className="text-red-400 hover:text-red-600 transition-colors"
+                  className="text-red-400 hover:text-red-600 transition-colors flex-shrink-0"
                   aria-label="Clear filter"
                 >
                   <FiX size={11} />
@@ -209,7 +218,7 @@ const AllProductsBanner = ({ onSearchChange, onClearSearch, searchState }) => {
           </div>
 
           {dropdownOpen && (
-            <div className="w-full bg-white border-t border-gray-100 rounded-b-xl shadow-lg">
+            <div className="w-full bg-white border-t border-gray-100 rounded-b-xl shadow-lg max-h-[60vh] overflow-y-auto">
               <div className="px-4 pt-3 pb-4">
                 <p className="text-[10px] font-semibold uppercase tracking-widest text-gray-400 mb-2.5">
                   Filter by category
@@ -220,7 +229,7 @@ const AllProductsBanner = ({ onSearchChange, onClearSearch, searchState }) => {
                       key={f}
                       onMouseDown={(e) => e.preventDefault()}
                       onClick={() => handleFilterSelect(f)}
-                      className={`px-3 py-1.5 rounded-full text-[12px] font-semibold font-gothamNarrow border transition-all duration-150 ${
+                      className={`px-3 py-1.5 rounded-full text-[11px] sm:text-[12px] font-semibold font-gothamNarrow border transition-all duration-150 ${
                         activeFilter === f
                           ? "bg-red-500 text-white border-red-500 shadow-sm"
                           : "bg-white text-gray-600 border-gray-200 hover:border-red-300 hover:text-red-500 hover:bg-red-50"

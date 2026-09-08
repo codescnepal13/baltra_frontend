@@ -1,6 +1,5 @@
-import React from "react";
-import UserProductBanner from "./userProductBanner/UserProductBanner";
 import UserAllProducts from "./userAllProducts/UserAllProducts";
+import UserProductBanner from "./userProductBanner/UserProductBanner";
 
 const UserProductPage = () => {
   return (

@@ -35,12 +35,12 @@ const BaltraCategoryBased = ({ searchState }) => {
     }
     if (isSearchActive) {
       return (
-        <div className="col-span-full flex flex-col items-center py-16 text-gray-400">
-          <span className="text-4xl mb-3">🔍</span>
-          <p className="font-semibold font-gothamNarrow text-lg">
+        <div className="col-span-full flex flex-col items-center py-12 sm:py-16 text-gray-400 px-4">
+          <span className="text-3xl sm:text-4xl mb-3">🔍</span>
+          <p className="font-semibold font-gothamNarrow text-base sm:text-lg text-center">
             No products found
           </p>
-          <p className="text-sm mt-1">
+          <p className="text-xs sm:text-sm mt-1 text-center">
             Try a different name or remove the filter
           </p>
         </div>
@@ -54,8 +54,8 @@ const BaltraCategoryBased = ({ searchState }) => {
   }, [products, isSearchActive]);
 
   return (
-    <div className="container mx-auto px-8 p-4">
-      <h2 className="text-center text-2xl font-semibold mb-4 font-gothamNarrow tracking-normal">
+    <div className="container mx-auto px-3 sm:px-6 lg:px-8 py-4 sm:py-6">
+      <h2 className="text-center text-lg sm:text-xl md:text-2xl font-semibold mb-3 sm:mb-4 font-gothamNarrow tracking-normal px-2 break-words">
         {isSearchActive
           ? searchState.filter
             ? `Results in "${searchState.filter}"`
@@ -64,12 +64,12 @@ const BaltraCategoryBased = ({ searchState }) => {
       </h2>
 
       {isSearchActive && !isProcessing && products?.length > 0 && (
-        <p className="text-center text-sm text-gray-500 -mt-2 mb-4 font-gothamNarrow">
+        <p className="text-center text-xs sm:text-sm text-gray-500 -mt-1 sm:-mt-2 mb-3 sm:mb-4 font-gothamNarrow">
           {products.length} product{products.length !== 1 ? "s" : ""} found
         </p>
       )}
 
-      <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-6">
+      <div className="grid grid-cols-2 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-3 sm:gap-4 lg:gap-6">
         {isLoading ? renderSkeletons(10) : productCards}
       </div>
     </div>
