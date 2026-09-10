@@ -1,7 +1,7 @@
-import React, { useState } from "react";
-import PropTypes from "prop-types";
-import { Link } from "react-router-dom";
 import { AnimatePresence, motion } from "framer-motion";
+import PropTypes from "prop-types";
+import { useState } from "react";
+import { Link } from "react-router-dom";
 import LazyLoadImage from "../../../../components/layout/lazyLoadImage/LazyLoadImage";
 
 const BaltraCategoryBasedCard = ({ item }) => {

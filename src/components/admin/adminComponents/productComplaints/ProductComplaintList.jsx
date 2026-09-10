@@ -6,6 +6,7 @@ import {
   HiOutlineArrowPath,
   HiOutlineExclamationCircle,
   HiOutlineEye,
+  HiOutlineMagnifyingGlass,
   HiOutlinePencilSquare,
   HiOutlineTrash,
   HiOutlineXMark,
@@ -20,6 +21,26 @@ import {
 } from "../../../../redux/features/customer/customerSlice";
 import CustomPagination from "../adminPagination/customPagination/CustomPagination";
 import DeleteComplaintModal from "./deleteComplaintModal/DeleteComplaintModal";
+
+/* ── Job statuses ────────────────────────────────────────────────────────
+   Full lifecycle used by the status filter dropdown and the status badge.
+─────────────────────────────────────────────────────────────────────────── */
+const JOB_STATUSES = [
+  "Unassigned",
+  "Service Center Assigned",
+  "Engineer Allocated",
+  "Part Approval Pending from ASM",
+  "Part Pending from HO",
+  "Parts in Transit",
+  "Part Consumed by Service Center",
+  "On Service",
+  "Completed",
+];
+
+const STATUS_OPTIONS = [
+  { value: "", label: "All statuses" },
+  ...JOB_STATUSES.map((s) => ({ value: s, label: s })),
+];
 
 /* ── Indeterminate checkbox ─────────────────────────────────────────────── */
 const BCheckbox = ({ indeterminate = false, checked, onChange, disabled }) => {
@@ -45,6 +66,28 @@ const ProblemBadge = ({ type }) => {
   return (
     <span className="inline-flex items-center px-2 py-0.5 rounded-md bg-orange-50 border border-orange-200 text-[10px] font-semibold text-orange-600 whitespace-nowrap">
       {type}
+    </span>
+  );
+};
+
+/* ── Status badge (Completed = green, everything else = red) ───────────── */
+const StatusBadge = ({ status }) => {
+  if (!status) return <span className="text-slate-300 text-xs">—</span>;
+  const isCompleted = status.trim().toLowerCase() === "completed";
+  return (
+    <span
+      className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-md border text-[10px] font-semibold whitespace-nowrap ${
+        isCompleted
+          ? "bg-emerald-50 border-emerald-200 text-emerald-600"
+          : "bg-red-50 border-red-200 text-red-600"
+      }`}
+    >
+      <span
+        className={`w-1.5 h-1.5 rounded-full ${
+          isCompleted ? "bg-emerald-500" : "bg-red-500"
+        }`}
+      />
+      {status}
     </span>
   );
 };
@@ -85,13 +128,42 @@ const ProductComplaintList = () => {
   const [selectedIds, setSelectedIds] = useState([]);
   const [deleteTargetId, setDeleteTargetId] = useState(null);
 
+  // ── Search + filter state ────────────────────────────────────────────
+  const [searchInput, setSearchInput] = useState(""); // raw input value (immediate)
+  const [search, setSearch] = useState(""); // debounced value actually sent to API
+  const [status, setStatus] = useState(""); // status filter
+
   const items = productComplaints ?? [];
 
   /* ── Fetch ──────────────────────────────────────────────────────────── */
   const fetchPage = useCallback(
-    (p = 1) => dispatch(allProductComplaints({ page: p })),
-    [dispatch],
+    (p = 1, overrides = {}) =>
+      dispatch(
+        allProductComplaints({
+          page: p,
+          search,
+          status,
+          ...overrides,
+        }),
+      ),
+    [dispatch, search, status],
   );
+
+  /* ── Debounce: searchInput -> search (customer contact) ───────────────
+     Waits 450ms after the user stops typing before firing the query. ──── */
+  useEffect(() => {
+    const handle = setTimeout(() => {
+      setSearch(searchInput.trim());
+    }, 450);
+    return () => clearTimeout(handle);
+  }, [searchInput]);
+
+  /* ── Refetch (page 1) whenever the debounced search or status changes ─ */
+  useEffect(() => {
+    setSelectedIds([]);
+    dispatch(allProductComplaints({ page: 1, search, status }));
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [search, status]);
 
   /* ── Selection ──────────────────────────────────────────────────────── */
   const allSelected = items.length > 0 && selectedIds.length === items.length;
@@ -143,7 +215,14 @@ const ProductComplaintList = () => {
   const handleReset = () => {
     setSelectedIds([]);
     setDeleteTargetId(null);
-    fetchPage(1);
+    setSearchInput("");
+    if (search === "" && status === "") {
+      // filters already empty, force a refetch of page 1
+      fetchPage(1, { search: "", status: "" });
+    } else {
+      setSearch("");
+      setStatus("");
+    }
   };
 
   /* ── Effects ────────────────────────────────────────────────────────── */
@@ -151,50 +230,80 @@ const ProductComplaintList = () => {
     if (error) dispatch(clearCustomerError());
   }, [dispatch, error]);
 
-  useEffect(() => {
-    fetchPage(1);
-  }, [fetchPage]);
-
   /* ── Render ─────────────────────────────────────────────────────────── */
   return (
     <div className="font-gothamNarrow max-w-screen-2xl mx-auto px-4 py-6 min-h-screen bg-slate-50">
-      {/* ── Page header ──────────────────────────────────────────────── */}
-      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 mb-5">
-        {/* Left */}
-        <div className="flex items-center gap-3">
-          <div className="w-9 h-9 rounded-xl bg-red-50 flex items-center justify-center flex-shrink-0">
-            <HiOutlineExclamationCircle size={18} className="text-red-500" />
-          </div>
-          <div>
-            <h1 className="text-sm font-semibold text-slate-900 tracking-tight">
-              Product Complaints
-            </h1>
-            <p className="text-[11px] text-slate-400 mt-0.5">
-              {items.length} record{items.length !== 1 ? "s" : ""} on this page
-              {total_pages > 1 && ` · page ${page} of ${total_pages}`}
-            </p>
-          </div>
-
-          {/* Bulk delete — near title */}
-          {selectedIds.length > 0 && (
+      <div className="flex items-center gap-3 mb-5">
+        <div className="w-9 h-9 rounded-xl bg-red-50 flex items-center justify-center flex-shrink-0">
+          <HiOutlineExclamationCircle size={18} className="text-red-500" />
+        </div>
+        <div>
+          <h1 className="text-sm font-semibold text-slate-900 tracking-tight whitespace-nowrap">
+            Product Complaints
+          </h1>
+          <p className="text-[11px] text-slate-400 mt-0.5 whitespace-nowrap">
+            {items.length} record{items.length !== 1 ? "s" : ""} on this page
+            {total_pages > 1 && ` · page ${page} of ${total_pages}`}
+          </p>
+        </div>
+      </div>
+      <div className="flex items-center gap-2 flex-wrap mb-5">
+        {/* Search by customer contact */}
+        <div className="relative">
+          <HiOutlineMagnifyingGlass
+            size={14}
+            className="absolute left-2.5 top-1/2 -translate-y-1/2 text-slate-300"
+          />
+          <input
+            type="text"
+            inputMode="numeric"
+            value={searchInput}
+            onChange={(e) => setSearchInput(e.target.value)}
+            placeholder="Search by contact no."
+            className="pl-8 pr-3 py-1.5 rounded-lg border border-slate-200 bg-white text-xs text-slate-700 placeholder:text-slate-300 focus:outline-none focus:ring-2 focus:ring-red-100 focus:border-red-300 w-44 sm:w-52"
+          />
+          {searchInput && (
             <button
-              onClick={handleBulkDelete}
-              className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-red-500 hover:bg-red-600 text-white text-xs font-semibold transition-colors ml-2"
+              onClick={() => setSearchInput("")}
+              className="absolute right-2 top-1/2 -translate-y-1/2 text-slate-300 hover:text-slate-500"
             >
-              <HiOutlineTrash size={12} />
-              Delete {selectedIds.length}
+              <HiOutlineXMark size={12} />
             </button>
           )}
         </div>
 
-        {/* Right — Reset only */}
+        {/* Status filter */}
+        <select
+          value={status}
+          onChange={(e) => setStatus(e.target.value)}
+          className="px-3 py-1.5 rounded-lg border border-slate-200 bg-white text-xs font-semibold text-slate-600 focus:outline-none focus:ring-2 focus:ring-red-100 focus:border-red-300 max-w-[220px]"
+        >
+          {STATUS_OPTIONS.map((opt) => (
+            <option key={opt.value} value={opt.value}>
+              {opt.label}
+            </option>
+          ))}
+        </select>
+
+        {/* Reset */}
         <button
           onClick={handleReset}
-          className="inline-flex items-center gap-1 px-3 py-1.5 rounded-lg border border-slate-200 bg-white text-xs font-semibold text-slate-500 hover:bg-slate-50 hover:border-slate-300 transition-all self-start sm:self-auto"
+          className="inline-flex items-center gap-1 px-3 py-1.5 rounded-lg border border-slate-200 bg-white text-xs font-semibold text-slate-500 hover:bg-slate-50 hover:border-slate-300 transition-all"
         >
           <HiOutlineArrowPath size={12} />
           Reset
         </button>
+
+        {/* Bulk delete — next to filters */}
+        {selectedIds.length > 0 && (
+          <button
+            onClick={handleBulkDelete}
+            className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-red-500 hover:bg-red-600 text-white text-xs font-semibold transition-colors"
+          >
+            <HiOutlineTrash size={12} />
+            Delete {selectedIds.length}
+          </button>
+        )}
       </div>
 
       {/* ── Selection banner ─────────────────────────────────────────── */}
@@ -232,9 +341,11 @@ const ProductComplaintList = () => {
                 {[
                   "#",
                   "Customer",
+                  "Contact",
                   "Model",
                   "Serial No.",
                   "Problem",
+                  "Status",
                   "Damage",
                   "Date",
                   "Actions",
@@ -247,7 +358,7 @@ const ProductComplaintList = () => {
             <tbody className="divide-y divide-slate-100">
               {loading ? (
                 <tr>
-                  <td colSpan={9} className="py-16 text-center">
+                  <td colSpan={11} className="py-16 text-center">
                     <div className="flex flex-col items-center gap-2">
                       <div className="w-5 h-5 rounded-full border-2 border-slate-200 border-t-red-500 animate-spin" />
                       <span className="text-xs text-slate-400">
@@ -286,7 +397,14 @@ const ProductComplaintList = () => {
                       {/* Customer */}
                       <Td>
                         <span className="text-xs font-semibold text-slate-800 whitespace-nowrap">
-                          {item?.customer_name || "—"}
+                          {item?.customer_name || item?.customerName || "—"}
+                        </span>
+                      </Td>
+
+                      {/* Contact */}
+                      <Td>
+                        <span className="text-xs text-slate-500 tabular-nums whitespace-nowrap">
+                          {item?.customerContact || "—"}
                         </span>
                       </Td>
 
@@ -310,6 +428,11 @@ const ProductComplaintList = () => {
                       {/* Problem type */}
                       <Td>
                         <ProblemBadge type={item?.problem_type} />
+                      </Td>
+
+                      {/* Status */}
+                      <Td>
+                        <StatusBadge status={item?.status} />
                       </Td>
 
                       {/* Damage image */}
@@ -371,7 +494,7 @@ const ProductComplaintList = () => {
                 })
               ) : (
                 <tr>
-                  <td colSpan={9} className="py-14 text-center">
+                  <td colSpan={11} className="py-14 text-center">
                     <div className="flex flex-col items-center gap-2">
                       <div className="w-9 h-9 rounded-xl bg-slate-100 flex items-center justify-center">
                         <HiOutlineExclamationCircle
@@ -383,7 +506,7 @@ const ProductComplaintList = () => {
                         No complaints found
                       </p>
                       <p className="text-xs text-slate-300">
-                        Try resetting or check back later
+                        Try adjusting your search/filter or resetting
                       </p>
                     </div>
                   </td>

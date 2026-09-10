@@ -142,13 +142,15 @@ export const verifiedCustomerProduct = createAsyncThunk(
   },
 );
 
-//getAllProductComplaints
+// getAllProductComplaints (updated: supports search + status filters)
 export const allProductComplaints = createAsyncThunk(
   "customer/allProductComplaints",
-  async ({ page } = {}, { rejectWithValue }) => {
+  async ({ page, search, status } = {}, { rejectWithValue }) => {
     try {
       let queryParams = new URLSearchParams();
       if (page) queryParams.append("page", page);
+      if (search) queryParams.append("search", search);
+      if (status) queryParams.append("status", status);
 
       const response = await API.get(
         `/stocks/getallcomplaints${
