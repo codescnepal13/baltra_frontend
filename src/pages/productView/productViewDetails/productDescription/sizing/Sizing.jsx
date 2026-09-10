@@ -23,10 +23,6 @@ const Sizing = ({ singleProduct }) => {
         </div>
       )}
 
-      <div className="text-[#282525] text-sm font-semibold leading-[27px] font-gothamNarrow text-center md:px-72 mt-6">
-        Box Dimension:
-      </div>
-
       {singleProduct?.sizing_images[0]?.image_url && (
         <div className="flex justify-center mt-6">
           <img

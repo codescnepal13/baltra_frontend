@@ -112,14 +112,14 @@ const TimeLine = () => {
         ref={scrollRef}
         onScroll={handleScroll}
         className="
-          flex gap-4 sm:gap-6
-          overflow-x-auto scroll-smooth
-          snap-x snap-mandatory
-          px-4 sm:px-8 lg:px-24 py-2
-          [-ms-overflow-style:none] [scrollbar-width:none]
-          [&::-webkit-scrollbar]:hidden
-        "
-        style={{ WebkitOverflowScrolling: "touch", touchAction: "pan-x" }}
+      flex gap-4 sm:gap-6
+      overflow-x-auto scroll-smooth
+      snap-x snap-mandatory
+      px-4 sm:px-8 lg:px-24 py-2
+      [-ms-overflow-style:none] [scrollbar-width:none]
+      [&::-webkit-scrollbar]:hidden
+      "
+        style={{ WebkitOverflowScrolling: "touch", touchAction: "pan-x pan-y" }}
       >
         {MILESTONES.map((m, i) => (
           <motion.div

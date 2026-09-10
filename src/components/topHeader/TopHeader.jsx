@@ -380,15 +380,16 @@ const TopHeader = () => {
         {/* Search + auth */}
         <div className="hidden md:flex items-center gap-3 lg:gap-4">
           {/* Search pill */}
-          <div className="flex items-center gap-2 w-36 lg:w-52 h-9 px-3 bg-white/10 hover:bg-white/15 border border-white/25 rounded-full transition-colors">
-            <HiSearch className="text-white/70 w-4 h-4 flex-shrink-0" />
+
+          <div className="flex items-center gap-2 w-36 lg:w-52 h-9 px-3 bg-black/30 hover:bg-black/40 border border-white/40 rounded-full transition-colors shadow-sm">
+            <HiSearch className="text-white w-4 h-4 flex-shrink-0" />
             <input
               type="text"
               placeholder="Search…"
               value={product_name}
               onChange={(e) => setProductName(e.target.value)}
               onKeyDown={handleKeyDown}
-              className="bg-transparent border-none text-white text-sm font-gothamNarrow placeholder-white/40 focus:outline-none w-full"
+              className="bg-transparent border-none text-white text-sm font-gothamNarrow placeholder-white/70 focus:outline-none w-full"
             />
           </div>
 

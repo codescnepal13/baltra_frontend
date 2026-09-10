@@ -2,7 +2,7 @@ import { AnimatePresence, motion } from "framer-motion";
 import { enqueueSnackbar } from "notistack";
 import { useEffect, useState } from "react";
 import { CiShare2 } from "react-icons/ci";
-import { FaEye, FaLinkedin, FaTimes } from "react-icons/fa";
+import { FaLinkedin, FaTimes } from "react-icons/fa";
 import {
   FaArrowRight,
   FaFacebook,
@@ -57,7 +57,6 @@ const RippleButton = ({
       onClick={onClick}
     >
       {" "}
-      {/* ===================================================== RIPPLE EFFECT ====================================================== */}{" "}
       <AnimatePresence>
         {" "}
         {isHovered && (
@@ -77,7 +76,6 @@ const RippleButton = ({
           />
         )}{" "}
       </AnimatePresence>{" "}
-      {/* ===================================================== BUTTON CONTENT ====================================================== */}{" "}
       <span
         className={` relative z-10 flex items-center justify-center gap-2 w-full whitespace-nowrap text-center ${isHovered && variant === "secondary" ? "text-white" : ""} `}
       >
@@ -110,7 +108,6 @@ const ProductViewDetails = ({ singleProduct, loading }) => {
   const [selectedModalNumber, setSelectedModalNumber] = useState("");
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [quoteModalOpen, setQuoteModalOpen] = useState(false);
-  const [imageViews, setImageViews] = useState(0);
   const [isLightboxOpen, setLightboxOpen] = useState(false);
 
   const [zoomPosition, setZoomPosition] = useState({
@@ -137,29 +134,21 @@ const ProductViewDetails = ({ singleProduct, loading }) => {
     setIsZoomVisible(false);
   };
 
+  // ── Fixed: was a broken check (the `bottles` branch could never be
+  // true at the same time as `flask`). Now correctly matches the
+  // real category name "Bottle and Flasks" (and similar variants). ──
   const isBottleOrFlaskCategory = () => {
     const name = singleProduct?.category?.category_name?.toLowerCase() || "";
-    return (
-      name.includes("bottle") ||
-      (name.includes("bottles") &&
-        (name.includes("flask") || name.includes("flasks")))
-    );
+    return name.includes("bottle") || name.includes("flask");
   };
 
   const handlePersonalizationClick = () => {
-    if (isBottleOrFlaskCategory()) {
-      if (singleProduct?.sizes?.length > 0 && !selectedSize) {
-        enqueueSnackbar("Please Select a size.", { variant: "error" });
-      } else if (singleProduct?.color_styles?.length > 0 && !selectedColor) {
-        enqueueSnackbar("Please Select a color.", { variant: "error" });
-      } else {
-        setIsModalOpen(true);
-      }
+    if (singleProduct?.sizes?.length > 0 && !selectedSize) {
+      enqueueSnackbar("Please Select a size.", { variant: "error" });
+    } else if (singleProduct?.color_styles?.length > 0 && !selectedColor) {
+      enqueueSnackbar("Please Select a color.", { variant: "error" });
     } else {
-      enqueueSnackbar(
-        "Personalization is only available for Bottles and Flasks.",
-        { variant: "error" },
-      );
+      setIsModalOpen(true);
     }
   };
 
@@ -173,7 +162,6 @@ const ProductViewDetails = ({ singleProduct, loading }) => {
 
   const handleImageSelect = (imageUrl) => {
     setSelectedImage(imageUrl);
-    setImageViews((prev) => prev + 1);
   };
 
   useEffect(() => {
@@ -201,6 +189,7 @@ const ProductViewDetails = ({ singleProduct, loading }) => {
 
   const hasPackaging = Boolean(singleProduct?.packaging);
   const hasPower = Boolean(singleProduct?.power);
+  const showPersonalization = isBottleOrFlaskCategory();
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-gray-50 via-white to-gray-100">
@@ -247,12 +236,13 @@ const ProductViewDetails = ({ singleProduct, loading }) => {
                         initial={{ scale: 0.8, opacity: 0 }}
                         animate={{ scale: 1, opacity: 1 }}
                         transition={{ duration: 0.5 }}
-                        className="w-full h-full object-contain relative z-10"
+                        className="w-full h-full object-contain relative z-10 cursor-zoom-in"
                         src={selectedImage}
                         alt="Product"
                         loading="lazy"
                         onMouseMove={handleMouseMove}
                         onMouseOut={handleMouseOut}
+                        onClick={() => setLightboxOpen(true)}
                       />
 
                       {/* Zoom Effect */}
@@ -270,22 +260,10 @@ const ProductViewDetails = ({ singleProduct, loading }) => {
                         />
                       )}
                     </div>
-
-                    {/* View Counter / Lightbox trigger */}
-                    <button
-                      type="button"
-                      onClick={() => {
-                        setImageViews((prev) => prev + 1);
-                        setLightboxOpen(true);
-                      }}
-                      className="absolute bottom-4 right-4 bg-black/70 hover:bg-black/85 text-white px-3 py-1 rounded-full text-sm flex items-center gap-1 z-30 transition-colors"
-                    >
-                      <FaEye size={12} />
-                      <span>{imageViews}</span>
-                    </button>
                   </div>
 
-                  {/* Warranty Badge — sibling of the clipped area, so it's never cropped */}
+                  {/* Warranty Badge — repositioned to sit fully outside the
+                      padded corner instead of overlapping the product image. */}
                   {singleProduct?.warranty_icon && (
                     <motion.img
                       initial={{ scale: 0, rotate: -180 }}
@@ -295,7 +273,7 @@ const ProductViewDetails = ({ singleProduct, loading }) => {
                         type: "spring",
                         stiffness: 200,
                       }}
-                      className="absolute top-2 right-2 w-16 h-16 md:w-20 md:h-20 z-30"
+                      className="absolute -top-2 -right-2 w-12 h-12 md:w-16 md:h-16 z-30 drop-shadow-lg"
                       src={singleProduct?.warranty_icon}
                       alt="Warranty"
                     />
@@ -508,14 +486,18 @@ const ProductViewDetails = ({ singleProduct, loading }) => {
                   <FaArrowRight />
                 </RippleButton>
 
-                <RippleButton
-                  label="ADD PERSONALIZATION"
-                  rippleColor="#1f2937"
-                  onClick={handlePersonalizationClick}
-                  variant="secondary"
-                >
-                  <FaArrowRight />
-                </RippleButton>
+                {/* Only shown for Bottle & Flask category products now,
+                    instead of always showing and erroring on click. */}
+                {showPersonalization && (
+                  <RippleButton
+                    label="ADD PERSONALIZATION"
+                    rippleColor="#1f2937"
+                    onClick={handlePersonalizationClick}
+                    variant="secondary"
+                  >
+                    <FaArrowRight />
+                  </RippleButton>
+                )}
               </div>
             </div>
           </div>
@@ -595,7 +577,7 @@ const ProductViewDetails = ({ singleProduct, loading }) => {
           )}
         </AnimatePresence>
 
-        {/* Fullscreen image lightbox — opened via the eye icon */}
+        {/* Fullscreen image lightbox — now opened by clicking the main image itself */}
         <AnimatePresence>
           {isLightboxOpen && (
             <motion.div
@@ -678,15 +660,16 @@ const ProductViewDetails = ({ singleProduct, loading }) => {
           )}
         </AnimatePresence>
 
-        {/* Additional Sections */}
+        {/* Additional Sections — Reviews moved to the end, after Related
+            Products, instead of sitting right after the gallery/video. */}
         <ProductDescription singleProduct={singleProduct} />
         <ProductVaccum singleProduct={singleProduct} />
         <ProductDetailsVideo singleProduct={singleProduct} />
-        <RatingReviewsSection />
         <RelatedProducts
           allRelatedProducts={allRelatedProducts}
           isFetching={isFetching}
         />
+        <RatingReviewsSection />
       </div>
     </div>
   );

@@ -66,7 +66,7 @@ const HomeApplianceCard = () => {
           {cards.map((card, i) => (
             <motion.div
               key={card.title}
-              className="w-full max-w-sm h-auto px-6 py-8 bg-white bg-opacity-20 border border-gray-300 backdrop-blur-lg flex flex-col justify-center items-center gap-4 md:gap-6 cursor-pointer transition-transform duration-500 ease-in-out hover:scale-105"
+              className="w-full max-w-sm h-auto px-6 py-8 bg-white bg-opacity-20 border border-gray-300 backdrop-blur-lg flex flex-col justify-center items-center gap-4 md:gap-6 cursor-default transition-transform duration-500 ease-in-out hover:scale-105"
               custom={i}
               variants={cardVariants}
               initial="hidden"
