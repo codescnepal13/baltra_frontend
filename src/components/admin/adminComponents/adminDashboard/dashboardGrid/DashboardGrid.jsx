@@ -95,7 +95,7 @@ const buildGrid = (stats) => [
     icon: <IoPersonAdd />,
     title: "Registered Products",
     value: stats.total_registered_products,
-    path: "/baltra-admin-dashboard/all/warranty-status-list",
+    path: "/baltra-admin-dashboard/all-customer-products-list",
     colorKey: "teal",
   },
   {
