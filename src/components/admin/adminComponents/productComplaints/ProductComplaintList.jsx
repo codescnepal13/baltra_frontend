@@ -4,11 +4,13 @@ import { enqueueSnackbar } from "notistack";
 import { useCallback, useEffect, useRef, useState } from "react";
 import {
   HiOutlineArrowPath,
+  HiOutlineCheckCircle,
   HiOutlineExclamationCircle,
   HiOutlineEye,
   HiOutlineMagnifyingGlass,
   HiOutlinePencilSquare,
   HiOutlineTrash,
+  HiOutlineXCircle,
   HiOutlineXMark,
 } from "react-icons/hi2";
 import { useDispatch, useSelector } from "react-redux";
@@ -41,6 +43,9 @@ const STATUS_OPTIONS = [
   { value: "", label: "All statuses" },
   ...JOB_STATUSES.map((s) => ({ value: s, label: s })),
 ];
+
+// Number of columns in the table (used for colSpan on empty/loading rows)
+const TABLE_COL_COUNT = 12;
 
 /* ── Indeterminate checkbox ─────────────────────────────────────────────── */
 const BCheckbox = ({ indeterminate = false, checked, onChange, disabled }) => {
@@ -92,6 +97,24 @@ const StatusBadge = ({ status }) => {
   );
 };
 
+/* ── CRM sync badge (true = synced/green check, false = red cross) ──────── */
+const CrmSyncBadge = ({ synced }) => (
+  <span
+    className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-md border text-[10px] font-semibold whitespace-nowrap ${
+      synced
+        ? "bg-emerald-50 border-emerald-200 text-emerald-600"
+        : "bg-red-50 border-red-200 text-red-600"
+    }`}
+  >
+    {synced ? (
+      <HiOutlineCheckCircle size={12} />
+    ) : (
+      <HiOutlineXCircle size={12} />
+    )}
+    {synced ? "Synced" : "Not Synced"}
+  </span>
+);
+
 /* ── Table header ───────────────────────────────────────────────────────── */
 const Th = ({ children, checkbox }) => (
   <th
@@ -135,6 +158,11 @@ const ProductComplaintList = () => {
 
   const items = productComplaints ?? [];
 
+  // Only complaints NOT yet synced to CRM can be selected / deleted.
+  // Once is_crm_synced is true, the row is locked (checkbox + delete disabled).
+  const selectableItems = items.filter((item) => !item?.is_crm_synced);
+  const selectableIds = selectableItems.map((item) => item.id);
+
   /* ── Fetch ──────────────────────────────────────────────────────────── */
   const fetchPage = useCallback(
     (p = 1, overrides = {}) =>
@@ -165,18 +193,23 @@ const ProductComplaintList = () => {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [search, status]);
 
-  /* ── Selection ──────────────────────────────────────────────────────── */
-  const allSelected = items.length > 0 && selectedIds.length === items.length;
+  /* ── Selection ──────────────────────────────────────────────────────────
+     Selection (and therefore bulk delete) is restricted to complaints that
+     have NOT been synced to the CRM yet (is_crm_synced === false).       ── */
+  const allSelected =
+    selectableIds.length > 0 && selectedIds.length === selectableIds.length;
   const someSelected =
-    selectedIds.length > 0 && selectedIds.length < items.length;
+    selectedIds.length > 0 && selectedIds.length < selectableIds.length;
 
   const handleSelectAll = (e) =>
-    setSelectedIds(e.target.checked ? items.map((p) => p.id) : []);
+    setSelectedIds(e.target.checked ? selectableIds : []);
 
-  const handleSelectItem = (e, id) =>
+  const handleSelectItem = (e, item) => {
+    if (item?.is_crm_synced) return; // guard: synced rows can't be toggled
     setSelectedIds((prev) =>
-      e.target.checked ? [...prev, id] : prev.filter((i) => i !== id),
+      e.target.checked ? [...prev, item.id] : prev.filter((i) => i !== item.id),
     );
+  };
 
   /* ── Pagination ─────────────────────────────────────────────────────── */
   const handlePageChange = (newPage) => {
@@ -186,14 +219,16 @@ const ProductComplaintList = () => {
 
   /* ── Bulk delete ────────────────────────────────────────────────────── */
   const handleBulkDelete = () => {
-    if (!selectedIds.length) return;
+    // Extra safety: strip out any synced ids before sending the request.
+    const idsToDelete = selectedIds.filter((id) => selectableIds.includes(id));
+    if (!idsToDelete.length) return;
     dispatch(
       deleteMultipleProductComplaints({
-        complaint_ids: selectedIds,
+        complaint_ids: idsToDelete,
         enqueueSnackbar,
       }),
     ).then(() => {
-      const remaining = items.length - selectedIds.length;
+      const remaining = items.length - idsToDelete.length;
       fetchPage(remaining <= 0 && page > 1 ? page - 1 : page);
     });
     setSelectedIds([]);
@@ -209,6 +244,11 @@ const ProductComplaintList = () => {
       fetchPage(remaining <= 0 && page > 1 ? page - 1 : page);
     });
     setDeleteTargetId(null);
+  };
+
+  const openDeleteModal = (item) => {
+    if (item?.is_crm_synced) return; // guard: synced rows can't be deleted
+    setDeleteTargetId(item.id);
   };
 
   /* ── Reset ──────────────────────────────────────────────────────────── */
@@ -335,7 +375,7 @@ const ProductComplaintList = () => {
                     checked={allSelected}
                     indeterminate={someSelected}
                     onChange={handleSelectAll}
-                    disabled={items.length === 0}
+                    disabled={selectableIds.length === 0}
                   />
                 </Th>
                 {[
@@ -346,6 +386,7 @@ const ProductComplaintList = () => {
                   "Serial No.",
                   "Problem",
                   "Status",
+                  "CRM Sync",
                   "Damage",
                   "Date",
                   "Actions",
@@ -358,7 +399,7 @@ const ProductComplaintList = () => {
             <tbody className="divide-y divide-slate-100">
               {loading ? (
                 <tr>
-                  <td colSpan={11} className="py-16 text-center">
+                  <td colSpan={TABLE_COL_COUNT} className="py-16 text-center">
                     <div className="flex flex-col items-center gap-2">
                       <div className="w-5 h-5 rounded-full border-2 border-slate-200 border-t-red-500 animate-spin" />
                       <span className="text-xs text-slate-400">
@@ -370,6 +411,7 @@ const ProductComplaintList = () => {
               ) : items.length > 0 ? (
                 items.map((item, index) => {
                   const isSelected = selectedIds.includes(item.id);
+                  const isSynced = Boolean(item?.is_crm_synced);
                   const rowNum = (page - 1) * results_per_page + index + 1;
 
                   return (
@@ -379,11 +421,12 @@ const ProductComplaintList = () => {
                         isSelected ? "bg-red-50/40" : "hover:bg-slate-50/60"
                       }`}
                     >
-                      {/* Checkbox */}
+                      {/* Checkbox — locked once synced to CRM */}
                       <Td>
                         <BCheckbox
                           checked={isSelected}
-                          onChange={(e) => handleSelectItem(e, item.id)}
+                          onChange={(e) => handleSelectItem(e, item)}
+                          disabled={isSynced}
                         />
                       </Td>
 
@@ -435,6 +478,11 @@ const ProductComplaintList = () => {
                         <StatusBadge status={item?.status} />
                       </Td>
 
+                      {/* CRM sync */}
+                      <Td>
+                        <CrmSyncBadge synced={isSynced} />
+                      </Td>
+
                       {/* Damage image */}
                       <Td>
                         {item?.damaged_image_url ? (
@@ -481,9 +529,18 @@ const ProductComplaintList = () => {
                             <HiOutlinePencilSquare size={13} />
                           </Link>
                           <button
-                            onClick={() => setDeleteTargetId(item.id)}
-                            className="w-7 h-7 rounded-md text-slate-400 hover:text-red-600 hover:bg-red-50 flex items-center justify-center transition-all"
-                            title="Delete"
+                            onClick={() => openDeleteModal(item)}
+                            disabled={isSynced}
+                            title={
+                              isSynced
+                                ? "Synced to CRM — cannot be deleted"
+                                : "Delete"
+                            }
+                            className={`w-7 h-7 rounded-md flex items-center justify-center transition-all ${
+                              isSynced
+                                ? "text-slate-200 cursor-not-allowed"
+                                : "text-slate-400 hover:text-red-600 hover:bg-red-50"
+                            }`}
                           >
                             <HiOutlineTrash size={13} />
                           </button>
@@ -494,7 +551,7 @@ const ProductComplaintList = () => {
                 })
               ) : (
                 <tr>
-                  <td colSpan={11} className="py-14 text-center">
+                  <td colSpan={TABLE_COL_COUNT} className="py-14 text-center">
                     <div className="flex flex-col items-center gap-2">
                       <div className="w-9 h-9 rounded-xl bg-slate-100 flex items-center justify-center">
                         <HiOutlineExclamationCircle
