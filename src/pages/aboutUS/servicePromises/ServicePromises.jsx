@@ -545,16 +545,15 @@ const injectStyles = () => {
       padding: 0 !important;
     }
 
-    /* ── Image responsive heights ── */
+    /* ── Image box: fixed aspect ratio, image fully covers it edge-to-edge ── */
     .sp-img-wrap {
       width: 100%;
+      aspect-ratio: 16 / 10;
       overflow: hidden;
-      background: #fafafa;
-      border-bottom: 1px solid #f0f0f0;
     }
     .sp-img-wrap img {
       width: 100%;
-      height: clamp(140px, 22vw, 208px);
+      height: 100%;
       object-fit: cover;
       display: block;
     }

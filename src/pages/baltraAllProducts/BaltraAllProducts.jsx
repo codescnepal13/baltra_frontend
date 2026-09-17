@@ -1,32 +1,13 @@
-import React, { useCallback, useState } from "react";
-import { useDispatch, useSelector } from "react-redux";
+import React from "react";
+import { useSelector } from "react-redux";
 import MetaData from "../../components/layout/metaData/MetaData";
 import ProductsSchema from "../../components/layout/siteSchema/ProductsSchema";
-import { clearSearch } from "../../redux/features/product/productSlice";
 import AllProductsBanner from "./allProductsBanner/AllProductsBanner";
 import BaltraCategoryProducts from "./baltraCategory/BaltraCategoryProducts";
-import BaltraCategoryBased from "./baltraCategory/baltraCategoryBased/BaltraCategoryBased";
 
 const BaltraAllProducts = () => {
-  const dispatch = useDispatch();
-
   // adjust this path to match your actual productSlice state shape
   const allProducts = useSelector((state) => state.product.allProducts);
-
-  const [searchState, setSearchState] = useState({
-    query: "",
-    filter: "",
-    isActive: false,
-  });
-
-  const handleSearchChange = useCallback(({ query, filter, isActive }) => {
-    setSearchState({ query, filter, isActive });
-  }, []);
-
-  const handleClearSearch = useCallback(() => {
-    dispatch(clearSearch());
-    setSearchState({ query: "", filter: "", isActive: false });
-  }, [dispatch]);
 
   return (
     <>
@@ -47,18 +28,11 @@ const BaltraAllProducts = () => {
       />
 
       {/* Only emit the catalog schema for the full, unfiltered product list */}
-      {!searchState.isActive && <ProductsSchema products={allProducts} />}
+      <ProductsSchema products={allProducts} />
 
-      <AllProductsBanner
-        onSearchChange={handleSearchChange}
-        onClearSearch={handleClearSearch}
-        searchState={searchState}
-      />
+      <AllProductsBanner />
 
-      {/* Hide category grid while search is active */}
-      {!searchState.isActive && <BaltraCategoryProducts />}
-
-      <BaltraCategoryBased searchState={searchState} />
+      <BaltraCategoryProducts />
     </>
   );
 };

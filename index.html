@@ -19,8 +19,15 @@
 
     <meta
       name="keywords"
-      content="Baltra Nepal, Baltra price in Nepal, Baltra home appliances Nepal, Baltra rice cooker Nepal, Baltra blender Nepal, Baltra induction cooktop Nepal, Baltra water purifier Nepal, Baltra showroom Kathmandu, Baltra distributor Nepal, Baltra service center Nepal"
+      content="Baltra, Baltra Nepal, Baltra price in Nepal, Baltra home appliances Nepal, Baltra rice cooker Nepal, Baltra blender Nepal, Baltra induction cooktop Nepal, Baltra water purifier Nepal, Baltra showroom Kathmandu, Baltra distributor Nepal, Baltra service center Nepal, Baltra kitchen appliances"
     />
+
+    <!-- Geo meta tags — signal that this brand operates physically in Nepal.
+         Replace the coordinates with your real showroom/office location. -->
+    <meta name="geo.region" content="NP-3" />
+    <meta name="geo.placename" content="Teku, Kathmandu" />
+    <meta name="geo.position" content="27.6958017;85.303738" />
+    <meta name="ICBM" content="27.6958017, 85.303738" />
 
     <!-- OpenGraph (Facebook) Meta Tags -->
     <meta
@@ -66,6 +73,7 @@
     <!-- Canonical must point to THIS domain, not baltra.com -->
     <link rel="canonical" href="https://np.baltra.in/" />
 
+    <!-- Organization schema -->
     <script type="application/ld+json">
       {
         "@context": "https://schema.org",
@@ -79,6 +87,10 @@
           "addressLocality": "Kathmandu",
           "addressCountry": "NP"
         },
+        "areaServed": {
+          "@type": "Country",
+          "name": "Nepal"
+        },
         "contactPoint": {
           "@type": "ContactPoint",
           "telephone": "+977 980-1200505",
@@ -91,6 +103,51 @@
           "https://www.instagram.com/baltra.nepal/",
           "https://www.linkedin.com/company/baltra-nepal/"
         ]
+      }
+    </script>
+
+    <!-- LocalBusiness / Store schema — Baltra Retail Outlet (BRO), Teku.
+         Verify streetAddress/postalCode/phone against the Google Business
+         Profile listing before publishing; postal code below is Kathmandu's
+         general 44600 code — confirm Teku falls under it or update it.
+         If you want ALL retail outlets (Teku, Jorpati, Indrachowk,
+         Koushaltar) represented, repeat this block once per outlet with
+         each one's own address/geo/phone, or use a JSON array. -->
+    <script type="application/ld+json">
+      {
+        "@context": "https://schema.org",
+        "@type": "Store",
+        "name": "Baltra Retail Outlet (BRO) - Teku",
+        "image": "https://np.baltra.in/images/baltraLogo.png",
+        "url": "https://np.baltra.in/",
+        "telephone": "+977 980-1200501",
+        "priceRange": "NPR",
+        "address": {
+          "@type": "PostalAddress",
+          "streetAddress": "Teku, Bhansar Road",
+          "addressLocality": "Kathmandu",
+          "addressRegion": "Bagmati Province",
+          "postalCode": "44600",
+          "addressCountry": "NP"
+        },
+        "geo": {
+          "@type": "GeoCoordinates",
+          "latitude": 27.6958017,
+          "longitude": 85.303738
+        },
+        "openingHoursSpecification": {
+          "@type": "OpeningHoursSpecification",
+          "dayOfWeek": [
+            "Sunday",
+            "Monday",
+            "Tuesday",
+            "Wednesday",
+            "Thursday",
+            "Friday"
+          ],
+          "opens": "10:00",
+          "closes": "18:00"
+        }
       }
     </script>
   </head>

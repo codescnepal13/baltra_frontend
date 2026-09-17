@@ -56,6 +56,9 @@ import BaltraMobile from "./pages/user/baltraMobile/BaltraMobile";
 import BaltraSuccessModal from "./pages/user/baltraSuccessModal/BaltraSuccessModal";
 import Register from "./pages/user/register/Register";
 import VerifyOTP from "./pages/user/verifyOTP/VerifyOTP";
+const BaltraNewSubCategoryProducts = lazy(
+  () => import("./pages/baltraNewSubCategory/BaltraNewSubCategoryProducts"),
+);
 const EditProductComplaint = lazy(
   () =>
     import("./components/admin/adminComponents/productComplaints/editProductComplaint/EditProductComplaint"),
@@ -209,6 +212,16 @@ const App = () => {
               element={
                 <>
                   <BaltraSubCategoryProducts />
+                  <Footer />
+                </>
+              }
+            />
+
+            <Route
+              path="/baltra-newsubcategory/:category_id"
+              element={
+                <>
+                  <BaltraNewSubCategoryProducts />
                   <Footer />
                 </>
               }

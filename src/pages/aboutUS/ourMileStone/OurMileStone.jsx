@@ -89,8 +89,10 @@ const OurMileStone = () => {
           ${isVisible ? "opacity-100 translate-y-0" : "opacity-0 translate-y-10"}
         `}
       >
+        {/* overflow-hidden removed here — it was clipping the rail's
+            tap target and interfering with touch scrolling */}
         <div className="flex justify-center w-full">
-          <div className="overflow-hidden w-full max-w-7xl">
+          <div className="w-full max-w-7xl">
             <TimeLine />
           </div>
         </div>

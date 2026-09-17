@@ -55,6 +55,7 @@ const TimeLine = () => {
 
   const [maxScroll, setMaxScroll] = useState(0);
   const [scrollPct, setScrollPct] = useState(0); // 0 → 1
+  const [isDragging, setIsDragging] = useState(false);
 
   const updateMax = useCallback(() => {
     const el = scrollRef.current;
@@ -88,12 +89,15 @@ const TimeLine = () => {
     if (!rail || !el) return;
     const rect = rail.getBoundingClientRect();
     const pct = Math.max(0, Math.min(1, (clientX - rect.left) / rect.width));
+    // Direct jump — no smooth animation queued while actively dragging,
+    // otherwise scrollLeft updates fight the animation and lag behind the pointer.
     el.scrollLeft = pct * maxScroll;
     setScrollPct(pct);
   };
 
   const onRailPointerDown = (e) => {
     draggingRail.current = true;
+    setIsDragging(true);
     e.currentTarget.setPointerCapture?.(e.pointerId);
     setScrollFromClientX(e.clientX);
   };
@@ -103,6 +107,7 @@ const TimeLine = () => {
   };
   const onRailPointerUp = () => {
     draggingRail.current = false;
+    setIsDragging(false);
   };
 
   return (
@@ -111,14 +116,15 @@ const TimeLine = () => {
       <div
         ref={scrollRef}
         onScroll={handleScroll}
-        className="
+        className={`
       flex gap-4 sm:gap-6
-      overflow-x-auto scroll-smooth
-      snap-x snap-mandatory
+      overflow-x-auto
+      snap-x snap-proximity
       px-4 sm:px-8 lg:px-24 py-2
       [-ms-overflow-style:none] [scrollbar-width:none]
       [&::-webkit-scrollbar]:hidden
-      "
+      ${isDragging ? "" : "scroll-smooth"}
+      `}
         style={{ WebkitOverflowScrolling: "touch", touchAction: "pan-x pan-y" }}
       >
         {MILESTONES.map((m, i) => (
@@ -148,20 +154,19 @@ const TimeLine = () => {
         ))}
       </div>
 
-      {/* ── Scroll Rail (now works on mobile too, drives the same scroll container) ── */}
-      <div className="flex items-center gap-0 px-4 sm:px-8 lg:px-24 mt-5 sm:mt-6">
+      {/* ── Scroll Rail (works on mobile too, drives the same scroll container) ── */}
+      <div className="flex items-center gap-2 px-4 sm:px-8 lg:px-24 mt-5 sm:mt-6">
         <div
           ref={railRef}
           onPointerDown={onRailPointerDown}
           onPointerMove={onRailPointerMove}
           onPointerUp={onRailPointerUp}
           onPointerCancel={onRailPointerUp}
-          className="relative flex-1 h-[3px] py-3 -my-3 cursor-pointer"
-          style={{ touchAction: "none" }}
+          className="relative flex-1 h-11 flex items-center cursor-pointer touch-none"
         >
           {/* Dotted background */}
           <div
-            className="absolute inset-y-0 left-0 right-0 top-1/2 -translate-y-1/2 h-[3px]"
+            className="absolute inset-x-0 top-1/2 -translate-y-1/2 h-[3px]"
             style={{
               backgroundImage:
                 "repeating-linear-gradient(to right, #8B8686 0, #8B8686 4px, transparent 4px, transparent 10px)",
@@ -172,24 +177,27 @@ const TimeLine = () => {
             className="absolute top-1/2 -translate-y-1/2 left-0 h-[3px] bg-[#F02323] rounded-full"
             style={{ width: `${scrollPct * 100}%` }}
           />
-          {/* Draggable handle */}
+          {/* Draggable handle — clamped so it never pokes outside the rail */}
           <div
             className="
-              absolute top-1/2 -translate-y-1/2 -translate-x-1/2
+              absolute top-1/2
               w-[22px] h-[22px]
               bg-white border-[3px] border-[#F02323]
               rounded-full
               flex items-center justify-center
               shadow-sm pointer-events-none
             "
-            style={{ left: `${scrollPct * 100}%` }}
+            style={{
+              left: `clamp(11px, ${scrollPct * 100}%, calc(100% - 11px))`,
+              transform: "translate(-50%, -50%)",
+            }}
           >
             <div className="w-[9px] h-[9px] bg-[#F02323] rounded-full" />
           </div>
         </div>
 
         {/* Arrow cap */}
-        <div className="ml-2 w-0 h-0 border-t-[7px] border-t-transparent border-b-[7px] border-b-transparent border-l-[10px] border-l-[#8B8686] flex-shrink-0" />
+        <div className="w-0 h-0 border-t-[7px] border-t-transparent border-b-[7px] border-b-transparent border-l-[10px] border-l-[#8B8686] flex-shrink-0" />
       </div>
 
       {/* ── Mobile swipe hint ── */}

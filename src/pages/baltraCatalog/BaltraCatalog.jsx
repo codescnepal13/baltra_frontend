@@ -1,5 +1,5 @@
 import { AnimatePresence, motion } from "framer-motion";
-import { memo, useCallback, useEffect, useState } from "react";
+import { memo, useCallback, useEffect, useMemo, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import ArtCoverImg from "../../assets/images/userAuthImg.png";
 import MetaData from "../../components/layout/metaData/MetaData";
@@ -10,6 +10,9 @@ import {
 } from "../../redux/features/product/productSlice";
 import CatalogSkeleton from "./CatalogSkeleton";
 import PdfModal from "./pdfModal/PdfModal";
+
+const SITE_URL = "https://np.baltra.in";
+const PAGE_PATH = "/baltra-catalog"; // update to match your real route
 
 // ─── RippleButton ────────────────────────────────────────────────────────────
 const RippleButton = memo(
@@ -28,8 +31,6 @@ const RippleButton = memo(
       setRipple(null);
     }, []);
 
-    // Primary = solid red fill that fades to deep red on hover ripple
-    // Secondary = outlined red, ripple fills with dark charcoal
     const isPrimary = variant === "primary";
 
     return (
@@ -53,7 +54,6 @@ const RippleButton = memo(
           opacity: disabled ? 0.5 : 1,
         }}
       >
-        {/* Ripple fill */}
         <AnimatePresence>
           {hovered && ripple && (
             <motion.span
@@ -97,23 +97,19 @@ const CatalogCard = memo(
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.4, ease: "easeOut" }}
       className="flex flex-col h-full items-center gap-4"
-      style={{
-        padding: "14px",
-      }}
+      style={{ padding: "14px" }}
     >
-      {/* Catalog Image — no border, no frame */}
       <div
         className="relative group cursor-pointer w-full flex-1 min-h-0"
         onClick={() => onPreview(catalog)}
       >
         <img
           src={catalog.catalogue_image}
-          alt={catalog.catalogue_type}
+          alt={`${catalog.catalogue_type} - Baltra Nepal product catalog`}
           className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-[1.02]"
           style={{ border: "none", outline: "none", boxShadow: "none" }}
           loading="lazy"
         />
-        {/* Red hover overlay */}
         <div
           className="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity duration-300"
           style={{ background: "rgba(120, 8, 12, 0.62)" }}
@@ -127,7 +123,6 @@ const CatalogCard = memo(
         </div>
       </div>
 
-      {/* Title */}
       <h3
         className="text-center text-sm sm:text-base font-medium tracking-wide font-gothamNarrow w-full"
         style={{ color: "#000000", minHeight: "2.5rem" }}
@@ -135,7 +130,6 @@ const CatalogCard = memo(
         {catalog.catalogue_type}
       </h3>
 
-      {/* Red accent divider */}
       <div
         style={{
           width: "40px",
@@ -146,15 +140,12 @@ const CatalogCard = memo(
         }}
       />
 
-      {/* Buttons */}
       <div className="flex flex-col w-full gap-2 mt-auto">
-        {/* Explore = solid red (primary) */}
         <RippleButton
           variant="primary"
           label="Explore"
           onClick={() => onExplore(catalog.file)}
         />
-        {/* Download = outlined red (secondary) */}
         <RippleButton
           variant="secondary"
           label={isDownloading ? "Downloading…" : "Download"}
@@ -229,13 +220,69 @@ const BaltraCatalog = () => {
     [downloadingId],
   );
 
+  // Build page-specific keywords from whatever catalog types actually
+  // exist, instead of a fixed generic keyword string.
+  const dynamicKeywords = useMemo(() => {
+    const base = [
+      "Baltra",
+      "Baltra Nepal",
+      "Baltra product catalog",
+      "Baltra catalogue Nepal",
+      "Baltra kitchen appliances catalog",
+      "Baltra brochure",
+      "download Baltra catalog PDF",
+    ];
+    const fromList =
+      allProductsCatalogList?.map((c) => `${c.catalogue_type} catalog`) || [];
+    return [...base, ...fromList].join(", ");
+  }, [allProductsCatalogList]);
+
+  // ItemList schema — one entry per catalog PDF, so each is understood as
+  // a distinct downloadable item rather than the page being one blob.
+  const catalogItemListSchema = useMemo(() => {
+    if (!allProductsCatalogList?.length) return null;
+    return {
+      "@context": "https://schema.org",
+      "@type": "ItemList",
+      name: "Baltra Nepal Product Catalogs",
+      itemListElement: allProductsCatalogList.map((catalog, index) => ({
+        "@type": "ListItem",
+        position: index + 1,
+        item: {
+          "@type": "DigitalDocument",
+          name: `Baltra ${catalog.catalogue_type} Catalog`,
+          url: catalog.file,
+          image: catalog.catalogue_image,
+          encodingFormat: "application/pdf",
+        },
+      })),
+    };
+  }, [allProductsCatalogList]);
+
   return (
     <>
-      <MetaData title="Baltra Products Catalog" />
+      <MetaData
+        title="Baltra Product Catalog | Download Full Appliance Range PDF"
+        description="Browse and download Baltra Nepal's complete product catalogs — kitchen appliances, home appliances, and more. View online or download the full PDF brochure for the latest Baltra range in Nepal."
+        keywords={dynamicKeywords}
+        url={`${SITE_URL}${PAGE_PATH}`}
+        image={
+          allProductsCatalogList?.[0]?.catalogue_image ||
+          `${SITE_URL}/images/baltraAllProductsBanner.png`
+        }
+        ogTitle="Baltra Product Catalog | Download Full Appliance Range PDF"
+        ogDescription="Explore Baltra Nepal's full range of home and kitchen appliances. Download official product catalogs in PDF."
+        breadcrumbs={[
+          { name: "Home", url: "/" },
+          { name: "Product Catalog", url: PAGE_PATH },
+        ]}
+        extraSchemas={
+          catalogItemListSchema ? [catalogItemListSchema] : undefined
+        }
+      />
 
       {/* Page wrapper with bg image */}
       <div className="relative min-h-screen">
-        {/* Background image — full-bleed, no dim, matches About page pattern */}
         <img
           src={ArtCoverImg}
           alt="ArtImage"
@@ -245,7 +292,6 @@ const BaltraCatalog = () => {
           loading="lazy"
         />
 
-        {/* Header */}
         <div className="absolute top-0 left-0 w-full z-50">
           <ProductHeader
             isAuthenticated={isAuthenticated}
@@ -253,10 +299,17 @@ const BaltraCatalog = () => {
           />
         </div>
 
-        {/* Page Content */}
         <main className="relative z-10 px-4 sm:px-8 md:px-16 lg:px-24 pt-20 md:pt-24 pb-16 min-h-screen">
-          {/* Soft scrim — keeps catalog cards readable over the bright image */}
           <div className="absolute inset-0 bg-white/20 -z-10" />
+
+          {/* SEO-visible heading — the page had no <h1>, and everything else
+              is images/buttons with no crawlable body text explaining what
+              the page is. */}
+          <h1 className="sr-only">
+            Baltra Nepal Product Catalog — Download Kitchen and Home Appliance
+            Brochures
+          </h1>
+
           {loading ? (
             <CatalogSkeleton />
           ) : allProductsCatalogList?.length > 0 ? (
@@ -271,7 +324,7 @@ const BaltraCatalog = () => {
                     delay: index * 0.07,
                     ease: "easeOut",
                   }}
-                  className="h-full" // ← add this
+                  className="h-full"
                 >
                   <CatalogCard
                     catalog={catalog}
@@ -296,9 +349,7 @@ const BaltraCatalog = () => {
           )}
         </main>
       </div>
-      {/* end page wrapper */}
 
-      {/* PDF Modal — outside wrapper so it overlays the full viewport */}
       <PdfModal
         isOpen={modalOpen}
         onClose={handleCloseModal}

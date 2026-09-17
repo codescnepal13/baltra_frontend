@@ -6,7 +6,7 @@ import LazyImage from "../../../components/layout/lazyImage/LazyImage";
 const BaltraCard = ({ item, index }) => {
   return (
     <>
-      <Link to={`/baltra-subCategoryProducts/${item.id}`}>
+      <Link to={`/baltra-newsubcategory/${item.id}`}>
         <div
           className={`p-4 bg-gray-200/10 rounded-lg flex flex-col justify-start items-center gap-4 ${
             index === 0 ? "border border-slate-300" : "border-none"

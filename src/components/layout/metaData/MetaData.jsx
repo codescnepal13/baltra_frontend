@@ -18,6 +18,8 @@ const MetaData = ({
   ogImage,
   ogUrl,
   breadcrumbs, // optional: [{ name: "Home", url: "/" }, { name: "Products", url: "/products" }]
+  extraSchemas, // optional: array of additional JSON-LD objects (e.g. Product schema)
+  noindex = false, // set true for login/cart/checkout/account pages
 }) => {
   const canonicalUrl = url || SITE_URL;
 
@@ -55,6 +57,10 @@ const MetaData = ({
       {keywords && <meta name="keywords" content={keywords} />}
       <meta name="author" content="Baltra Nepal" />
       <link rel="canonical" href={canonicalUrl} />
+      <meta
+        name="robots"
+        content={noindex ? "noindex, nofollow" : "index, follow"}
+      />
 
       {/* Open Graph / Facebook */}
       <meta property="og:type" content="website" />
@@ -81,6 +87,13 @@ const MetaData = ({
           {JSON.stringify(breadcrumbSchema)}
         </script>
       )}
+
+      {/* Extra JSON-LD schemas, e.g. Product schema on product pages */}
+      {extraSchemas?.map((schema, i) => (
+        <script key={i} type="application/ld+json">
+          {JSON.stringify(schema)}
+        </script>
+      ))}
     </Helmet>
   );
 };

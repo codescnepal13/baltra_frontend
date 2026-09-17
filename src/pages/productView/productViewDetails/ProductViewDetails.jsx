@@ -42,7 +42,16 @@ const RippleButton = ({
   const handleMouseLeave = () => {
     setIsHovered(false);
   };
-  const baseClasses = ` relative overflow-hidden w-full min-h-[52px] sm:min-h-[56px] px-4 sm:px-6 md:px-7 py-3 sm:py-4 rounded-xl font-semibold font-gothamNarrow text-sm sm:text-base md:text-lg leading-none whitespace-nowrap text-center flex items-center justify-center transition-all duration-300 transform hover:scale-[1.02] shadow-lg hover:shadow-xl select-none `;
+  const baseClasses = `
+  relative overflow-hidden w-full min-h-[48px] sm:min-h-[52px]
+  px-4 sm:px-6 md:px-7 py-2.5 sm:py-3
+  rounded-xl font-semibold font-gothamNarrow
+  text-xs sm:text-sm md:text-base
+  leading-none whitespace-nowrap text-center
+  flex items-center justify-center
+  transition-all duration-300 transform hover:scale-[1.02]
+  shadow-lg hover:shadow-xl select-none
+`;
   const variantClasses =
     variant === "primary"
       ? ` bg-gradient-to-r from-red-600 to-red-700 text-white border border-red-600 `
@@ -357,9 +366,9 @@ const ProductViewDetails = ({ singleProduct, loading }) => {
               {/* Price and Rating */}
               <div className="bg-gradient-to-r from-red-50 to-orange-50 p-6 rounded-2xl border border-red-100">
                 <div className="flex items-center justify-between mb-4">
-                  <div className="text-4xl font-bold text-red-600">
+                  <div className="text-2xl md:text-3xl font-bold text-red-600">
                     Rs {singleProduct?.price?.toLocaleString()}
-                    <span className="text-lg text-gray-600 font-normal ml-2">
+                    <span className="text-sm text-gray-600 font-normal ml-2">
                       MRP
                     </span>
                   </div>
@@ -371,11 +380,10 @@ const ProductViewDetails = ({ singleProduct, loading }) => {
                   </span>
                 </div>
               </div>
-
               {/* Color Selection */}
               {singleProduct?.color_styles?.length > 0 && (
-                <div className="space-y-4">
-                  <h3 className="text-xl font-semibold text-gray-900">
+                <div className="space-y-3">
+                  <h3 className="text-base font-semibold text-gray-900">
                     Select Color
                   </h3>
                   <div className="flex flex-wrap gap-3">
@@ -384,7 +392,7 @@ const ProductViewDetails = ({ singleProduct, loading }) => {
                         key={index}
                         whileHover={{ scale: 1.1 }}
                         whileTap={{ scale: 0.95 }}
-                        className={`relative w-12 h-12 rounded-full cursor-pointer border-4 transition-all ${
+                        className={`relative w-10 h-10 rounded-full cursor-pointer border-4 transition-all ${
                           selectedColor === color
                             ? "border-gray-800 shadow-lg scale-110"
                             : "border-gray-300 hover:border-gray-400"
@@ -399,7 +407,7 @@ const ProductViewDetails = ({ singleProduct, loading }) => {
                             className="absolute inset-0 flex items-center justify-center"
                           >
                             <svg
-                              className="w-6 h-6 text-white drop-shadow-lg"
+                              className="w-5 h-5 text-white drop-shadow-lg"
                               fill="none"
                               stroke="currentColor"
                               viewBox="0 0 24 24"
@@ -421,8 +429,8 @@ const ProductViewDetails = ({ singleProduct, loading }) => {
 
               {/* Size Selection */}
               {singleProduct?.sizes?.length > 0 && (
-                <div className="space-y-4">
-                  <h3 className="text-xl font-semibold text-gray-900">
+                <div className="space-y-3">
+                  <h3 className="text-base font-semibold text-gray-900">
                     Select Size
                   </h3>
                   <div className="flex flex-wrap gap-3">
@@ -431,7 +439,7 @@ const ProductViewDetails = ({ singleProduct, loading }) => {
                         key={index}
                         whileHover={{ scale: 1.05 }}
                         whileTap={{ scale: 0.95 }}
-                        className={`px-4 py-3 min-w-[60px] rounded-xl border-2 font-semibold transition-all ${
+                        className={`px-4 py-2.5 min-w-[52px] text-sm rounded-xl border-2 font-semibold transition-all ${
                           selectedSize === size
                             ? "border-red-500 bg-red-50 text-red-700"
                             : "border-gray-300 hover:border-gray-400 text-gray-700"
@@ -454,20 +462,20 @@ const ProductViewDetails = ({ singleProduct, loading }) => {
                 >
                   {hasPackaging && (
                     <div>
-                      <h4 className="text-sm font-semibold text-gray-600 mb-2">
+                      <h4 className="text-xs font-semibold text-gray-600 mb-1.5">
                         PACKAGING
                       </h4>
-                      <p className="text-lg font-bold text-gray-900">
+                      <p className="text-base font-bold text-gray-900">
                         {singleProduct.packaging}
                       </p>
                     </div>
                   )}
                   {hasPower && (
                     <div>
-                      <h4 className="text-sm font-semibold text-gray-600 mb-2">
+                      <h4 className="text-xs font-semibold text-gray-600 mb-1.5">
                         POWER
                       </h4>
-                      <p className="text-lg font-bold text-gray-900">
+                      <p className="text-base font-bold text-gray-900">
                         {singleProduct.power}
                       </p>
                     </div>
@@ -662,14 +670,17 @@ const ProductViewDetails = ({ singleProduct, loading }) => {
 
         {/* Additional Sections — Reviews moved to the end, after Related
             Products, instead of sitting right after the gallery/video. */}
+        {/* Additional Sections — Reviews now sit right after the product's own
+    content (description/specs/video) and before Related Products,
+    instead of at the very bottom of the page. */}
         <ProductDescription singleProduct={singleProduct} />
         <ProductVaccum singleProduct={singleProduct} />
         <ProductDetailsVideo singleProduct={singleProduct} />
+        <RatingReviewsSection />
         <RelatedProducts
           allRelatedProducts={allRelatedProducts}
           isFetching={isFetching}
         />
-        <RatingReviewsSection />
       </div>
     </div>
   );
