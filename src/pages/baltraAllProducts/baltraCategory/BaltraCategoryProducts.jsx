@@ -62,11 +62,11 @@ const BaltraCategoryCard = ({ item, index = 0 }) => {
       <Link
         to={`/baltra-newsubcategory/${item.id}`}
         title={descriptor}
-        className="group flex h-full flex-col overflow-hidden rounded-2xl border border-[#EDE6D9] bg-white transition-colors duration-200 hover:border-[#E0B8A0]"
+        className="group flex h-full flex-col overflow-hidden rounded-2xl bg-white transition-shadow duration-200 hover:shadow-lg"
       >
         {/* Image sits in a warm gradient well, inset rather than bled to the
             edge — reads as a product shot rather than a flat grey box. */}
-        <div className="relative aspect-square w-full overflow-hidden bg-gradient-to-br from-[#FAF7F2] to-[#F1EAD9] p-3 xs:p-4">
+        <div className="relative aspect-square w-full overflow-hidden bg-gradient-to-br from-[#FAF7F2] to-[#F1EAD9] p-2 xs:p-2.5">
           <img
             src={item.image_url}
             alt={descriptor}
@@ -128,7 +128,14 @@ const BaltraCategoryProducts = () => {
   }, [dispatch]);
 
   const renderSkeletons = (length) =>
-    Array.from({ length }).map((_, index) => <CategorySkeleton key={index} />);
+    Array.from({ length }).map((_, index) => (
+      <div
+        key={index}
+        className="w-[calc(50%-0.5rem)] sm:w-[calc(33.333%-0.667rem)] lg:w-[calc(25%-0.75rem)]"
+      >
+        <CategorySkeleton />
+      </div>
+    ));
 
   // ItemList schema — tells Google this section is a structured list of
   // category pages, which is what can earn a rich "category carousel"
@@ -150,17 +157,27 @@ const BaltraCategoryProducts = () => {
     };
   }, [categoryProducts]);
 
+  // Flexbox instead of CSS Grid: Grid can't center a leftover row on its
+  // own (a partial last row stays left-aligned), but flex-wrap + a
+  // per-item width does — each wrapped line is centered independently, so
+  // 7 items at 4-per-row naturally lands as 4 on top and 3 centered below,
+  // with no need to special-case the count of 7.
   const productCards = useMemo(() => {
     if (!categoryProducts || categoryProducts.length === 0) {
       return (
-        <span className="col-span-full py-10 text-center font-gothamNarrow text-sm text-[#8A8378]">
+        <span className="w-full py-10 text-center font-gothamNarrow text-sm text-[#8A8378]">
           No categories to show right now.
         </span>
       );
     }
 
     return categoryProducts.map((item, index) => (
-      <BaltraCategoryCard key={item.id} item={item} index={index} />
+      <div
+        key={item.id}
+        className="w-[calc(50%-0.5rem)] sm:w-[calc(33.333%-0.667rem)] lg:w-[calc(25%-0.75rem)]"
+      >
+        <BaltraCategoryCard item={item} index={index} />
+      </div>
     ));
   }, [categoryProducts]);
 
@@ -174,7 +191,7 @@ const BaltraCategoryProducts = () => {
         </Helmet>
       )}
 
-      <div className="grid grid-cols-2 gap-3 xs:gap-3.5 sm:grid-cols-3 sm:gap-4 md:grid-cols-4 lg:grid-cols-5 lg:gap-5 xl:grid-cols-6">
+      <div className="flex flex-wrap justify-center gap-4">
         {loading ? renderSkeletons(8) : productCards}
       </div>
     </div>

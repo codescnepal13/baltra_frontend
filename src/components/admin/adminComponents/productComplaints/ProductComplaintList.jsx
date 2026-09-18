@@ -128,7 +128,7 @@ const Th = ({ children, checkbox }) => (
 
 /* ── Table cell ─────────────────────────────────────────────────────────── */
 const Td = ({ children, className = "" }) => (
-  <td className={`px-3 py-2.5 align-middle ${className}`}>{children}</td>
+  <td className={`px-3 py-2 align-middle ${className}`}>{children}</td>
 );
 
 /* ══════════════════════════════════════════════════════════════════════════
@@ -379,7 +379,7 @@ const ProductComplaintList = () => {
                   />
                 </Th>
                 {[
-                  "#",
+                  "S.No.",
                   "Customer",
                   "Contact",
                   "Model",
