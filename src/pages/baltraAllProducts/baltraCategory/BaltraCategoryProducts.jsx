@@ -13,13 +13,16 @@ import CategorySkeleton from "./categorySkeleton/CategorySkeleton";
 
 const SITE_URL = "https://np.baltra.in";
 
+// Single page-load reveal, staggered slightly per card. This is the one
+// motion moment on this page — hover effects below stay to a single change
+// each rather than stacking lift + scale + shadow.
 const cardVariants = {
-  hidden: { opacity: 0, y: 24 },
+  hidden: { opacity: 0, y: 20 },
   visible: (delay = 0) => ({
     opacity: 1,
     y: 0,
     transition: {
-      duration: 0.45,
+      duration: 0.5,
       delay,
       ease: [0.25, 0.46, 0.45, 0.94],
     },
@@ -52,35 +55,54 @@ const BaltraCategoryCard = ({ item, index = 0 }) => {
       variants={cardVariants}
       initial="hidden"
       animate={inView ? "visible" : "hidden"}
-      custom={(index % 8) * 0.06}
-      whileHover={{ y: -3 }}
-      whileTap={{ scale: 0.97 }}
+      custom={(index % 8) * 0.05}
+      whileTap={{ scale: 0.98 }}
       className="h-full"
     >
       <Link
         to={`/baltra-newsubcategory/${item.id}`}
         title={descriptor}
-        className="group relative flex h-full flex-col overflow-hidden rounded-xl border border-neutral-100 bg-white shadow-sm transition-shadow duration-200 hover:shadow-lg"
+        className="group flex h-full flex-col overflow-hidden rounded-2xl border border-[#EDE6D9] bg-white transition-colors duration-200 hover:border-[#E0B8A0]"
       >
-        <div className="relative aspect-square w-full overflow-hidden bg-gray-50">
+        {/* Image sits in a warm gradient well, inset rather than bled to the
+            edge — reads as a product shot rather than a flat grey box. */}
+        <div className="relative aspect-square w-full overflow-hidden bg-gradient-to-br from-[#FAF7F2] to-[#F1EAD9] p-3 xs:p-4">
           <img
             src={item.image_url}
             alt={descriptor}
             loading="lazy"
-            className="absolute inset-0 h-full w-full object-contain object-center transition-transform duration-300 group-hover:scale-105"
+            className="h-full w-full object-contain object-center transition-transform duration-300 ease-out group-hover:scale-[1.06]"
             onError={(e) => {
               e.currentTarget.style.display = "none";
             }}
           />
-          <div className="pointer-events-none absolute inset-0 bg-gradient-to-t from-black/5 via-transparent to-transparent opacity-0 transition-opacity duration-200 group-hover:opacity-100" />
         </div>
 
-        <div className="flex flex-1 flex-col items-start gap-1.5 p-2 xs:p-2.5 sm:gap-2 sm:p-3.5">
-          <h3 className="line-clamp-2 w-full min-h-[2.2em] font-gothamNarrow text-[11px] leading-tight font-semibold text-neutral-800 xs:text-xs sm:text-sm lg:text-base">
+        <div className="flex flex-1 flex-col items-start gap-1.5 p-3 xs:p-3.5 sm:gap-2 sm:p-4">
+          <h3 className="line-clamp-2 w-full min-h-[2.2em] font-gothamNarrow text-[12px] font-semibold leading-tight text-[#1C1917] xs:text-[13px] sm:text-sm lg:text-base">
             {item.name}
           </h3>
-          <span className="mt-auto inline-flex w-full items-center justify-center rounded-md bg-red-600 px-2 py-1.5 text-[10px] font-semibold text-white transition-colors font-gothamNarrow group-hover:bg-red-700 xs:text-[11px] sm:px-4 sm:py-2 sm:text-xs lg:text-sm">
+
+          {/* Quiet text link + arrow instead of a solid button block on
+              every card — the red is reserved for this one small move. */}
+          <span className="mt-auto inline-flex items-center gap-1 font-gothamNarrow text-[11px] font-medium text-[#C41E3A] sm:text-xs">
             Explore
+            <svg
+              width="14"
+              height="14"
+              viewBox="0 0 14 14"
+              fill="none"
+              className="transition-transform duration-200 ease-out group-hover:translate-x-1"
+              aria-hidden="true"
+            >
+              <path
+                d="M2 7h9.5M7.5 3l4.5 4-4.5 4"
+                stroke="currentColor"
+                strokeWidth="1.5"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+              />
+            </svg>
           </span>
         </div>
       </Link>
@@ -131,8 +153,8 @@ const BaltraCategoryProducts = () => {
   const productCards = useMemo(() => {
     if (!categoryProducts || categoryProducts.length === 0) {
       return (
-        <span className="col-span-full text-center font-semibold py-8">
-          No Data Found
+        <span className="col-span-full py-10 text-center font-gothamNarrow text-sm text-[#8A8378]">
+          No categories to show right now.
         </span>
       );
     }
@@ -143,7 +165,7 @@ const BaltraCategoryProducts = () => {
   }, [categoryProducts]);
 
   return (
-    <div className="container mx-auto px-3 py-5 sm:px-4 sm:py-6 lg:px-14">
+    <div className="container mx-auto bg-[#FDFBF7] px-3 py-6 sm:px-4 sm:py-8 lg:px-14">
       {itemListSchema && (
         <Helmet>
           <script type="application/ld+json">
@@ -152,7 +174,7 @@ const BaltraCategoryProducts = () => {
         </Helmet>
       )}
 
-      <div className="grid grid-cols-2 gap-2.5 xs:gap-3 sm:grid-cols-3 sm:gap-4 md:grid-cols-4 lg:grid-cols-5 lg:gap-5 xl:grid-cols-6">
+      <div className="grid grid-cols-2 gap-3 xs:gap-3.5 sm:grid-cols-3 sm:gap-4 md:grid-cols-4 lg:grid-cols-5 lg:gap-5 xl:grid-cols-6">
         {loading ? renderSkeletons(8) : productCards}
       </div>
     </div>

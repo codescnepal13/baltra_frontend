@@ -1,6 +1,6 @@
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef } from "react";
 import { useDispatch, useSelector } from "react-redux";
-import { useParams } from "react-router-dom";
+import { useParams, useSearchParams } from "react-router-dom";
 
 import Breadcrumb from "../../components/layout/Breadcrumb";
 import MetaData from "../../components/layout/metaData/MetaData";
@@ -18,29 +18,55 @@ const BaltraNewSubCategoryProducts = () => {
     (state) => state.product,
   );
 
-  const [activeId, setActiveId] = useState(null);
+  // The selected subcategory now lives in the URL (?sub=id) instead of only
+  // in component state. That's what makes the browser back button behave:
+  // clicking a product pushes a new history entry, so going back returns to
+  // this exact URL — and because the subcategory id is part of that URL, we
+  // can restore the same product list instead of defaulting to the
+  // top-level "All categories" tile view.
+  const [searchParams, setSearchParams] = useSearchParams();
+  const activeId = searchParams.get("sub");
+
+  const isFirstRun = useRef(true);
 
   useEffect(() => {
     if (!category_id) return;
 
     dispatch(clearProductError());
     dispatch(baltraSubCategoryProducts(category_id));
-    setActiveId(null); // reset selection when category changes
+
+    // Only clear the subcategory selection when the category itself changes
+    // (a real navigation to a different category page) — not on first
+    // mount, since first mount is exactly when a `sub` param restored from
+    // browser history needs to be honored, not wiped.
+    if (isFirstRun.current) {
+      isFirstRun.current = false;
+    } else {
+      setSearchParams({}, { replace: true });
+    }
   }, [dispatch, category_id]);
 
   const subCategories = subCategoryProducts || [];
 
   const activeSubCategory = useMemo(
-    () => subCategories.find((sc) => sc.id === activeId) || null,
+    () => subCategories.find((sc) => String(sc.id) === activeId) || null,
     [subCategories, activeId],
   );
 
+  const handleSelect = (id) => {
+    if (id === null || id === undefined) {
+      setSearchParams({});
+    } else {
+      setSearchParams({ sub: id });
+    }
+  };
+
   const breadcrumbItems = useMemo(() => {
-    const items = [{ label: "Home", to: "/" }];
+    const items = [{ label: "Home", to: "/baltra-aboutUs-Page" }];
     if (categoryInfo?.category_name) {
       items.push({
         label: categoryInfo.category_name,
-        onClick: () => setActiveId(null),
+        onClick: () => handleSelect(null),
       });
     }
     if (activeSubCategory) {
@@ -68,7 +94,7 @@ const BaltraNewSubCategoryProducts = () => {
         subCategories={subCategories}
         categoryInfo={categoryInfo}
         activeId={activeId}
-        onSelect={setActiveId}
+        onSelect={handleSelect}
         activeSubCategory={activeSubCategory}
       />
     </>

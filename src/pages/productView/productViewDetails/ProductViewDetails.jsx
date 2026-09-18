@@ -12,6 +12,8 @@ import {
 import { useDispatch, useSelector } from "react-redux";
 import { Link } from "react-router-dom";
 import ProductViewSkeleton from "../../../components/layout/productViewSkeleton/ProductViewSkeleton";
+
+import useScrollLock from "../../../hooks/useScrollLock";
 import { baltraProductsRelated } from "../../../redux/features/product/productSlice";
 import BaltraPersonalization from "../../baltraPersonalization/BaltraPersonalization";
 import BaltraQuoteModal from "../../baltraQuoteModal/BaltraQuoteModal";
@@ -119,6 +121,10 @@ const ProductViewDetails = ({ singleProduct, loading }) => {
   const [quoteModalOpen, setQuoteModalOpen] = useState(false);
   const [isLightboxOpen, setLightboxOpen] = useState(false);
 
+  useScrollLock(
+    isPopupVisible || isLightboxOpen || isModalOpen || quoteModalOpen,
+  );
+
   const [zoomPosition, setZoomPosition] = useState({
     backgroundPositionX: "0%",
     backgroundPositionY: "0%",
@@ -143,9 +149,6 @@ const ProductViewDetails = ({ singleProduct, loading }) => {
     setIsZoomVisible(false);
   };
 
-  // ── Fixed: was a broken check (the `bottles` branch could never be
-  // true at the same time as `flask`). Now correctly matches the
-  // real category name "Bottle and Flasks" (and similar variants). ──
   const isBottleOrFlaskCategory = () => {
     const name = singleProduct?.category?.category_name?.toLowerCase() || "";
     return name.includes("bottle") || name.includes("flask");
@@ -207,14 +210,14 @@ const ProductViewDetails = ({ singleProduct, loading }) => {
         <div className="max-w-7xl mx-auto px-4 md:px-8 py-3">
           <nav className="text-sm text-gray-600">
             <Link
-              to={`/category/${singleProduct?.category?.id}`}
+              to={`/baltra-newsubcategory/${singleProduct?.category?.category_id}`}
               className="hover:text-red-600 transition-colors font-medium"
             >
               {singleProduct?.category?.category_name}
             </Link>
             <span className="mx-2">/</span>
             <Link
-              to={`/subcategory/${singleProduct?.sub_category?.id}`}
+              to={`/baltra-newsubcategory/${singleProduct?.category?.category_id}?sub=${singleProduct?.sub_category?.sub_category_id}`}
               className="hover:text-red-600 transition-colors font-medium"
             >
               {singleProduct?.sub_category?.sub_category_name}
@@ -234,9 +237,7 @@ const ProductViewDetails = ({ singleProduct, loading }) => {
             {/* Image Section */}
             <div className="relative">
               <div className="sticky top-8">
-                {/* Main Image Container — NOT clipped, so the warranty badge can sit outside its edges */}
                 <div className="relative p-8 mb-6 group">
-                  {/* Clipped inner area: background, hover glow, image, zoom overlay */}
                   <div className="relative rounded-2xl overflow-hidden bg-gradient-to-br from-gray-50 to-white">
                     <div className="absolute inset-0 bg-gradient-to-tr from-red-50/30 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500 pointer-events-none"></div>
 
@@ -254,7 +255,6 @@ const ProductViewDetails = ({ singleProduct, loading }) => {
                         onClick={() => setLightboxOpen(true)}
                       />
 
-                      {/* Zoom Effect */}
                       {isZoomVisible && (
                         <div
                           className="absolute inset-0 bg-contain bg-no-repeat pointer-events-none z-20"
@@ -271,8 +271,6 @@ const ProductViewDetails = ({ singleProduct, loading }) => {
                     </div>
                   </div>
 
-                  {/* Warranty Badge — repositioned to sit fully outside the
-                      padded corner instead of overlapping the product image. */}
                   {singleProduct?.warranty_icon && (
                     <motion.img
                       initial={{ scale: 0, rotate: -180 }}
@@ -289,7 +287,6 @@ const ProductViewDetails = ({ singleProduct, loading }) => {
                   )}
                 </div>
 
-                {/* Thumbnail Images */}
                 {singleProduct?.images?.length > 0 && (
                   <div className="flex gap-3 overflow-x-auto scrollbar-hide pb-2">
                     <motion.div
@@ -334,7 +331,6 @@ const ProductViewDetails = ({ singleProduct, loading }) => {
 
             {/* Product Details Section */}
             <div className="space-y-6">
-              {/* Header Section */}
               <div className="flex justify-between items-start">
                 <div className="flex-1">
                   <p className="text-gray-600 text-lg font-medium mb-2">
@@ -363,7 +359,6 @@ const ProductViewDetails = ({ singleProduct, loading }) => {
                 </div>
               </div>
 
-              {/* Price and Rating */}
               <div className="bg-gradient-to-r from-red-50 to-orange-50 p-6 rounded-2xl border border-red-100">
                 <div className="flex items-center justify-between mb-4">
                   <div className="text-2xl md:text-3xl font-bold text-red-600">
@@ -373,14 +368,16 @@ const ProductViewDetails = ({ singleProduct, loading }) => {
                     </span>
                   </div>
                 </div>
-                <div className="flex items-center gap-3">
-                  <StarRating rating={average_rating} />
-                  <span className="text-gray-600 font-medium">
-                    ({total_reviews.toLocaleString()} reviews)
-                  </span>
-                </div>
+                {total_reviews > 0 && (
+                  <div className="flex items-center gap-3">
+                    <StarRating rating={average_rating} />
+                    <span className="text-gray-600 font-medium">
+                      ({total_reviews.toLocaleString()} reviews)
+                    </span>
+                  </div>
+                )}
               </div>
-              {/* Color Selection */}
+
               {singleProduct?.color_styles?.length > 0 && (
                 <div className="space-y-3">
                   <h3 className="text-base font-semibold text-gray-900">
@@ -427,7 +424,6 @@ const ProductViewDetails = ({ singleProduct, loading }) => {
                 </div>
               )}
 
-              {/* Size Selection */}
               {singleProduct?.sizes?.length > 0 && (
                 <div className="space-y-3">
                   <h3 className="text-base font-semibold text-gray-900">
@@ -453,7 +449,6 @@ const ProductViewDetails = ({ singleProduct, loading }) => {
                 </div>
               )}
 
-              {/* Product Specifications — only render fields that actually have a value */}
               {(hasPackaging || hasPower) && (
                 <div
                   className={`grid gap-6 p-6 bg-gray-50 rounded-2xl ${
@@ -483,7 +478,6 @@ const ProductViewDetails = ({ singleProduct, loading }) => {
                 </div>
               )}
 
-              {/* Action Buttons */}
               <div className="space-y-4">
                 <RippleButton
                   label="REQUEST A BULK QUOTE"
@@ -494,8 +488,6 @@ const ProductViewDetails = ({ singleProduct, loading }) => {
                   <FaArrowRight />
                 </RippleButton>
 
-                {/* Only shown for Bottle & Flask category products now,
-                    instead of always showing and erroring on click. */}
                 {showPersonalization && (
                   <RippleButton
                     label="ADD PERSONALIZATION"
@@ -511,23 +503,32 @@ const ProductViewDetails = ({ singleProduct, loading }) => {
           </div>
         </div>
 
-        {/* Share Popup Modal */}
+        {/* Share Popup Modal
+            FIX: removed `backdrop-blur-sm` from the fixed full-screen overlay.
+            Blurring the entire viewport behind a newly-mounted fixed layer is
+            an expensive paint/composite operation; on first mount it can
+            block a frame or two, which reads as a "flash / loading" flicker.
+            Slightly darker overlay compensates visually for losing the blur.
+            Also bumped the transition duration a touch so the paint has
+            time to catch up smoothly instead of popping in. */}
         <AnimatePresence>
           {isPopupVisible && (
             <motion.div
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
               exit={{ opacity: 0 }}
+              transition={{ duration: 0.2 }}
               className="fixed inset-0 flex items-center justify-center z-50 px-4"
             >
               <div
-                className="absolute inset-0 bg-black/60 backdrop-blur-sm"
+                className="absolute inset-0 bg-black/70"
                 onClick={handleTogglePopup}
               />
               <motion.div
                 initial={{ scale: 0.8, opacity: 0 }}
                 animate={{ scale: 1, opacity: 1 }}
                 exit={{ scale: 0.8, opacity: 0 }}
+                transition={{ duration: 0.2 }}
                 className="relative bg-white p-8 rounded-3xl shadow-2xl max-w-md w-full"
               >
                 <button
@@ -585,20 +586,23 @@ const ProductViewDetails = ({ singleProduct, loading }) => {
           )}
         </AnimatePresence>
 
-        {/* Fullscreen image lightbox — now opened by clicking the main image itself */}
+        {/* Fullscreen image lightbox — backdrop-blur removed here too,
+            same reasoning as the share modal above. */}
         <AnimatePresence>
           {isLightboxOpen && (
             <motion.div
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
               exit={{ opacity: 0 }}
-              className="fixed inset-0 z-50 flex items-center justify-center bg-black/85 backdrop-blur-sm px-4"
+              transition={{ duration: 0.2 }}
+              className="fixed inset-0 z-50 flex items-center justify-center bg-black/90 px-4"
               onClick={() => setLightboxOpen(false)}
             >
               <motion.img
                 initial={{ scale: 0.9, opacity: 0 }}
                 animate={{ scale: 1, opacity: 1 }}
                 exit={{ scale: 0.9, opacity: 0 }}
+                transition={{ duration: 0.2 }}
                 src={selectedImage}
                 alt="Product full view"
                 className="max-w-full max-h-[85vh] object-contain rounded-xl"
@@ -614,19 +618,21 @@ const ProductViewDetails = ({ singleProduct, loading }) => {
           )}
         </AnimatePresence>
 
-        {/* Modals */}
+        {/* Modals — backdrop-blur removed */}
         <AnimatePresence>
           {isModalOpen && (
             <motion.div
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
               exit={{ opacity: 0 }}
-              className="fixed inset-0 z-50 flex justify-center items-center bg-black/60 backdrop-blur-sm"
+              transition={{ duration: 0.2 }}
+              className="fixed inset-0 z-50 flex justify-center items-center bg-black/70"
             >
               <motion.div
                 initial={{ scale: 0.9, opacity: 0 }}
                 animate={{ scale: 1, opacity: 1 }}
                 exit={{ scale: 0.9, opacity: 0 }}
+                transition={{ duration: 0.2 }}
                 className="bg-white w-full max-w-4xl mx-4 rounded-3xl overflow-hidden shadow-2xl"
               >
                 <BaltraPersonalization
@@ -647,12 +653,14 @@ const ProductViewDetails = ({ singleProduct, loading }) => {
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
               exit={{ opacity: 0 }}
-              className="fixed inset-0 z-50 flex justify-center items-center bg-black/60 backdrop-blur-sm"
+              transition={{ duration: 0.2 }}
+              className="fixed inset-0 z-50 flex justify-center items-center bg-black/70"
             >
               <motion.div
                 initial={{ scale: 0.9, opacity: 0 }}
                 animate={{ scale: 1, opacity: 1 }}
                 exit={{ scale: 0.9, opacity: 0 }}
+                transition={{ duration: 0.2 }}
                 className="w-full max-w-4xl mx-4 rounded-3xl overflow-hidden shadow-2xl"
               >
                 <BaltraQuoteModal
@@ -668,11 +676,6 @@ const ProductViewDetails = ({ singleProduct, loading }) => {
           )}
         </AnimatePresence>
 
-        {/* Additional Sections — Reviews moved to the end, after Related
-            Products, instead of sitting right after the gallery/video. */}
-        {/* Additional Sections — Reviews now sit right after the product's own
-    content (description/specs/video) and before Related Products,
-    instead of at the very bottom of the page. */}
         <ProductDescription singleProduct={singleProduct} />
         <ProductVaccum singleProduct={singleProduct} />
         <ProductDetailsVideo singleProduct={singleProduct} />
