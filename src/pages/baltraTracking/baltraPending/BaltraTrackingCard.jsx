@@ -1,175 +1,116 @@
-import { motion } from "framer-motion";
 import moment from "moment";
+import { memo } from "react";
+import { FiChevronRight } from "react-icons/fi";
 import { Link } from "react-router-dom";
 
+const RED = { color: "text-red-500", bg: "bg-red-50", dot: "bg-red-500" };
+const YELLOW = {
+  color: "text-yellow-600",
+  bg: "bg-yellow-50",
+  dot: "bg-yellow-500",
+};
+const BLUE = { color: "text-blue-600", bg: "bg-blue-50", dot: "bg-blue-500" };
+const GREEN = {
+  color: "text-green-600",
+  bg: "bg-green-50",
+  dot: "bg-green-500",
+};
+const GRAY = { color: "text-gray-500", bg: "bg-gray-100", dot: "bg-gray-400" };
+
 const STATUS_CONFIG = {
-  "Un-Assigned": { color: "text-red-500", bg: "bg-red-50", dot: "bg-red-500" },
-  Completed: {
-    color: "text-green-600",
-    bg: "bg-green-50",
-    dot: "bg-green-500",
-  },
-  "Service Center Allocated": {
-    color: "text-yellow-600",
-    bg: "bg-yellow-50",
-    dot: "bg-yellow-500",
-  },
-  "Service Center Assigned": {
-    color: "text-yellow-600",
-    bg: "bg-yellow-50",
-    dot: "bg-yellow-500",
-  },
-  "Engineer Allocated": {
-    color: "text-blue-600",
-    bg: "bg-blue-50",
-    dot: "bg-blue-500",
-  },
-  "On Service": {
-    color: "text-blue-600",
-    bg: "bg-blue-50",
-    dot: "bg-blue-500",
-  },
-  Cancelled: { color: "text-gray-500", bg: "bg-gray-100", dot: "bg-gray-400" },
-  "Cancelled Not Approved By Customer": {
-    color: "text-gray-500",
-    bg: "bg-gray-100",
-    dot: "bg-gray-400",
-  },
-  "Cancelled Not Approved By HO": {
-    color: "text-gray-500",
-    bg: "bg-gray-100",
-    dot: "bg-gray-400",
-  },
-  "Product Delivered": {
-    color: "text-gray-500",
-    bg: "bg-gray-100",
-    dot: "bg-gray-400",
-  },
-  "Happy Calling Completed": {
-    color: "text-gray-500",
-    bg: "bg-gray-100",
-    dot: "bg-gray-400",
-  },
-  "Request For Cancel": {
-    color: "text-gray-500",
-    bg: "bg-gray-100",
-    dot: "bg-gray-400",
-  },
-  "Request For Close": {
-    color: "text-gray-500",
-    bg: "bg-gray-100",
-    dot: "bg-gray-400",
-  },
-  "Transfer To Third Party": {
-    color: "text-gray-500",
-    bg: "bg-gray-100",
-    dot: "bg-gray-400",
-  },
+  "Un-Assigned": RED,
+  Unassigned: RED,
+  Completed: GREEN,
+  "Service Center Allocated": YELLOW,
+  "Service Center Assigned": YELLOW,
+  "Part Approval Pending from ASM": YELLOW,
+  "Part Pending from HO": YELLOW,
+  "Parts in Transit": YELLOW,
+  "Part Consumed by Service Center": YELLOW,
+  "Engineer Allocated": BLUE,
+  "On Service": BLUE,
 };
 
-const DEFAULT_STATUS = {
-  color: "text-gray-700",
-  bg: "bg-gray-100",
-  dot: "bg-gray-400",
-};
+// Shared by the header and every row so columns always line up
+export const ROW_GRID =
+  "md:grid md:grid-cols-[1.1fr_1.7fr_1.2fr_1.2fr_1.6fr_1.1fr_20px] md:gap-4 md:items-center";
 
-// min-h-[20px] keeps every row the same height even when value is "—"
-const Row = ({ label, value, valueClass = "" }) => (
-  <div className="flex items-baseline gap-2 text-sm font-gothamNarrow min-h-[20px]">
-    <span className="font-semibold text-gray-600 w-28 sm:w-32 shrink-0">
-      {label}
-    </span>
-    <span
-      className={`text-gray-800 leading-snug line-clamp-1 break-all ${valueClass}`}
-    >
-      {value || "—"}
-    </span>
+export const BaltraTrackingHeader = () => (
+  <div
+    className={`hidden ${ROW_GRID} px-4 py-3 bg-gray-50 border-b border-gray-200 text-[11px] font-semibold uppercase tracking-wider text-gray-500 font-gothamNarrow`}
+  >
+    <span>Job ID</span>
+    <span>Model</span>
+    <span>Model No.</span>
+    <span>Sent for</span>
+    <span>Status</span>
+    <span>Date</span>
+    <span />
   </div>
 );
 
+const StatusBadge = ({ status }) => {
+  const cfg = STATUS_CONFIG[status] || GRAY;
+  return (
+    <span
+      className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[11px] font-semibold font-gothamNarrow max-w-full ${cfg.bg} ${cfg.color}`}
+    >
+      <span className={`w-1.5 h-1.5 rounded-full shrink-0 ${cfg.dot}`} />
+      <span className="truncate">{status || "Unknown"}</span>
+    </span>
+  );
+};
+
 const BaltraTrackingCard = ({ item }) => {
-  const statusCfg = STATUS_CONFIG[item.status] || DEFAULT_STATUS;
+  const date = item?.date_joined
+    ? moment(item.date_joined).format("DD MMM YYYY")
+    : "—";
 
   return (
     <Link
       to={`/baltra-tracking-ProductDetails/${item.id}`}
-      className="h-full block"
+      className="block px-4 py-3 border-b border-gray-100 last:border-b-0 hover:bg-red-50/40 transition-colors font-gothamNarrow"
     >
-      <motion.div
-        whileHover={{
-          boxShadow:
-            "0 4px 20px rgba(220, 38, 38, 0.12), 0 1px 6px rgba(0,0,0,0.06)",
-          y: -2,
-          transition: { duration: 0.18, ease: "easeOut" },
-        }}
-        // slightly taller + flex-col so the footer line always has room to breathe
-        // before the bottom accent bar
-        className="mt-2 h-full sm:h-[196px] bg-white rounded-md border border-gray-200 overflow-hidden flex flex-col"
-      >
-        <div className="flex flex-col sm:flex-row flex-1 min-h-0">
-          {/* ── Image panel ── */}
-          <div className="sm:w-36 md:w-40 lg:w-44 shrink-0 bg-gray-50 flex items-center justify-center p-2.5 border-b sm:border-b-0 sm:border-r border-gray-100">
-            <img
-              className="w-full h-28 sm:h-full object-contain"
-              src={item.damaged_image || item.product_image}
-              alt={item.model_name}
-            />
-          </div>
-
-          {/* ── Content panel ── */}
-          <div className="flex flex-col flex-1 min-w-0 px-4 pt-3 pb-2.5 gap-1.5">
-            {/* Top: model name + status badge */}
-            <div className="flex items-start justify-between gap-3">
-              <h3 className="text-base font-semibold text-gray-900 font-gothamNarrow leading-tight line-clamp-1 min-w-0">
-                {item.model_name}
-              </h3>
-              <span
-                className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[11px] font-semibold font-gothamNarrow whitespace-nowrap shrink-0 max-w-[140px] truncate
-                  ${statusCfg.bg} ${statusCfg.color}`}
-              >
-                <span
-                  className={`w-1.5 h-1.5 rounded-full shrink-0 ${statusCfg.dot}`}
-                />
-                <span className="truncate">{item.status || "Unknown"}</span>
-              </span>
-            </div>
-
-            {/* Detail rows */}
-            <div className="flex flex-col gap-1">
-              <Row label="Model Code" value={item.model_num} />
-              <Row
-                label="Job ID"
-                value={item.job_no}
-                valueClass="text-red-500 font-semibold"
-              />
-              <Row label="Sent for" value={item.problem_type} />
-              <Row label="Complaint" value={item.problem_description} />
-              <Row
-                label="Complaint Date"
-                value={moment(item?.date_joined || "").format(
-                  "ddd, MMM D, YYYY",
-                )}
-              />
-            </div>
-
-            {/* Bottom: subtle "View details" cue — pinned to bottom with its own breathing room */}
-            <div className="flex justify-end mt-auto pt-1 shrink-0">
-              <span className="text-xs text-red-500 font-gothamNarrow font-medium tracking-wide leading-none">
-                View details →
-              </span>
-            </div>
+      {/* ── Mobile layout ── */}
+      <div className="md:hidden flex flex-col gap-1.5">
+        <div className="flex items-start justify-between gap-2">
+          <h3 className="text-sm font-semibold text-gray-900 line-clamp-1 min-w-0">
+            {item.model_name || "—"}
+          </h3>
+          <div className="shrink-0 max-w-[150px]">
+            <StatusBadge status={item.status} />
           </div>
         </div>
+        <div className="flex items-center justify-between text-xs text-gray-600">
+          <span>
+            Job ID:{" "}
+            <b className="text-red-500 font-semibold">{item.job_no || "—"}</b>
+          </span>
+          <span className="text-gray-400">{date}</span>
+        </div>
+        <div className="text-xs text-gray-500 line-clamp-1">
+          {item.model_num || "—"} · {item.problem_type || "—"}
+        </div>
+      </div>
 
-        {/* Bottom accent line — red for active, green for completed */}
-        <div
-          className={`h-0.5 w-full shrink-0 ${
-            item.status === "Completed" ? "bg-green-400" : "bg-red-500"
-          }`}
-        />
-      </motion.div>
+      {/* ── Desktop layout ── */}
+      <div className={`hidden ${ROW_GRID} text-sm text-gray-700`}>
+        <span className="font-semibold text-red-500 truncate">
+          {item.job_no || "—"}
+        </span>
+        <span className="font-semibold text-gray-900 truncate">
+          {item.model_name || "—"}
+        </span>
+        <span className="truncate">{item.model_num || "—"}</span>
+        <span className="truncate">{item.problem_type || "—"}</span>
+        <span className="min-w-0">
+          <StatusBadge status={item.status} />
+        </span>
+        <span className="text-gray-500">{date}</span>
+        <FiChevronRight className="text-gray-300" />
+      </div>
     </Link>
   );
 };
 
-export default BaltraTrackingCard;
+export default memo(BaltraTrackingCard);

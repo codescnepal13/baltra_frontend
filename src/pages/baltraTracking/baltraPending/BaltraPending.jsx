@@ -1,5 +1,4 @@
-import { debounce } from "lodash";
-import { useCallback, useEffect, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { FaSearch } from "react-icons/fa";
 import { FiChevronDown, FiSearch, FiX } from "react-icons/fi";
 import { useDispatch, useSelector } from "react-redux";
@@ -10,12 +9,14 @@ import {
   getAllTrackingProducts,
 } from "../../../redux/features/customer/customerSlice";
 import BaltraApplianceCareHeader from "../baltraApplianceCare/BaltraApplianceCareHeader";
-import BaltraCompleted from "../baltraCompleted/BaltraCompleted";
-import BaltraPendingSkeleton from "./baltraPendingSkeleton/BaltraPendingSkeleton";
-import BaltraTrackingCard from "./BaltraTrackingCard";
+import Pagination from "../Pagination";
+import BaltraTrackingCard, { BaltraTrackingHeader } from "./BaltraTrackingCard";
 
 /* ── Constants ─────────────────────────────────────────────── */
 
+const PAGE_SIZE = 20;
+
+// value = query param name your backend accepts (same as your original code)
 const SEARCH_FIELDS = [
   { label: "Job ID", value: "job_no" },
   { label: "Model No.", value: "model_no" },
@@ -23,7 +24,8 @@ const SEARCH_FIELDS = [
   { label: "Serial No.", value: "serial_no" },
 ];
 
-const JOB_STATUSES = [
+// "Completed" has its own tab, so it is not in this filter list
+const PENDING_STATUSES = [
   "Unassigned",
   "Service Center Assigned",
   "Engineer Allocated",
@@ -32,8 +34,25 @@ const JOB_STATUSES = [
   "Parts in Transit",
   "Part Consumed by Service Center",
   "On Service",
-  "Completed",
 ];
+
+/* ── Small helpers ─────────────────────────────────────────── */
+
+const useDebounced = (value, delay = 500) => {
+  const [debounced, setDebounced] = useState(value);
+  useEffect(() => {
+    const t = setTimeout(() => setDebounced(value), delay);
+    return () => clearTimeout(t);
+  }, [value, delay]);
+  return debounced;
+};
+
+const RowSkeleton = () => (
+  <div className="px-4 py-4 border-b border-gray-100 last:border-b-0 animate-pulse">
+    <div className="h-4 bg-gray-200 rounded w-1/3 mb-2" />
+    <div className="h-3 bg-gray-100 rounded w-2/3" />
+  </div>
+);
 
 /* ── Component ─────────────────────────────────────────────── */
 
@@ -43,92 +62,43 @@ const BaltraPending = () => {
   );
   const dispatch = useDispatch();
   const dropdownRef = useRef(null);
+  const listTopRef = useRef(null);
 
-  // Tab state
   const [activeTab, setActiveTab] = useState("pending"); // "pending" | "completed"
+  const [page, setPage] = useState(1);
 
-  // Search state
-  const [searchField, setSearchField] = useState(SEARCH_FIELDS[0]); // active search-by field
-  const [searchQuery, setSearchQuery] = useState("");
-  const [activeStatus, setActiveStatus] = useState(""); // selected status filter
+  const [searchField, setSearchField] = useState(SEARCH_FIELDS[0]);
+  const [searchInput, setSearchInput] = useState("");
+  const [activeStatus, setActiveStatus] = useState("");
   const [fieldDropdownOpen, setFieldDropdownOpen] = useState(false);
   const [statusDropdownOpen, setStatusDropdownOpen] = useState(false);
 
-  /* ── Core dispatch ── */
-  const fetchProducts = useCallback(
-    (query, field, status, tab) => {
-      const params = {
-        // Map the chosen field key → its param value
-        [field]: query.trim() || undefined,
-        status: status || (tab === "completed" ? "Completed" : undefined),
-      };
-      dispatch(getAllTrackingProducts(params));
-    },
-    [dispatch],
-  );
+  const debouncedQuery = useDebounced(searchInput.trim(), 500);
 
-  /* ── Debounced search for live typing ── */
-  const debouncedFetch = useCallback(
-    debounce((query, field, status, tab) => {
-      fetchProducts(query, field, status, tab);
-    }, 500),
-    [fetchProducts],
-  );
+  const isCompletedTab = activeTab === "completed";
+  const isSearchActive = searchInput.trim().length > 0 || activeStatus !== "";
 
-  useEffect(() => () => debouncedFetch.cancel(), [debouncedFetch]);
+  /* ── API params ──
+     Pending   → no status (backend returns pending by default)
+                 or status = selected filter
+     Completed → status = "Completed"
+     Search    → { [field]: query }
+     JSON key means we only refetch when the params really change. */
+  const paramsKey = useMemo(() => {
+    const params = {};
+    if (debouncedQuery) params[searchField.value] = debouncedQuery;
+    if (isCompletedTab) params.status = "Completed";
+    else if (activeStatus) params.status = activeStatus;
+    return JSON.stringify(params);
+  }, [debouncedQuery, searchField.value, isCompletedTab, activeStatus]);
 
-  /* ── Handlers ── */
+  useEffect(() => {
+    dispatch(getAllTrackingProducts(JSON.parse(paramsKey)));
+  }, [dispatch, paramsKey]);
 
-  const handleSearchChange = (e) => {
-    const val = e.target.value;
-    setSearchQuery(val);
-    debouncedFetch(val, searchField.value, activeStatus, activeTab);
-  };
-
-  const handleFieldSelect = (field) => {
-    setSearchField(field);
-    setFieldDropdownOpen(false);
-    // Re-run search with new field if query exists
-    if (searchQuery.trim()) {
-      debouncedFetch.cancel();
-      fetchProducts(searchQuery, field.value, activeStatus, activeTab);
-    }
-  };
-
-  const handleStatusSelect = (status) => {
-    const next = activeStatus === status ? "" : status;
-    setActiveStatus(next);
-    setStatusDropdownOpen(false);
-    debouncedFetch.cancel();
-    fetchProducts(searchQuery, searchField.value, next, activeTab);
-  };
-
-  const handleClearStatus = (e) => {
-    e.stopPropagation();
-    setActiveStatus("");
-    debouncedFetch.cancel();
-    fetchProducts(searchQuery, searchField.value, "", activeTab);
-  };
-
-  const handleClearSearch = () => {
-    setSearchQuery("");
-    setActiveStatus("");
-    debouncedFetch.cancel();
-    fetchProducts("", searchField.value, "", activeTab);
-  };
-
-  const handleTabChange = (tab) => {
-    setActiveTab(tab);
-    setSearchQuery("");
-    setActiveStatus("");
-    debouncedFetch.cancel();
-    // For "completed" tab, force status = Completed
-    dispatch(
-      getAllTrackingProducts(
-        tab === "completed" ? { status: "Completed" } : {},
-      ),
-    );
-  };
+  useEffect(() => {
+    if (error) dispatch(clearCustomerError());
+  }, [dispatch, error]);
 
   /* ── Close dropdowns on outside click ── */
   useEffect(() => {
@@ -142,49 +112,73 @@ const BaltraPending = () => {
     return () => document.removeEventListener("mousedown", handler);
   }, []);
 
-  /* ── Initial load ── */
-  useEffect(() => {
-    if (error) dispatch(clearCustomerError());
-  }, [dispatch, error]);
+  /* ── Frontend pagination ── */
+  const allItems = useMemo(() => {
+    const list = Array.isArray(trackingProducts) ? trackingProducts : [];
+    // newest first
+    return [...list].sort((a, b) =>
+      String(b.date_joined || "").localeCompare(String(a.date_joined || "")),
+    );
+  }, [trackingProducts]);
 
-  useEffect(() => {
-    dispatch(getAllTrackingProducts({}));
-  }, [dispatch]);
+  const total = allItems.length;
+  const totalPages = Math.max(1, Math.ceil(total / PAGE_SIZE));
+  const safePage = Math.min(page, totalPages);
 
-  const isSearchActive =
-    searchQuery.trim().length > 0 || activeStatus.length > 0;
-
-  /* ── Shared empty-state UI ── */
-  const EmptyState = () => (
-    <div className="col-span-1 sm:col-span-2 flex flex-col items-center py-16 text-gray-400">
-      <span className="text-4xl mb-3">
-        <FaSearch />
-      </span>
-      <p className="font-semibold font-gothamNarrow text-lg text-gray-600">
-        {isSearchActive ? "No results found" : "No Data Found"}
-      </p>
-      {isSearchActive && (
-        <p className="text-sm mt-1">
-          Try a different {searchField.label} or clear the filters
-        </p>
-      )}
-    </div>
+  const pagedItems = useMemo(
+    () => allItems.slice((safePage - 1) * PAGE_SIZE, safePage * PAGE_SIZE),
+    [allItems, safePage],
   );
 
-  /* ── Shared skeleton loader UI ── */
-  const SkeletonLoader = () => (
-    <div className="px-4 md:px-16 lg:px-24 xl:px-32 2xl:px-48 py-4 grid grid-cols-1 sm:grid-cols-2 gap-4 sm:gap-6">
-      {Array.from({ length: 4 }).map((_, i) => (
-        <BaltraPendingSkeleton key={i} />
-      ))}
-    </div>
-  );
+  const hasData = pagedItems.length > 0;
+
+  /* ── Handlers (only update state; the effect fetches) ── */
+  const handleSearchChange = (e) => {
+    setSearchInput(e.target.value);
+    setPage(1);
+  };
+
+  const handleFieldSelect = (field) => {
+    setSearchField(field);
+    setFieldDropdownOpen(false);
+    setPage(1);
+  };
+
+  const handleStatusSelect = (status) => {
+    setActiveStatus((prev) => (prev === status ? "" : status));
+    setStatusDropdownOpen(false);
+    setPage(1);
+  };
+
+  const handleClearStatus = (e) => {
+    e.stopPropagation();
+    setActiveStatus("");
+    setPage(1);
+  };
+
+  const handleClearSearch = () => {
+    setSearchInput("");
+    setActiveStatus("");
+    setPage(1);
+  };
+
+  const handleTabChange = (tab) => {
+    if (tab === activeTab) return;
+    setActiveTab(tab);
+    setSearchInput("");
+    setActiveStatus("");
+    setPage(1);
+  };
+
+  const handlePageChange = (p) => {
+    setPage(p);
+    listTopRef.current?.scrollIntoView({ behavior: "smooth", block: "start" });
+  };
 
   return (
     <>
       {/* ── Hero banner ── */}
       <div className="w-full bg-gradient-to-r from-[#E91C1C] to-[#831010]">
-        {/* Header sits at the top of the red block, with its own row */}
         <BaltraApplianceCareHeader />
         <div className="flex flex-col md:flex-row justify-between items-center h-auto md:h-[278px] px-4 sm:px-8 lg:px-16 2xl:px-24">
           <img
@@ -211,7 +205,6 @@ const BaltraPending = () => {
       {/* ── Search bar ── */}
       <div className="flex justify-center relative md:-top-10 z-30 px-4">
         <div ref={dropdownRef} className="w-full max-w-[700px]">
-          {/* Main pill */}
           <div className="w-full h-12 bg-white rounded-xl shadow-lg flex items-center gap-2 px-3">
             {/* Search-by field selector */}
             <div className="relative flex-shrink-0">
@@ -250,17 +243,15 @@ const BaltraPending = () => {
 
             <div className="w-px h-5 bg-gray-200 flex-shrink-0" />
 
-            {/* Search input */}
             <FiSearch className="w-4 h-4 text-neutral-400 flex-shrink-0" />
             <input
               type="text"
-              value={searchQuery}
+              value={searchInput}
               onChange={handleSearchChange}
               placeholder={`Search by ${searchField.label}...`}
               className="flex-1 min-w-0 bg-transparent border-none outline-none text-sm text-black font-gothamNarrow placeholder:text-neutral-400"
             />
 
-            {/* Clear all button */}
             {isSearchActive && (
               <button
                 onClick={handleClearSearch}
@@ -271,140 +262,143 @@ const BaltraPending = () => {
               </button>
             )}
 
-            <div className="w-px h-5 bg-gray-200 flex-shrink-0" />
+            {/* Status filter only on the Pending tab */}
+            {!isCompletedTab && (
+              <>
+                <div className="w-px h-5 bg-gray-200 flex-shrink-0" />
+                <div className="relative flex-shrink-0">
+                  <button
+                    onClick={() => {
+                      setStatusDropdownOpen((v) => !v);
+                      setFieldDropdownOpen(false);
+                    }}
+                    className={`flex items-center gap-1.5 text-xs font-semibold font-gothamNarrow px-2.5 py-1 rounded-full border transition-colors ${
+                      activeStatus
+                        ? "text-red-600 bg-red-50 border-red-200"
+                        : "text-gray-500 border-gray-200 hover:border-gray-300 hover:text-gray-700"
+                    }`}
+                  >
+                    {activeStatus ? (
+                      <>
+                        <span className="max-w-[110px] truncate">
+                          {activeStatus}
+                        </span>
+                        <FiX
+                          size={11}
+                          onClick={handleClearStatus}
+                          className="text-red-400 hover:text-red-600"
+                        />
+                      </>
+                    ) : (
+                      <>
+                        Status
+                        <FiChevronDown
+                          size={11}
+                          className={`transition-transform ${statusDropdownOpen ? "rotate-180" : ""}`}
+                        />
+                      </>
+                    )}
+                  </button>
 
-            {/* Status filter */}
-            <div className="relative flex-shrink-0">
-              <button
-                onClick={() => {
-                  setStatusDropdownOpen((v) => !v);
-                  setFieldDropdownOpen(false);
-                }}
-                className={`flex items-center gap-1.5 text-xs font-semibold font-gothamNarrow px-2.5 py-1 rounded-full border transition-colors ${
-                  activeStatus
-                    ? "text-red-600 bg-red-50 border-red-200"
-                    : "text-gray-500 border-gray-200 hover:border-gray-300 hover:text-gray-700"
-                }`}
-              >
-                {activeStatus ? (
-                  <>
-                    <span className="max-w-[110px] truncate">
-                      {activeStatus}
-                    </span>
-                    <FiX
-                      size={11}
-                      onClick={handleClearStatus}
-                      className="text-red-400 hover:text-red-600"
-                    />
-                  </>
-                ) : (
-                  <>
-                    Status
-                    <FiChevronDown
-                      size={11}
-                      className={`transition-transform ${statusDropdownOpen ? "rotate-180" : ""}`}
-                    />
-                  </>
-                )}
-              </button>
-
-              {statusDropdownOpen && (
-                <div className="absolute top-full right-0 mt-1 bg-white rounded-xl shadow-lg border border-gray-100 py-1.5 z-50 min-w-[240px]">
-                  <p className="text-[10px] font-semibold uppercase tracking-widest text-gray-400 px-3 pt-1 pb-1.5">
-                    Filter by status
-                  </p>
-                  {JOB_STATUSES.map((s) => (
-                    <button
-                      key={s}
-                      onMouseDown={(e) => e.preventDefault()}
-                      onClick={() => handleStatusSelect(s)}
-                      className={`w-full text-left px-3 py-1.5 text-xs font-gothamNarrow transition-colors flex items-center justify-between gap-2 ${
-                        activeStatus === s
-                          ? "text-red-600 font-semibold bg-red-50"
-                          : "text-gray-600 hover:bg-gray-50"
-                      }`}
-                    >
-                      {s}
-                      {activeStatus === s && (
-                        <span className="w-1.5 h-1.5 rounded-full bg-red-500 flex-shrink-0" />
-                      )}
-                    </button>
-                  ))}
+                  {statusDropdownOpen && (
+                    <div className="absolute top-full right-0 mt-1 bg-white rounded-xl shadow-lg border border-gray-100 py-1.5 z-50 min-w-[240px] max-h-[320px] overflow-y-auto">
+                      <p className="text-[10px] font-semibold uppercase tracking-widest text-gray-400 px-3 pt-1 pb-1.5">
+                        Filter by status
+                      </p>
+                      {PENDING_STATUSES.map((s) => (
+                        <button
+                          key={s}
+                          onMouseDown={(e) => e.preventDefault()}
+                          onClick={() => handleStatusSelect(s)}
+                          className={`w-full text-left px-3 py-1.5 text-xs font-gothamNarrow transition-colors flex items-center justify-between gap-2 ${
+                            activeStatus === s
+                              ? "text-red-600 font-semibold bg-red-50"
+                              : "text-gray-600 hover:bg-gray-50"
+                          }`}
+                        >
+                          {s}
+                          {activeStatus === s && (
+                            <span className="w-1.5 h-1.5 rounded-full bg-red-500 flex-shrink-0" />
+                          )}
+                        </button>
+                      ))}
+                    </div>
+                  )}
                 </div>
-              )}
-            </div>
+              </>
+            )}
           </div>
-
-          {/* Active status chip (visible below bar) */}
-          {activeStatus && (
-            <div className="flex items-center gap-1.5 mt-2 px-1">
-              <span className="text-[11px] text-gray-400 font-gothamNarrow">
-                Status:
-              </span>
-              <span className="flex items-center gap-1 bg-red-50 border border-red-200 rounded-full px-2 py-0.5 text-[11px] text-red-600 font-semibold font-gothamNarrow">
-                {activeStatus}
-                <button
-                  onClick={handleClearStatus}
-                  className="text-red-400 hover:text-red-600"
-                >
-                  <FiX size={10} />
-                </button>
-              </span>
-            </div>
-          )}
         </div>
       </div>
 
       {/* ── Pending / Completed tabs ── */}
       <div className="flex justify-center mb-6 mt-2">
         <div className="flex flex-wrap">
-          <button
-            onClick={() => handleTabChange("pending")}
-            className={`flex-1 min-w-[120px] md:min-w-[200px] h-[50px] md:h-[60px] flex justify-center items-center font-gothamNarrow font-normal transition-colors ${
-              activeTab === "pending"
-                ? "bg-[#F3232B] text-white"
-                : "bg-white border border-[#DDDDDD] text-black"
-            }`}
-          >
-            Pending
-          </button>
-          <button
-            onClick={() => handleTabChange("completed")}
-            className={`flex-1 min-w-[120px] md:min-w-[200px] h-[50px] md:h-[60px] flex justify-center items-center font-gothamNarrow font-normal transition-colors ${
-              activeTab === "completed"
-                ? "bg-[#F3232B] text-white"
-                : "bg-white border border-[#DDDDDD] text-black"
-            }`}
-          >
-            Completed
-          </button>
+          {["pending", "completed"].map((tab) => (
+            <button
+              key={tab}
+              onClick={() => handleTabChange(tab)}
+              className={`flex-1 min-w-[120px] md:min-w-[200px] h-[50px] md:h-[60px] flex justify-center items-center font-gothamNarrow font-normal capitalize transition-colors ${
+                activeTab === tab
+                  ? "bg-[#F3232B] text-white"
+                  : "bg-white border border-[#DDDDDD] text-black"
+              }`}
+            >
+              {tab}
+            </button>
+          ))}
         </div>
       </div>
 
       {/* ── Results ── */}
-      {activeTab === "completed" ? (
-        loading ? (
-          <SkeletonLoader />
-        ) : trackingProducts && trackingProducts.length > 0 ? (
-          <BaltraCompleted trackingProducts={trackingProducts} />
-        ) : (
-          <EmptyState />
-        )
-      ) : (
-        <div className="px-4 md:px-16 lg:px-24 xl:px-32 2xl:px-48 py-4 grid grid-cols-1 sm:grid-cols-2 gap-4 sm:gap-6 items-stretch">
+      <div
+        ref={listTopRef}
+        className="px-4 md:px-8 lg:px-16 xl:px-32 2xl:px-48 pb-10 scroll-mt-4"
+      >
+        {/* Result count */}
+        {!loading && total > 0 && (
+          <p className="text-sm text-gray-500 font-gothamNarrow mb-2">
+            <b className="text-gray-800">{total}</b>{" "}
+            {isCompletedTab ? "completed" : "pending"} complaint
+            {total === 1 ? "" : "s"}
+            {isSearchActive && " found"}
+          </p>
+        )}
+
+        <div className="bg-white border border-gray-200 rounded-lg overflow-hidden">
           {loading ? (
-            Array.from({ length: 4 }).map((_, i) => (
-              <BaltraPendingSkeleton key={i} />
-            ))
-          ) : trackingProducts && trackingProducts.length > 0 ? (
-            trackingProducts.map((item) => (
-              <BaltraTrackingCard key={item.id} item={item} />
-            ))
+            Array.from({ length: 8 }).map((_, i) => <RowSkeleton key={i} />)
+          ) : hasData ? (
+            <>
+              <BaltraTrackingHeader />
+              {pagedItems.map((item) => (
+                <BaltraTrackingCard key={item.id} item={item} />
+              ))}
+            </>
           ) : (
-            <EmptyState />
+            <div className="flex flex-col items-center py-16 text-gray-400">
+              <FaSearch className="text-4xl mb-3" />
+              <p className="font-semibold font-gothamNarrow text-lg text-gray-600">
+                {isSearchActive ? "No results found" : "No Data Found"}
+              </p>
+              {isSearchActive && (
+                <p className="text-sm mt-1">
+                  Try a different {searchField.label} or clear the filters
+                </p>
+              )}
+            </div>
           )}
         </div>
-      )}
+
+        {!loading && (
+          <Pagination
+            page={safePage}
+            pageSize={PAGE_SIZE}
+            total={total}
+            onChange={handlePageChange}
+          />
+        )}
+      </div>
     </>
   );
 };

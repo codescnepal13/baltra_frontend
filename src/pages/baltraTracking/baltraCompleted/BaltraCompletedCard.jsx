@@ -46,17 +46,6 @@ const BaltraCompletedCard = ({ item }) => {
         className="w-full h-full border border-gray-200 rounded-md font-gothamNarrow flex flex-col bg-white"
       >
         {/* Fixed-size image box keeps the top of every card identical */}
-        <div className="w-full h-56 flex items-center justify-center p-3 border-b border-gray-100">
-          <img
-            className="max-w-full max-h-full object-contain"
-            src={item?.damaged_image}
-            alt={item?.model_name || "tracking image"}
-          />
-        </div>
-
-        <div className="px-4 pt-2 text-gray-500 text-xs font-gothamNarrow">
-          Product type
-        </div>
 
         <div className="flex flex-col flex-1 px-4 pt-2 pb-3 text-sm gap-1">
           <InfoRow label="Model Name:" value={item.model_name} />
