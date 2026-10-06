@@ -97,10 +97,10 @@ const BaltraPersonalization = ({
     formData.append("text", addText);
     formData.append("font_style", selectedFont);
     formData.append("placement", orientation);
-    formData.append("color", selectedColor);
-    formData.append("size", selectedSize);
+    if (selectedColor) formData.append("color", selectedColor);
+    if (selectedSize) formData.append("size", selectedSize); // optional
     formData.append("product_id", productId);
-    formData.append("quantity", quantity); // ✅ NEW — bound to API
+    formData.append("quantity", quantity);
 
     const file = await urlToFile(mainImage);
     if (!file) {

@@ -1,23 +1,37 @@
-import { motion } from "framer-motion";
-import React, { useEffect, useMemo } from "react";
+import { motion, useReducedMotion } from "framer-motion";
+import { useCallback, useEffect, useMemo } from "react";
 import { Helmet } from "react-helmet-async";
 import { useInView } from "react-intersection-observer";
 import { useDispatch, useSelector } from "react-redux";
 import { Link } from "react-router-dom";
+
 import {
   baltraCategoryProducts,
   clearProductError,
 } from "../../../redux/features/product/productSlice";
+
 import { CATEGORY_KEYWORDS } from "../../../seo/keywords";
 import CategorySkeleton from "./categorySkeleton/CategorySkeleton";
 
 const SITE_URL = "https://np.baltra.in";
+const EAGER_IMAGE_COUNT = 4;
 
-// Single page-load reveal, staggered slightly per card. This is the one
-// motion moment on this page — hover effects below stay to a single change
-// each rather than stacking lift + scale + shadow.
+const CARD_WRAPPER_CLASS =
+  "w-[calc(50%-0.5rem)] sm:w-[calc(33.333%-0.667rem)] lg:w-[calc(25%-0.75rem)]";
+
+const toAbsoluteUrl = (value) => {
+  if (!value) return undefined;
+  if (value.startsWith("http")) return value;
+  return `${SITE_URL}${value.startsWith("/") ? "" : "/"}${value}`;
+};
+
+// Single page-load reveal, staggered slightly per card.
 const cardVariants = {
-  hidden: { opacity: 0, y: 20 },
+  hidden: {
+    opacity: 0,
+    y: 20,
+  },
+
   visible: (delay = 0) => ({
     opacity: 1,
     y: 0,
@@ -29,18 +43,26 @@ const cardVariants = {
   }),
 };
 
-// Builds one natural, human-readable phrase per category instead of
-// dumping the whole keyword array into alt/title — that's what keeps
-// this useful for SEO rather than looking like keyword stuffing.
+// Reduced-motion version: no movement, instant appearance.
+const reducedCardVariants = {
+  hidden: { opacity: 1, y: 0 },
+  visible: { opacity: 1, y: 0 },
+};
+
+// Builds one natural, human-readable phrase per category (used for the link title).
 const getCategoryDescriptor = (item) => {
-  const terms = CATEGORY_KEYWORDS[item.slug] || [];
-  const priceTerm = terms.find((t) => t.toLowerCase().includes("price"));
+  const terms = (item.slug && CATEGORY_KEYWORDS[item.slug]) || [];
+
+  const priceTerm = terms.find((term) => term.toLowerCase().includes("price"));
+
   return priceTerm
     ? `${item.name} - ${priceTerm}`
     : `${item.name} - Baltra Nepal`;
 };
 
 const BaltraCategoryCard = ({ item, index = 0 }) => {
+  const shouldReduceMotion = useReducedMotion();
+
   const { ref, inView } = useInView({
     triggerOnce: true,
     threshold: 0.1,
@@ -48,34 +70,36 @@ const BaltraCategoryCard = ({ item, index = 0 }) => {
   });
 
   const descriptor = getCategoryDescriptor(item);
+  const categoryUrl = `/baltra-newsubcategory/${item.id}`;
 
   return (
     <motion.div
       ref={ref}
-      variants={cardVariants}
+      variants={shouldReduceMotion ? reducedCardVariants : cardVariants}
       initial="hidden"
       animate={inView ? "visible" : "hidden"}
       custom={(index % 8) * 0.05}
-      whileTap={{ scale: 0.98 }}
+      whileTap={shouldReduceMotion ? undefined : { scale: 0.98 }}
       className="h-full"
     >
       <Link
-        to={`/baltra-newsubcategory/${item.id}`}
+        to={categoryUrl}
         title={descriptor}
         className="group flex h-full flex-col overflow-hidden rounded-2xl bg-white transition-shadow duration-200 hover:shadow-lg"
       >
-        {/* Image sits in a warm gradient well, inset rather than bled to the
-            edge — reads as a product shot rather than a flat grey box. */}
         <div className="relative aspect-square w-full overflow-hidden bg-gradient-to-br from-[#FAF7F2] to-[#F1EAD9] p-2 xs:p-2.5">
-          <img
-            src={item.image_url}
-            alt={descriptor}
-            loading="lazy"
-            className="h-full w-full object-contain object-center transition-transform duration-300 ease-out group-hover:scale-[1.06]"
-            onError={(e) => {
-              e.currentTarget.style.display = "none";
-            }}
-          />
+          {item.image_url && (
+            <img
+              src={item.image_url}
+              alt={item.name}
+              loading={index < EAGER_IMAGE_COUNT ? "eager" : "lazy"}
+              decoding="async"
+              className="h-full w-full object-contain object-center transition-transform duration-300 ease-out group-hover:scale-[1.06]"
+              onError={(e) => {
+                e.currentTarget.style.display = "none";
+              }}
+            />
+          )}
         </div>
 
         <div className="flex flex-1 flex-col items-start gap-1.5 p-3 xs:p-3.5 sm:gap-2 sm:p-4">
@@ -83,8 +107,6 @@ const BaltraCategoryCard = ({ item, index = 0 }) => {
             {item.name}
           </h3>
 
-          {/* Quiet text link + arrow instead of a solid button block on
-              every card — the red is reserved for this one small move. */}
           <span className="mt-auto inline-flex items-center gap-1 font-gothamNarrow text-[11px] font-medium text-[#C41E3A] sm:text-xs">
             Explore
             <svg
@@ -117,69 +139,88 @@ const BaltraCategoryProducts = () => {
 
   const dispatch = useDispatch();
 
-  useEffect(() => {
-    if (error) {
-      dispatch(clearProductError());
-    }
-  }, [dispatch, error]);
-
-  useEffect(() => {
+  const fetchCategories = useCallback(() => {
+    dispatch(clearProductError());
     dispatch(baltraCategoryProducts());
   }, [dispatch]);
 
-  const renderSkeletons = (length) =>
-    Array.from({ length }).map((_, index) => (
-      <div
-        key={index}
-        className="w-[calc(50%-0.5rem)] sm:w-[calc(33.333%-0.667rem)] lg:w-[calc(25%-0.75rem)]"
-      >
-        <CategorySkeleton />
-      </div>
-    ));
+  // Fetch on mount.
+  useEffect(() => {
+    fetchCategories();
+  }, [fetchCategories]);
 
-  // ItemList schema — tells Google this section is a structured list of
-  // category pages, which is what can earn a rich "category carousel"
-  // result. This is the part that can genuinely help visibility, unlike
-  // the meta keywords tag.
+  // Clear any leftover error when leaving the page, so it doesn't leak elsewhere.
+  useEffect(() => {
+    return () => {
+      dispatch(clearProductError());
+    };
+  }, [dispatch]);
+
+  const categories = useMemo(
+    () =>
+      Array.isArray(categoryProducts)
+        ? categoryProducts.filter((item) => item?.id && item?.name)
+        : [],
+    [categoryProducts],
+  );
+
+  /*
+   * ItemList schema for the category listing.
+   * URLs match the React Router route: /baltra-newsubcategory/:id
+   */
   const itemListSchema = useMemo(() => {
-    if (!categoryProducts || categoryProducts.length === 0) return null;
+    if (categories.length === 0) return null;
 
     return {
       "@context": "https://schema.org",
       "@type": "ItemList",
-      itemListElement: categoryProducts.map((item, index) => ({
+      name: "Baltra Product Categories",
+      numberOfItems: categories.length,
+      itemListElement: categories.map((item, index) => ({
         "@type": "ListItem",
         position: index + 1,
         name: item.name,
         url: `${SITE_URL}/baltra-newsubcategory/${item.id}`,
-        image: item.image_url,
+        ...(item.image_url && { image: toAbsoluteUrl(item.image_url) }),
       })),
     };
-  }, [categoryProducts]);
+  }, [categories]);
 
-  // Flexbox instead of CSS Grid: Grid can't center a leftover row on its
-  // own (a partial last row stays left-aligned), but flex-wrap + a
-  // per-item width does — each wrapped line is centered independently, so
-  // 7 items at 4-per-row naturally lands as 4 on top and 3 centered below,
-  // with no need to special-case the count of 7.
-  const productCards = useMemo(() => {
-    if (!categoryProducts || categoryProducts.length === 0) {
-      return (
+  const renderSkeletons = (length) =>
+    Array.from({ length }).map((_, index) => (
+      <div key={index} className={CARD_WRAPPER_CLASS}>
+        <CategorySkeleton />
+      </div>
+    ));
+
+  const content = useMemo(() => {
+    if (categories.length === 0) {
+      return error ? (
+        <div className="flex w-full flex-col items-center gap-3 py-10 text-center">
+          <span className="font-gothamNarrow text-sm text-[#8A8378]">
+            Something went wrong while loading categories.
+          </span>
+          <button
+            type="button"
+            onClick={fetchCategories}
+            className="rounded-full bg-[#C41E3A] px-5 py-2 font-gothamNarrow text-xs font-medium text-white transition-opacity hover:opacity-90"
+          >
+            Try again
+          </button>
+        </div>
+      ) : (
         <span className="w-full py-10 text-center font-gothamNarrow text-sm text-[#8A8378]">
           No categories to show right now.
         </span>
       );
     }
 
-    return categoryProducts.map((item, index) => (
-      <div
-        key={item.id}
-        className="w-[calc(50%-0.5rem)] sm:w-[calc(33.333%-0.667rem)] lg:w-[calc(25%-0.75rem)]"
-      >
+    return categories.map((item, index) => (
+      <div key={item.id} className={CARD_WRAPPER_CLASS}>
         <BaltraCategoryCard item={item} index={index} />
       </div>
     ));
-  }, [categoryProducts]);
+  }, [categories, error, fetchCategories]);
 
   return (
     <div className="container mx-auto bg-[#FDFBF7] px-3 py-6 sm:px-4 sm:py-8 lg:px-14">
@@ -192,10 +233,10 @@ const BaltraCategoryProducts = () => {
       )}
 
       <div className="flex flex-wrap justify-center gap-4">
-        {loading ? renderSkeletons(8) : productCards}
+        {loading ? renderSkeletons(8) : content}
       </div>
     </div>
   );
 };
 
-export default React.memo(BaltraCategoryProducts);
+export default BaltraCategoryProducts;

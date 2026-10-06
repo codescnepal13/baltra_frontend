@@ -1,7 +1,9 @@
 import { motion } from "framer-motion";
 import moment from "moment";
+import { useCallback, useState } from "react";
 import { FaArrowRight, FaCheck } from "react-icons/fa6";
 import { useNavigate } from "react-router-dom";
+import WarrantyComingSoon from "../../../components/layout/warrantyComingSoon/WarrantyComingSoon";
 import ExtendedSkeleton from "../extendedSkeleton/ExtendedSkeleton";
 
 // Reusable Check Icon
@@ -13,6 +15,11 @@ const CheckIcon = () => (
 
 const BaltraExtendPackage = ({ loyaltyProduct, loading }) => {
   const navigate = useNavigate();
+  const [showComingSoon, setShowComingSoon] = useState(false);
+
+  const handleCloseComingSoon = useCallback(() => {
+    setShowComingSoon(false);
+  }, []);
 
   if (loading) {
     return <ExtendedSkeleton />;
@@ -144,9 +151,9 @@ const BaltraExtendPackage = ({ loyaltyProduct, loading }) => {
               Includes
             </div>
             <ul className="list-none mt-3 space-y-2.5">
-              {includes.map((item, index) => (
+              {includes.map((item) => (
                 <li
-                  key={index}
+                  key={item}
                   className="flex text-sm font-gothamNarrow items-center text-[#1A1A1A]"
                 >
                   <CheckIcon />
@@ -157,10 +164,15 @@ const BaltraExtendPackage = ({ loyaltyProduct, loading }) => {
           </div>
 
           <div className="mt-10 flex flex-col gap-3">
-            <button className="w-full text-sm border-2 border-[#ED1C24] text-[#ED1C24] py-3 rounded-md hover:bg-[#ED1C24] hover:text-white transition-colors duration-300 font-gothamNarrow font-medium">
+            <button
+              type="button"
+              onClick={() => setShowComingSoon(true)}
+              className="w-full text-sm border-2 border-[#ED1C24] text-[#ED1C24] py-3 rounded-md hover:bg-[#ED1C24] hover:text-white transition-colors duration-300 font-gothamNarrow font-medium"
+            >
               EXTEND WARRANTY
             </button>
             <button
+              type="button"
               onClick={handleNext}
               className="font-gothamNarrow text-sm w-full py-3 rounded-md text-white transition-all duration-300 font-medium bg-[#ED1C24] hover:bg-gradient-to-r hover:from-[#ED1C24] hover:to-[#831010] flex items-center justify-center gap-2"
             >
@@ -170,6 +182,12 @@ const BaltraExtendPackage = ({ loyaltyProduct, loading }) => {
           </div>
         </motion.div>
       </div>
+
+      {/* Coming soon modal */}
+      <WarrantyComingSoon
+        isOpen={showComingSoon}
+        onClose={handleCloseComingSoon}
+      />
     </div>
   );
 };

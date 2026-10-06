@@ -118,7 +118,7 @@ const Footer = () => {
       categoryProducts?.length > 0
         ? categoryProducts.map((cat) => ({
             label: cat.name,
-            to: `/baltra-subCategoryProducts/${cat.id}`,
+            to: `/baltra-newsubcategory/${cat.id}`,
           }))
         : [{ label: "All Products", to: "/baltra-allProducts" }],
   };
@@ -133,7 +133,7 @@ const Footer = () => {
       subcategoryData?.length > 0
         ? subcategoryData.map((sub) => ({
             label: sub.name,
-            to: `/baltra-allProducts?subcategory=${sub.id}`,
+            to: `/baltra-newsubcategory/${sub.id}`,
           }))
         : staticBestSellers.links,
   };

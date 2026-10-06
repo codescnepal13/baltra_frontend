@@ -155,13 +155,19 @@ const ProductViewDetails = ({ singleProduct, loading }) => {
   };
 
   const handlePersonalizationClick = () => {
-    if (singleProduct?.sizes?.length > 0 && !selectedSize) {
-      enqueueSnackbar("Please Select a size.", { variant: "error" });
-    } else if (singleProduct?.color_styles?.length > 0 && !selectedColor) {
-      enqueueSnackbar("Please Select a color.", { variant: "error" });
-    } else {
-      setIsModalOpen(true);
+    const hasColors = singleProduct?.color_styles?.length > 0;
+
+    // Color is required (when the product has color options)
+    if (hasColors && !selectedColor) {
+      enqueueSnackbar("Please select a color to add personalization.", {
+        variant: "error",
+      });
+      return;
     }
+
+    // Size is optional: no check here. If the product has sizes and the
+    // user skipped it, selectedSize stays "" and we continue.
+    setIsModalOpen(true);
   };
 
   const handleBulkQuoteClick = () => {

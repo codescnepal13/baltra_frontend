@@ -1,23 +1,110 @@
+```xml
 <?xml version="1.0" encoding="UTF-8"?>
+
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
+
+  <!-- =========================
+       CORE WEBSITE PAGES
+       ========================= -->
+
   <url>
     <loc>https://np.baltra.in/</loc>
+    <lastmod>2026-10-06</lastmod>
     <changefreq>weekly</changefreq>
     <priority>1.0</priority>
   </url>
-  <url>
-    <loc>https://np.baltra.in/baltra-readAboutUS</loc>
-    <changefreq>monthly</changefreq>
-    <priority>0.7</priority>
-  </url>
+
   <url>
     <loc>https://np.baltra.in/baltra-allProducts</loc>
-    <changefreq>weekly</changefreq>
+    <lastmod>2026-10-06</lastmod>
+    <changefreq>daily</changefreq>
     <priority>0.9</priority>
   </url>
+
+  <url>
+    <loc>https://np.baltra.in/baltra-readAboutUS</loc>
+    <lastmod>2026-10-06</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.6</priority>
+  </url>
+
   <url>
     <loc>https://np.baltra.in/baltra-contact-us</loc>
+    <lastmod>2026-10-06</lastmod>
     <changefreq>monthly</changefreq>
-    <priority>0.5</priority>
+    <priority>0.6</priority>
   </url>
+
+
+  <!-- =========================
+       PRODUCT CATEGORY PAGES
+       ========================= -->
+
+  <url>
+    <loc>https://np.baltra.in/baltra-allProducts/kettles</loc>
+    <lastmod>2026-10-06</lastmod>
+    <changefreq>daily</changefreq>
+    <priority>0.9</priority>
+  </url>
+
+  <url>
+    <loc>https://np.baltra.in/baltra-allProducts/rice-cookers</loc>
+    <lastmod>2026-10-06</lastmod>
+    <changefreq>daily</changefreq>
+    <priority>0.9</priority>
+  </url>
+
+  <url>
+    <loc>https://np.baltra.in/baltra-allProducts/blenders</loc>
+    <lastmod>2026-10-06</lastmod>
+    <changefreq>daily</changefreq>
+    <priority>0.9</priority>
+  </url>
+
+  <url>
+    <loc>https://np.baltra.in/baltra-allProducts/induction-cooktops</loc>
+    <lastmod>2026-10-06</lastmod>
+    <changefreq>daily</changefreq>
+    <priority>0.9</priority>
+  </url>
+
+  <url>
+    <loc>https://np.baltra.in/baltra-allProducts/water-purifiers</loc>
+    <lastmod>2026-10-06</lastmod>
+    <changefreq>daily</changefreq>
+    <priority>0.9</priority>
+  </url>
+
+
+  <!-- =========================
+       KETTLE PRODUCT PAGES
+       ========================= -->
+
+  <url>
+    <loc>https://np.baltra.in/baltra-allProducts/kettles/baltra-electric-kettle-bl-123</loc>
+    <lastmod>2026-10-06</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.8</priority>
+  </url>
+
+  <url>
+    <loc>https://np.baltra.in/baltra-allProducts/kettles/baltra-electric-kettle-bl-456</loc>
+    <lastmod>2026-10-06</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.8</priority>
+  </url>
+
+
+  <!-- =========================
+       RICE COOKER PRODUCT PAGES
+       ========================= -->
+
+  <url>
+    <loc>https://np.baltra.in/baltra-allProducts/rice-cookers/baltra-rice-cooker-bl-789</loc>
+    <lastmod>2026-10-06</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.8</priority>
+  </url>
+
 </urlset>
+```

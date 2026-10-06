@@ -3,11 +3,15 @@ import { Helmet } from "react-helmet-async";
 const SITE_NAME = "Baltra Nepal";
 const SITE_URL = "https://np.baltra.in";
 const DEFAULT_IMAGE = `${SITE_URL}/images/baltraAllProductsBanner.png`;
+const DEFAULT_TITLE = "Baltra Nepal";
+const DEFAULT_DESCRIPTION = "Shop Baltra products online in Nepal.";
 
-// MetaData Component to manage per-page SEO data
+const toAbsoluteUrl = (value) =>
+  value?.startsWith("http") ? value : `${SITE_URL}${value || ""}`;
+
 const MetaData = ({
-  title,
-  description,
+  title = DEFAULT_TITLE,
+  description = DEFAULT_DESCRIPTION,
   keywords,
   image = DEFAULT_IMAGE,
   url,
@@ -17,56 +21,75 @@ const MetaData = ({
   ogDescription,
   ogImage,
   ogUrl,
-  breadcrumbs, // optional: [{ name: "Home", url: "/" }, { name: "Products", url: "/products" }]
-  extraSchemas, // optional: array of additional JSON-LD objects (e.g. Product schema)
-  noindex = false, // set true for login/cart/checkout/account pages
+  breadcrumbs,
+  extraSchemas,
+  noindex = false,
 }) => {
-  const canonicalUrl = url || SITE_URL;
+  const canonicalUrl = url ? toAbsoluteUrl(url) : SITE_URL;
+  const resolvedImage = toAbsoluteUrl(ogImage || image);
+
+  const websiteSchema = {
+    "@context": "https://schema.org",
+    "@type": "WebSite",
+    "@id": `${SITE_URL}/#website`,
+    name: SITE_NAME,
+    url: SITE_URL,
+    inLanguage: "en",
+  };
 
   const webPageSchema = {
     "@context": "https://schema.org",
     "@type": "WebPage",
+    "@id": `${canonicalUrl}#webpage`,
     name: title,
     description,
     url: canonicalUrl,
-    image,
+    image: resolvedImage,
     inLanguage: "en",
     isPartOf: {
-      "@type": "WebSite",
-      name: SITE_NAME,
-      url: SITE_URL,
+      "@id": `${SITE_URL}/#website`,
     },
   };
 
-  const breadcrumbSchema = breadcrumbs && {
-    "@context": "https://schema.org",
-    "@type": "BreadcrumbList",
-    itemListElement: breadcrumbs.map((item, index) => ({
-      "@type": "ListItem",
-      position: index + 1,
-      name: item.name,
-      item: item.url.startsWith("http") ? item.url : `${SITE_URL}${item.url}`,
-    })),
-  };
+  const breadcrumbSchema =
+    Array.isArray(breadcrumbs) && breadcrumbs.length > 0
+      ? {
+          "@context": "https://schema.org",
+          "@type": "BreadcrumbList",
+          itemListElement: breadcrumbs.map((item, index) => ({
+            "@type": "ListItem",
+            position: index + 1,
+            name: item.name,
+            item: toAbsoluteUrl(item.url),
+          })),
+        }
+      : null;
 
   return (
     <Helmet>
       <html lang="en" />
+
+      {/* Basic SEO */}
       <title>{title}</title>
       <meta name="description" content={description} />
       {keywords && <meta name="keywords" content={keywords} />}
-      <meta name="author" content="Baltra Nepal" />
-      <link rel="canonical" href={canonicalUrl} />
+      <meta name="author" content={SITE_NAME} />
+
+      {/* Robots */}
       <meta
         name="robots"
         content={noindex ? "noindex, nofollow" : "index, follow"}
       />
 
-      {/* Open Graph / Facebook */}
+      {/* Canonical */}
+      <link rel="canonical" href={canonicalUrl} />
+
+      {/* Open Graph */}
       <meta property="og:type" content="website" />
       <meta property="og:title" content={ogTitle || title} />
       <meta property="og:description" content={ogDescription || description} />
-      <meta property="og:image" content={ogImage || image} />
+      <meta property="og:image" content={resolvedImage} />
+      <meta property="og:image:alt" content={ogTitle || title} />
       <meta property="og:url" content={ogUrl || canonicalUrl} />
       <meta property="og:site_name" content={SITE_NAME} />
       <meta property="og:locale" content="en_US" />
@@ -74,23 +97,30 @@ const MetaData = ({
       {/* Twitter */}
       <meta name="twitter:card" content={twitterCard} />
       <meta name="twitter:site" content={twitterSite} />
-      <meta name="twitter:title" content={title} />
-      <meta name="twitter:description" content={description} />
-      <meta name="twitter:image" content={ogImage || image} />
+      <meta name="twitter:title" content={ogTitle || title} />
+      <meta name="twitter:description" content={ogDescription || description} />
+      <meta name="twitter:image" content={resolvedImage} />
 
-      {/* Page-level JSON-LD */}
+      {/* WebSite Schema */}
+      <script type="application/ld+json">
+        {JSON.stringify(websiteSchema)}
+      </script>
+
+      {/* WebPage Schema */}
       <script type="application/ld+json">
         {JSON.stringify(webPageSchema)}
       </script>
+
+      {/* Breadcrumb Schema */}
       {breadcrumbSchema && (
         <script type="application/ld+json">
           {JSON.stringify(breadcrumbSchema)}
         </script>
       )}
 
-      {/* Extra JSON-LD schemas, e.g. Product schema on product pages */}
-      {extraSchemas?.map((schema, i) => (
-        <script key={i} type="application/ld+json">
+      {/* Additional Schemas */}
+      {extraSchemas?.map((schema, index) => (
+        <script key={index} type="application/ld+json">
           {JSON.stringify(schema)}
         </script>
       ))}

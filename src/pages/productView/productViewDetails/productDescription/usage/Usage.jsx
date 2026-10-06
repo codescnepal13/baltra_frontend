@@ -1,7 +1,8 @@
 import React from "react";
 
 const Usage = ({ singleProduct }) => {
-  const imageToDisplay = singleProduct?.usage_images?.slice(0, 2) || [];
+  const imagesToDisplay = singleProduct?.usage_images?.slice(0, 2) || [];
+  const thirdImage = singleProduct?.usage_images?.[2]?.image_url;
 
   return (
     <div className="w-full bg-white py-2">
@@ -11,30 +12,33 @@ const Usage = ({ singleProduct }) => {
 
         <div
           className="text-[#282525] text-sm font-light leading-[27px] break-words font-gothamNarrow ql-editor prose prose-lg max-w-none"
-          dangerouslySetInnerHTML={{ __html: singleProduct?.usage }}
+          dangerouslySetInnerHTML={{ __html: singleProduct?.usage || "" }}
         />
       </div>
 
-      {/* Render images as before */}
-      {imageToDisplay.length > 0 && (
+      {imagesToDisplay.length > 0 && (
         <div className="flex flex-col md:flex-row gap-x-6 items-start mt-6 justify-center">
-          {imageToDisplay.map((image, index) => (
+          {imagesToDisplay.map((image, index) => (
             <img
-              key={index}
+              key={image?.image_url || index}
               className="w-full md:w-96 h-auto mb-4 md:mb-0 object-contain"
-              src={image.image_url}
-              alt={`SpecificationImg${index + 1}`}
+              src={image?.image_url}
+              alt={`Product usage ${index + 1}`}
+              loading="lazy"
+              decoding="async"
             />
           ))}
         </div>
       )}
 
-      {singleProduct?.usage_images[2]?.image_url && (
+      {thirdImage && (
         <div className="flex justify-center mt-6">
           <img
             className="w-full md:w-96 h-auto object-contain"
-            src={singleProduct?.usage_images[2]?.image_url}
-            alt="specificationImg3"
+            src={thirdImage}
+            alt="Product usage 3"
+            loading="lazy"
+            decoding="async"
           />
         </div>
       )}
