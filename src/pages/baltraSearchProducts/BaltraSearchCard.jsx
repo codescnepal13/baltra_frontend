@@ -1,89 +1,97 @@
-import React from "react";
+import React, { useState } from "react";
 import { Link } from "react-router-dom";
 
-const BaltraSearchCard = ({ item, view }) => {
+const formatPrice = (price) =>
+  price === null || price === undefined || price === ""
+    ? null
+    : `Rs. ${Number(price).toLocaleString("en-IN")}`;
+
+const BaltraSearchCard = ({ item, view = "grid" }) => {
+  const [imgError, setImgError] = useState(false);
+  const isList = view === "list";
+
+  const price = formatPrice(item.price);
+
+  // Only show fields that actually have a value
+  const specs = [
+    { label: "Model Name", value: item.model_name },
+    { label: "Model No.", value: item.model_num },
+    { label: "Power", value: item.power },
+    {
+      label: "Warranty",
+      value: item.warranty ? `${item.warranty} Months` : null,
+    },
+  ].filter((s) => s.value);
+
   return (
-    <>
+    <Link
+      to={`/baltra-product-view/${item.id}`}
+      className={`group bg-white border border-[#E4E4E4] transition-shadow duration-200 hover:shadow-lg hover:border-gray-300 ${
+        isList ? "flex flex-col sm:flex-row" : "flex flex-col h-full"
+      }`}
+    >
+      {/* Image: fixed box, image never stretches or expands */}
       <div
-        className={`relative w-full ${
-          view === "list"
-            ? "flex h-auto border border-[#E4E4E4] p-4 bg-white"
-            : "sm:w-[293px] h-auto sm:h-[454px] border border-[#E4E4E4] bg-white"
+        className={`bg-[#F7F7F7] flex items-center justify-center overflow-hidden ${
+          isList
+            ? "w-full aspect-[4/3] sm:aspect-auto sm:w-[240px] sm:h-[220px] sm:shrink-0"
+            : "w-full aspect-square"
         }`}
       >
-        <Link to={`/baltra-product-view/${item.id}`} className="flex w-full">
-          <div
-            className={`${
-              view === "list"
-                ? "w-[180px] h-[175px] flex-shrink-0"
-                : "absolute w-[180px] h-[175px] left-1/2 transform -translate-x-1/2 top-8 sm:top-[30.31px]"
-            }`}
-          >
-            <img
-              className={`${
-                view === "list"
-                  ? "w-full h-full object-contain"
-                  : "absolute w-full h-full"
-              }`}
-              src={item?.image_url}
-              alt={item.name}
-            />
-          </div>
-
-          {view === "grid" && (
-            <>
-              <div className="absolute w-full border-t border-[#E4E4E4] top-[265.32px] sm:top-[265.32px]"></div>
-              <div className="absolute left-4 sm:left-[23px] top-[290.32px] text-[#A9A9A9] text-xs font-normal">
-                Product Type
-              </div>
-              <div className="absolute left-4 sm:left-[23px] top-[324.32px] text-[#4A4A4A] text-sm font-normal font-gothamNarrow space-y-2">
-                <div>
-                  <span>Model Name: </span>
-                  <span className="font-semibold">{item.model_name}</span>
-                </div>
-                <div>
-                  <span>Model Number: </span>
-                  <span className="font-semibold">{item.model_num}</span>
-                </div>
-                <div>
-                  <span>Power: </span>
-                  <span className="font-semibold">{item.power}</span>
-                </div>
-                <div>
-                  <span>Warranty: </span>
-                  <span className="font-semibold">{item.warranty}</span>
-                </div>
-              </div>
-            </>
-          )}
-
-          {view === "list" && (
-            <div className="ml-4 text-[#4A4A4A] text-sm font-normal font-gothamNarrow space-y-2 flex flex-col justify-center">
-              <div className="text-[#A9A9A9] text-xs font-normal">
-                Product Type
-              </div>
-              <div>
-                <span>Model Name: </span>
-                <span className="font-semibold">{item.model_name}</span>
-              </div>
-              <div>
-                <span>Model Number: </span>
-                <span className="font-semibold">{item.model_num}</span>
-              </div>
-              <div>
-                <span>Power: </span>
-                <span className="font-semibold">{item.power}</span>
-              </div>
-              <div>
-                <span>Warranty: </span>
-                <span className="font-semibold">{item.warranty}</span>
-              </div>
-            </div>
-          )}
-        </Link>
+        {imgError || !item?.image_url ? (
+          <span className="text-xs text-gray-400 font-gothamNarrow">
+            No image
+          </span>
+        ) : (
+          <img
+            src={item.image_url}
+            alt={item.name || item.model_name}
+            loading="lazy"
+            onError={() => setImgError(true)}
+            className="max-w-full max-h-full w-auto h-auto object-contain p-4 mix-blend-multiply"
+          />
+        )}
       </div>
-    </>
+
+      {/* Details */}
+      <div
+        className={`flex flex-col flex-1 p-4 ${
+          isList ? "sm:p-6 sm:justify-center" : ""
+        }`}
+      >
+        <h3 className="text-base font-medium text-gray-900 font-gothamNarrow line-clamp-2 group-hover:text-red-600 transition-colors">
+          {item.name}
+        </h3>
+
+        {price && (
+          <p className="mt-1 text-lg font-semibold text-red-600 font-gothamNarrow">
+            {price}
+          </p>
+        )}
+
+        {specs.length > 0 && (
+          <dl className="mt-3 pt-3 border-t border-[#E4E4E4] space-y-1.5 text-sm font-gothamNarrow">
+            {specs.map((s) => (
+              <div key={s.label} className="flex justify-between gap-3">
+                <dt className="text-[#A9A9A9] shrink-0">{s.label}</dt>
+                <dd className="text-[#4A4A4A] font-semibold text-right truncate">
+                  {s.value}
+                </dd>
+              </div>
+            ))}
+          </dl>
+        )}
+
+        <span
+          className={`mt-4 inline-flex items-center justify-center h-10 px-5 text-sm font-medium font-gothamNarrow border border-red-600 text-red-600 rounded-sm transition-colors group-hover:bg-red-600 group-hover:text-white ${
+            isList ? "sm:self-start" : "mt-auto"
+          }`}
+        >
+          View Details
+        </span>
+      </div>
+    </Link>
   );
 };
 
-export default BaltraSearchCard;
+export default React.memo(BaltraSearchCard);

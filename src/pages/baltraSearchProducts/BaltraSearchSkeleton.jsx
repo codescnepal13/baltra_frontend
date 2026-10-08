@@ -1,20 +1,40 @@
-import React from "react";
 
-const BaltraSearchSkeleton = () => {
+const SkeletonCard = ({ isList }) => (
+  <div
+    className={`bg-white border border-[#E4E4E4] animate-pulse ${
+      isList ? "flex flex-col sm:flex-row" : "flex flex-col"
+    }`}
+  >
+    <div
+      className={`bg-gray-200 ${
+        isList
+          ? "w-full aspect-[4/3] sm:aspect-auto sm:w-[240px] sm:h-[220px] sm:shrink-0"
+          : "w-full aspect-square"
+      }`}
+    />
+    <div className="flex-1 p-4 space-y-3">
+      <div className="h-4 bg-gray-200 rounded w-3/4" />
+      <div className="h-5 bg-gray-200 rounded w-1/3" />
+      <div className="h-3 bg-gray-200 rounded w-full" />
+      <div className="h-3 bg-gray-200 rounded w-5/6" />
+      <div className="h-10 bg-gray-200 rounded w-32" />
+    </div>
+  </div>
+);
+
+const BaltraSearchSkeleton = ({ view = "grid" }) => {
+  const isList = view === "list";
   return (
-    <div className="relative w-full sm:w-[293px] h-auto sm:h-[454px] border border-[#E4E4E4] bg-white animate-pulse">
-      <div className="absolute w-[180px] h-[175px] left-1/2 transform -translate-x-1/2 top-8 sm:top-[30.31px] bg-gray-200 rounded"></div>
-
-      <div className="absolute w-full border-t border-[#E4E4E4] top-[265.32px] sm:top-[265.32px]"></div>
-
-      <div className="absolute left-4 sm:left-[23px] top-[290.32px] bg-gray-200 h-4 w-[80px] rounded"></div>
-
-      <div className="absolute left-4 sm:left-[23px] top-[324.32px] space-y-2">
-        <div className="bg-gray-200 h-4 w-[120px] rounded"></div>
-        <div className="bg-gray-200 h-4 w-[140px] rounded"></div>
-        <div className="bg-gray-200 h-4 w-[100px] rounded"></div>
-        <div className="bg-gray-200 h-4 w-[110px] rounded"></div>
-      </div>
+    <div
+      className={
+        isList
+          ? "flex flex-col gap-4"
+          : "grid grid-cols-1 xs:grid-cols-2 md:grid-cols-3 xl:grid-cols-4 gap-4 sm:gap-6"
+      }
+    >
+      {Array.from({ length: isList ? 4 : 8 }).map((_, i) => (
+        <SkeletonCard key={i} isList={isList} />
+      ))}
     </div>
   );
 };
