@@ -57,19 +57,18 @@ const GenderBadge = ({ gender }) => {
   );
 };
 
-/* ── Filter Select ──────────────────────────────────────── */
-const FilterSelect = ({ value, onChange, children }) => (
+const FilterSelect = ({ value, onChange, children, className = "" }) => (
   <div className="relative">
     <select
       value={value}
       onChange={onChange}
-      className="appearance-none bg-white border-2 border-gray-200 rounded-xl pl-3 pr-8 py-2 text-sm font-semibold text-gray-600 focus:outline-none focus:border-red-400 transition-colors cursor-pointer font-gothamNarrow"
+      className={`appearance-none pl-3 pr-8 py-2 bg-gray-50/70 border border-gray-200 rounded-xl text-[13px] font-normal text-gray-600 cursor-pointer hover:border-gray-300 outline-none focus:outline-none focus-visible:outline-none focus:ring-2 focus:ring-red-50 focus:border-red-300 focus:bg-white transition-colors font-gothamNarrow ${className}`}
     >
       {children}
     </select>
     <HiOutlineChevronDown
       size={14}
-      className="absolute right-2.5 top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none"
+      className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none"
     />
   </div>
 );
@@ -195,9 +194,9 @@ const AllCustomerList = () => {
       </div>
 
       {/* ── Filters Bar ── */}
-      <div className="bg-white rounded-2xl border border-gray-100 shadow-sm px-4 py-3.5 mb-4">
+      <div className="bg-white rounded-2xl border border-gray-100 shadow-[0_1px_2px_rgba(0,0,0,0.03)] px-4 py-3 mb-4">
         <div className="flex flex-wrap items-center gap-2.5">
-          <HiOutlineFunnel size={15} className="text-gray-400 shrink-0" />
+          <HiOutlineFunnel size={15} className="text-gray-300 shrink-0" />
 
           {/* Search */}
           <div className="relative flex items-center gap-1.5">
@@ -212,12 +211,12 @@ const AllCustomerList = () => {
                 value={searchCustomerName}
                 onChange={(e) => setSearchCustomerName(e.target.value)}
                 onKeyDown={(e) => e.key === "Enter" && handleSearch()}
-                className="pl-9 pr-3 py-2 bg-gray-50 border-2 border-gray-200 rounded-xl text-sm font-semibold text-gray-700 placeholder-gray-400 focus:outline-none focus:border-red-400 focus:bg-white transition-colors w-52 font-gothamNarrow"
+                className="pl-9 pr-3 py-2 bg-gray-50/70 border border-gray-200 rounded-xl text-[13px] font-normal text-gray-600 placeholder:text-gray-400 placeholder:font-normal outline-none focus:outline-none focus-visible:outline-none focus:ring-2 focus:ring-red-50 focus:border-red-300 focus:bg-white transition-colors w-52 font-gothamNarrow"
               />
             </div>
             <button
               onClick={handleSearch}
-              className="px-3.5 py-2 rounded-xl bg-red-600 hover:bg-red-700 text-white transition-colors"
+              className="px-3.5 py-2 rounded-xl bg-red-600 hover:bg-red-700 active:scale-95 text-white outline-none focus:outline-none focus-visible:ring-2 focus-visible:ring-red-200 transition-all"
             >
               <HiOutlineMagnifyingGlass size={15} />
             </button>
@@ -247,7 +246,7 @@ const AllCustomerList = () => {
           {/* Reset */}
           <button
             onClick={handleReset}
-            className="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-xl border-2 border-gray-200 text-sm font-semibold text-gray-500 hover:border-gray-300 hover:bg-gray-50 transition-colors"
+            className="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-xl border border-gray-200 text-[13px] font-medium text-gray-500 hover:border-gray-300 hover:bg-gray-50 active:scale-95 outline-none focus:outline-none focus-visible:ring-2 focus-visible:ring-gray-200 transition-all"
           >
             <HiOutlineArrowPath size={14} />
             Reset
@@ -354,15 +353,17 @@ const AllCustomerList = () => {
                               />
                             </div>
                           )}
-                          <span className="text-sm font-semibold text-gray-800 whitespace-nowrap font-gothamNarrow">
-                            {c.firstname} {c.lastname}
+                          <span className="text-sm font-medium text-gray-800 whitespace-nowrap font-gothamNarrow">
+                            {c.firstname || c.lastname
+                              ? `${c.firstname ?? ""} ${c.lastname ?? ""}`.trim()
+                              : "—"}
                           </span>
                         </div>
                       </td>
 
                       {/* Email */}
                       <td className="px-3 py-2 text-sm text-gray-500 whitespace-nowrap font-gothamNarrow">
-                        {c.email}
+                        {c.email ? c.email : "—"}
                       </td>
 
                       {/* Contact */}

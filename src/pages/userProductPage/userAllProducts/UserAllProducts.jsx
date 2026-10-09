@@ -10,7 +10,8 @@ import {
   HiOutlineTag,
 } from "react-icons/hi";
 import { useDispatch, useSelector } from "react-redux";
-import { Link, useNavigate } from "react-router-dom";
+import { Link } from "react-router-dom";
+import WarrantyComingSoon from "../../../components/layout/warrantyComingSoon/WarrantyComingSoon";
 import {
   allCustomerProducts,
   clearProductError,
@@ -19,6 +20,7 @@ import {
 import AddRegisteredComplaintModal from "../userRegisteredComplaint/AddRegisteredComplaintModal";
 import CustomerAddSkeleton from "./customerAddSkeleton/CustomerAddSkeleton";
 import DeletePopUpModal from "./deleteModal/DeletePopUpModal";
+// Adjust this path to where WarrantyComingSoon lives in your project
 
 const RippleButton = ({
   label,
@@ -119,9 +121,9 @@ const UserAllProducts = () => {
     (state) => state.product,
   );
   const dispatch = useDispatch();
-  const navigate = useNavigate();
   const [openModal, setOpenModal] = useState(false);
   const [openDeleteModal, setOpenDeleteModal] = useState(false);
+  const [openWarrantyModal, setOpenWarrantyModal] = useState(false);
   const [selectedComplaintDetails, setSelectedComplaintDetails] =
     useState(null);
 
@@ -171,14 +173,9 @@ const UserAllProducts = () => {
     }
   };
 
-  const handleExtendWarranty = (customer) => {
-    if (customer.status === "Approved" || customer.status === "Discount") {
-      navigate(`/baltra-extended-warranty/${customer.id}`);
-    } else {
-      enqueueSnackbar("Customer must be Approved to extend the warranty", {
-        variant: "error",
-      });
-    }
+  // Extended warranty is not live yet, so show the "Coming Soon" popup
+  const handleExtendWarranty = () => {
+    setOpenWarrantyModal(true);
   };
 
   return (
@@ -311,7 +308,7 @@ const UserAllProducts = () => {
                           label="Extend Warranty"
                           rippleColor="#8B0000"
                           variant="primary"
-                          onClick={() => handleExtendWarranty(customer)}
+                          onClick={handleExtendWarranty}
                         >
                           <FaArrowRight size={11} />
                         </RippleButton>
@@ -343,6 +340,12 @@ const UserAllProducts = () => {
           </div>
         </div>
       )}
+
+      {/* Extended Warranty "Coming Soon" popup */}
+      <WarrantyComingSoon
+        isOpen={openWarrantyModal}
+        onClose={() => setOpenWarrantyModal(false)}
+      />
     </>
   );
 };
